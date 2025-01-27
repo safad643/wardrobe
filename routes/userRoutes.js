@@ -1,0 +1,18 @@
+const express=require('express')
+const usercontroller=require('../controllers/userController')
+const midddlewares=require('../midddlewares/session')
+const router = express.Router()
+
+router.get('/login',midddlewares.islogin,usercontroller.loadlogin)
+router.post('/login',midddlewares.checkBan,usercontroller.login)
+router.post('/register',midddlewares.checkBan,usercontroller.register)
+router.get('/google/auth',usercontroller.googleauth)
+router.get('/otp',usercontroller.loadotp)
+router.post('/otp',usercontroller.otpverify)
+router.post('/resendotp',usercontroller.reotp)
+router.get('/home',midddlewares.checkBan,usercontroller.loadhome)
+router.get('/logout',midddlewares.checkBan,usercontroller.logout)
+router.get('/shop',midddlewares.checkBan,usercontroller.loadshop)
+router.get('/shop/:name',midddlewares.checkBan,usercontroller.loadcategory)
+router.get('/product/:name',midddlewares.checkBan,usercontroller.loadproductview)
+module.exports = router;

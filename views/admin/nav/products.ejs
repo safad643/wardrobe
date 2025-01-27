@@ -1,0 +1,212 @@
+
+
+  
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>image</th>
+                  <th>name</th>
+                  <th>price</th>
+                  <th>catogory</th>
+                  <th>count</th>
+                  <th>colors</th>
+                  <th>rating</th>
+                  <th>created at</th>
+                  <th>Updated at</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% let index = 0; %>
+                <% products.forEach(product => { %>
+                  
+                    <tr 
+      <% if (++index >= 4) { %>
+        style="display: none;"
+      <% } %> 
+      id="row<%= index %>">
+                    <td><button onclick="showproductimages('<%= product.image0 %>','<%= product.image1 %>','<%= product.image2 %>')" class="btn btn-primary">show</button></td>
+                    <td><%= product.name %></td>
+                    <td><%= product.price %></td>
+                    <td><%= product.category %></td>
+                    <td><%= product.count %></td>
+                    <td><%= product.colors %></td>
+                    <td><%= product.rating %></td>
+                    <td><%= product.createdAt %></td>
+                    <td><%= product?.updatedAt %></td>
+                    <td><button onclick="updateprodcts('<%= product.name %>','<%= product.image0 %>','<%= product.image1 %>','<%= product.image2 %>')" class="btn btn-secondary btn-rounded">update</button></td>
+                    <td>
+                      <% if (!product.list) { %>
+                        <button onclick="Delete('product','<%=  product.name%>',true)" class="btn btn-success btn-rounded">List</button>
+                      <% } else { %>
+                        
+                        <button onclick="Delete('product','<%=  product.name %>',false)" class="btn btn-danger btn-rounded">
+                          <span class="mdi mdi-delete"></span> 
+                        </button>
+                      <% } %>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+              
+            </table>
+            <div id="unique-example">
+              <div style="color: black; cursor: pointer;" id="unique-example-text-prev" class="unique-example-text" onclick="pageback()">previous </div>
+              <div id="unique-example-counter" class="unique-example-counter">
+                  <span id="pageno" class="unique-example-number">01</span>
+                
+                  
+              </div>
+              <div style="color: black; cursor: pointer;" id="unique-example-text-next" class="unique-example-text" onclick="pagenext()">next </div>
+          </div>
+          
+          <style>
+          @import url('https://fonts.googleapis.com/css2?family=Rowdies&display=swap');
+          
+          #unique-example * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+          }
+          
+          #unique-example {
+              font-family: 'Rowdies', cursive;
+              font-size: calc(12px + 4 * ((100vw - 400px) / 400));
+              line-height: 1.25;
+          }
+          
+          @media screen and (max-width: 400px) {
+              #unique-example {
+                  font-size: 12px;
+              }
+          }
+          
+          @media screen and (min-width: 1200px) {
+              #unique-example {
+                  font-size: 20px;
+              }
+          }
+          
+          #unique-example {
+              background: #6a558e;
+              overflow: hidden;
+          }
+          
+          #unique-example {
+              margin: 3rem auto;
+              text-align: center;
+          }
+          
+          #unique-example > .unique-example-text {
+              display: inline-block;
+              position: relative;
+              padding: 1rem 3rem;
+              transform: translateY(-.5rem);
+              text-transform: uppercase;
+              perspective: 10rem;
+          }
+          
+          #unique-example > #unique-example-text-prev {
+              padding-left: 4rem;
+          }
+          
+          #unique-example > #unique-example-text-prev::before {
+              content: '';
+              height: 100%;
+              width: 100%;
+              position: absolute;
+              top: 0;
+              left: 0;
+              transform: rotateY(10deg) translateX(calc(2rem - 3px));
+              z-index: -1;
+              background: #ffffff;
+          }
+          
+          #unique-example > #unique-example-text-next {
+              padding-right: 4rem;
+          }
+          
+          #unique-example > #unique-example-text-next::after {
+              content: '';
+              height: 100%;
+              width: 100%;
+              position: absolute;
+              top: 0;
+              left: 0;
+              transform: rotateY(-10deg) translateX(calc(-1rem - 6px));
+              z-index: -1;
+              background: #ffffff;
+          }
+          
+          #unique-example > .unique-example-counter {
+              display: inline-block;
+              position: relative;
+              padding: .5rem 2rem;
+          }
+          
+          #unique-example > .unique-example-counter > .unique-example-background {
+              position: absolute;
+              top: 0;
+              left: 0;
+              height: 100%;
+              width: 100%;
+              background: #6a558e;
+              border-radius: .7rem;
+          }
+          
+          #unique-example > .unique-example-counter > .unique-example-background::before {
+              content: '';
+              height: 100%;
+              width: 100%;
+              position: absolute;
+              top: -4px;
+              left: -4px;
+              z-index: -1;
+              border-radius: 1rem;
+              border: solid #ffffff 4px;
+              background: #6a558e;
+          }
+          
+         
+          
+          #unique-example > .unique-example-counter > .unique-example-number {
+              position: relative;
+              display: inline-block;
+              z-index: 1;
+              transform: translateY(-2px);
+              color: #ffffff;
+          }
+          
+          #unique-example > .unique-example-counter > .unique-example-number:first-of-type {
+              font-size: 2rem;
+          }
+          
+          
+          
+          #unique-example > .unique-example-counter > .unique-example-number:last-of-type {
+              font-size: 1rem;
+              transform: translateY(-0.8rem) translateX(-.2rem);
+          }
+          
+          @media screen and (max-width: 600px) {
+              #unique-example {
+                  > .unique-example-text {
+                      display: block;
+                  }
+          
+                  > #unique-example-text-prev {
+                      margin-bottom: 3rem;
+                  }
+          
+                  > #unique-example-text-next {
+                      margin-top: 4rem;
+                  }
+              }
+          }
+          </style>
+          </div>
+          <button 
+    class="btn btn-danger position-fixed rounded-circle" 
+    style="bottom: 10px; right: 10px; width: 40px; height: 40px;" 
+    onclick="productadd()"> <i class="mdi mdi-plus"></i></button>
+      

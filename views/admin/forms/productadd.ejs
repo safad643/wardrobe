@@ -1,0 +1,60 @@
+<style>
+  #prev1, #prev2, #prev3 {
+    max-width: 200px;
+    max-height: 200px;
+    object-fit: contain;
+    display: block;
+    margin-top: 10px;
+  }
+</style>
+<div class="card">
+  <div class="card-body">
+    <form class="forms-sample" onsubmit="productAdder(event)">
+      <div class="form-group">
+        <label>Name of Product</label>
+        <input name="name" type="text" class="form-control" placeholder="Name">
+      </div>
+      <div class="form-group">
+        <label>Price</label>
+        <input name="price" type="number" class="form-control" placeholder="Price" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select class="form-control" name="category" id="dropdown" name="options">
+          <% options.forEach(option => { %>
+            <option value="<%= option %>"><%= option %></option>
+          <% }); %>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Count</label>
+        <input name="count" type="number" class="form-control" placeholder="Count">
+      </div>
+      <div class="form-group">
+        <label>Colors</label>
+        <input name="colors" type="text" class="form-control" placeholder="Comma-separated colors (e.g., Red, Blue)">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputName1">Description</label>
+        <textarea name="descr" class="form-control" id="descr" rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Images</label>
+        <input onchange="cropper(1)" id="image1" type="file" accept="image/*">
+        <img style="display: none;" src="" alt="" id="prev1">
+      </div>
+      <div class="form-group">
+        <label>Images</label>
+        <input onchange="cropper(2)" id="image2" type="file" accept="image/*">
+        <img style="display: none;" src="" alt="" id="prev2">
+      </div>
+      <div class="form-group">
+        <label>Images</label>
+        <input onchange="cropper(3)" id="image3" type="file" accept="image/*">
+        <img style="display: none;" src="" alt="" id="prev3">
+      </div>
+      <button type="submit" class="btn btn-primary mr-2">Submit</button>
+      <p id="errp" style="color: red;"></p>
+    </form>
+  </div>
+</div>

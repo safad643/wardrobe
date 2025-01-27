@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>OTP Form</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                },
+            },
+        };
+    </script>
+</head>
+
+<body class="relative font-inter antialiased">
+
+    <main class="relative min-h-screen flex flex-col justify-center bg-slate-50 overflow-hidden">
+        <div class="w-full max-w-6xl mx-auto px-4 md:px-6 py-24">
+            <div class="flex justify-center">
+
+                <div class="max-w-md mx-auto text-center bg-white px-4 sm:px-8 py-10 rounded-xl shadow">
+                    <header class="mb-8">
+                        <h1 class="text-2xl font-bold mb-1">Email Verification</h1>
+                        <p class="text-[15px] text-slate-500">Enter the 6-digit verification code that was sent to your email.</p>
+                    </header>
+                    <form action="/user/otp" method="post" id="otp-form">
+                        <div class="flex items-center justify-center gap-3">
+                          <input
+                            type="text"
+                            name="otp1"
+                            class="w-14 h-14 text-center text-2xl font-extrabold text-slate-900 bg-slate-100 border border-transparent hover:border-slate-200 appearance-none rounded p-4 outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                            pattern="\d*" maxlength="1" />
+                          <input
+                              type="text"
+                              name="otp2"
+                              class="w-14 h-14 text-center text-2xl font-extrabold text-slate-900 bg-slate-100 border border-transparent hover:border-slate-200 appearance-none rounded p-4 outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                              maxlength="1" />
+                          <input
+                              type="text"
+                              name="otp3"
+                              class="w-14 h-14 text-center text-2xl font-extrabold text-slate-900 bg-slate-100 border border-transparent hover:border-slate-200 appearance-none rounded p-4 outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                              maxlength="1" />
+                          <input
+                              type="text"
+                              name="otp4"
+                              class="w-14 h-14 text-center text-2xl font-extrabold text-slate-900 bg-slate-100 border border-transparent hover:border-slate-200 appearance-none rounded p-4 outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                              maxlength="1" />
+                          <input
+                              type="text"
+                              name="otp5"
+                              class="w-14 h-14 text-center text-2xl font-extrabold text-slate-900 bg-slate-100 border border-transparent hover:border-slate-200 appearance-none rounded p-4 outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                              maxlength="1" />
+                          <input
+                              type="text"
+                              name="otp6"
+                              class="w-14 h-14 text-center text-2xl font-extrabold text-slate-900 bg-slate-100 border border-transparent hover:border-slate-200 appearance-none rounded p-4 outline-none focus:bg-white focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                              maxlength="1" />
+                          
+                        </div>
+                        <p id="exp" class="text-red-500"><%= error %></p>
+                        <div class="max-w-[260px] mx-auto mt-4">
+                            <button type="submit"
+                                class="w-full inline-flex justify-center whitespace-nowrap rounded-lg bg-indigo-500 px-3.5 py-2.5 text-sm font-medium text-white shadow-sm shadow-indigo-950/10 hover:bg-indigo-600 focus:outline-none focus:ring focus:ring-indigo-300 focus-visible:outline-none focus-visible:ring focus-visible:ring-indigo-300 transition-colors duration-150">Verify
+                                Account</button>
+                        </div>
+                    </form>
+                    <div class="text-sm text-slate-500 mt-4">
+                        Didn't receive code?
+                        <!-- Remove the timer span -->
+                        <button id="resend-button" onclick="resendOtp()" class="font-medium text-indigo-500 hover:text-indigo-600 hidden">Resend</button>
+                    </div>
+                    <!-- Expiration message -->
+                    <p id="expiration-message" class="text-sm text-red-500 mt-2"></p>
+                </div>
+
+                <script>
+                    // Timer logic
+                    const TIMER_DURATION = 30; // 30 seconds
+                    const storageKey = 'otpTimerEndTime';
+
+                    function startTimer() {
+                        if(document.getElementById('exp').innerHTML=='expired'){
+                            document.getElementById('resend-button').classList.remove('hidden');
+                            return
+                        }
+                        const now = Math.floor(Date.now() / 1000); // Current time in seconds
+                        const newEndTime = now + TIMER_DURATION; // Set new end time
+                        localStorage.setItem(storageKey, newEndTime); // Store in localStorage
+                        updateTimer(newEndTime); // Start the timer
+                    }
+
+                    function updateTimer(endTime) {
+                        const resendButton = document.getElementById('resend-button')
+                        const expirationMessage = document.getElementById('expiration-message');
+
+                        // Clear any existing interval
+                        if (window.timerInterval) {
+                            clearInterval(window.timerInterval);
+                        }
+
+                        // Start a new interval
+                        window.timerInterval = setInterval(() => {
+                            const now = Math.floor(Date.now() / 1000);
+                            const remainingTime = endTime - now;
+
+                            if (remainingTime <= 0) {
+                                clearInterval(window.timerInterval); // Stop the timer
+                                resendButton.classList.remove('hidden'); // Show the "Resend" button
+                                expirationMessage.textContent = 'The OTP has expired. Please request a new one.'; // Show expiration message
+                                localStorage.removeItem(storageKey); // Clear the stored end time
+                            } else {
+                                expirationMessage.textContent = `Your OTP will expire in ${remainingTime} seconds.`; // Update expiration message
+                                resendButton.classList.add('hidden'); // Hide the "Resend" button
+                            }
+                        }, 1000);
+                    }
+
+                    function resendOtp() {
+                        fetch('/user/resendotp', { method: 'post' })
+                            .then((response) => response.json())
+                            .then((data) => {
+                                console.log(data);
+
+                                document.getElementById('exp').innerHTML=''
+
+                                // Restart the timer
+                                startTimer();
+                            })
+                            .catch((error) => console.error(error));
+                    }
+
+                    // Start the timer when the page loads
+                    document.addEventListener('DOMContentLoaded', startTimer);
+
+                    // OTP input handling
+                    document.addEventListener('DOMContentLoaded', () => {
+                        const form = document.getElementById('otp-form');
+                        const inputs = [...form.querySelectorAll('input[type=text]')];
+                        const submit = form.querySelector('button[type=submit]');
+
+                        const handleKeyDown = (e) => {
+                            const index = inputs.indexOf(e.target);
+                            if (
+                                !/^[0-9]{1}$/.test(e.key) &&
+                                e.key !== 'Backspace' &&
+                                e.key !== 'Delete' &&
+                                e.key !== 'Tab' &&
+                                !e.metaKey
+                            ) {
+                                e.preventDefault();
+                            }
+
+                            if ((e.key === 'Delete' || e.key === 'Backspace') && e.target.value === '') {
+                                if (index > 0) {
+                                    inputs[index - 1].focus();
+                                }
+                            } else if (e.key === 'Backspace') {
+                                e.target.value = '';
+                            }
+                        };
+
+                        const handleInput = (e) => {
+                            const { target } = e;
+                            const index = inputs.indexOf(target);
+                            if (target.value) {
+                                if (index < inputs.length - 1) {
+                                    inputs[index + 1].focus();
+                                } else {
+                                    submit.focus();
+                                }
+                            }
+                        };
+
+                        const handleFocus = (e) => {
+                            e.target.select();
+                        };
+
+                        const handlePaste = (e) => {
+                            e.preventDefault();
+                            const text = e.clipboardData.getData('text');
+                            if (!new RegExp(`^[0-9]{${inputs.length}}$`).test(text)) {
+                                return;
+                            }
+                            const digits = text.split('');
+                            inputs.forEach((input, index) => input.value = digits[index]);
+                            submit.focus();
+                        };
+
+                        inputs.forEach((input) => {
+                            input.addEventListener('input', handleInput);
+                            input.addEventListener('keydown', handleKeyDown);
+                            input.addEventListener('focus', handleFocus);
+                            input.addEventListener('paste', handlePaste);
+                        });
+                    });
+                </script>
+
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>
