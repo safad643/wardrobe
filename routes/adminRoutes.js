@@ -32,4 +32,7 @@ router.post('/productadd',midddlewares.adminsession,admincontroller.productadd)
 router.post('/delete',midddlewares.adminsession,admincontroller.Delete)
 
 
+router.post('/ordermanagment',admincontroller.loadordermanagment)
+router.put('/orders/:orderId',admincontroller.updateOrderStatus)
+
 module.exports=router

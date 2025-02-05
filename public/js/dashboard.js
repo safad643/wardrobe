@@ -446,3 +446,15 @@ function filterRows() {
     }
   });
 }
+
+function laodordermanagment(){
+ 
+    fetch('/admin/ordermanagment',{
+      method:'get'})
+      .then(response => response.text())
+      .then((html)=>{
+        document.querySelector('.main-panel').innerHTML=html
+      })
+  
+  
+}

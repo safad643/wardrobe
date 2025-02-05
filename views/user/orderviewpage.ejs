@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details - <%= order._id %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --active-color: #0d6efd;
+            --completed-color: #198754;
+        }
+
+        .order-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+        }
+
+        .status-timeline {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin: 40px 0;
+        }
+
+        .status-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 1;
+        }
+
+        .status-step .circle {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .status-step.active .circle {
+            background: var(--active-color);
+            transform: scale(1.1);
+            color: white;
+        }
+
+        .status-step.completed .circle {
+            background: var(--completed-color);
+            color: white;
+        }
+
+        .status-timeline::before {
+            content: '';
+            position: absolute;
+            top: 16px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #dee2e6;
+            border-radius: 2px;
+        }
+
+        .progress-line {
+            position: absolute;
+            top: 16px;
+            left: 0;
+            height: 4px;
+            background: var(--completed-color);
+            transition: all 0.5s ease;
+            border-radius: 2px;
+        }
+
+        .product-img-main {
+            height: 450px;
+            object-fit: contain;
+            border-radius: 12px;
+            background: white;
+            padding: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .thumbnail-img {
+            width: 90px;
+            height: 90px;
+            object-fit: cover;
+            cursor: pointer;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .thumbnail-img:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .thumbnail-img.active {
+            border-color: var(--active-color);
+        }
+
+        .order-summary-card {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        }
+
+        .detail-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            border: none;
+        }
+
+        .status-badge {
+            font-size: 1rem;
+            padding: 0.6em 1.2em;
+            border-radius: 8px;
+        }
+
+        .cancel-btn {
+            transition: all 0.3s ease;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <!-- Order Header -->
+        <div class="order-header d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3 mb-2 fw-semibold">Order #<%= order._id %></h1>
+                <p class="text-muted mb-0">
+                    Placed on <%= order.createdAt.toLocaleDateString('en-US', { 
+                        year: 'numeric', month: 'long', day: 'numeric' 
+                    }) %>
+                </p>
+            </div>
+            <% if (order.status !== 'cancelled' && order.status !== 'delivered') { %>
+                <button class="btn btn-danger cancel-btn" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                    Cancel Order
+                </button>
+            <% } %>
+        </div>
+
+        <!-- Status Timeline -->
+        <div class="status-timeline">
+            <% const statuses = ['ordered', 'confirmed', 'shipped', 'delivered'];
+               const currentStatusIndex = statuses.indexOf(order.status);
+               const progressWidth = (currentStatusIndex / (statuses.length - 1)) * 100;
+            %>
+            <div class="progress-line" style="width: <%= progressWidth %>%"></div>
+            
+            <% statuses.forEach((status, index) => { %>
+                <div class="status-step <%= 
+                    index <= currentStatusIndex ? 'completed' : 
+                    index === currentStatusIndex + 1 ? 'active' : '' 
+                %>">
+                    <div class="circle">
+                        <% if (index <= currentStatusIndex) { %>
+                            <i class="fas fa-check"></i>
+                        <% } %>
+                    </div>
+                    <span class="text-capitalize fw-medium"><%= status %></span>
+                </div>
+            <% }) %>
+        </div>
+
+        <!-- Product Details -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="mb-4">
+                    <img src="<%= product.image0 %>" alt="Product image" class="product-img-main w-100">
+                    <div class="d-flex gap-3 mt-4">
+                        <% [product.image0, product.image1, product.image2].forEach(img => { %>
+                            <% if (img) { %>
+                                <img src="<%= img %>" alt="Thumbnail" 
+                                     class="thumbnail-img <%= img === product.image0 ? 'active' : '' %>">
+                            <% } %>
+                        <% }) %>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="detail-card card h-100">
+                    <div class="card-body">
+                        <h2 class="h4 mb-3 fw-semibold"><%= product.name %></h2>
+                        <div class="row mb-4">
+                            <div class="col-6">
+                                <p class="mb-1 text-muted">Category</p>
+                                <p class="mb-0 fw-medium"><%= product.category %></p>
+                            </div>
+                            <div class="col-6">
+                                <p class="mb-1 text-muted">Quantity</p>
+                                <p class="mb-0 fw-medium"><%= order.quantity %></p>
+                            </div>
+                        </div>
+                        
+                        <h3 class="h5 mb-3">Product Description</h3>
+                        <p class="text-muted"><%= product.descr %></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="detail-card card">
+                    <div class="card-body">
+                        <h3 class="h5 card-title mb-4 fw-semibold">Payment & Shipping</h3>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1 text-muted">Payment Method</p>
+                                <p class="mb-4 fw-medium"><%= order.paymentMethod %></p>
+                                
+                                <p class="mb-1 text-muted">Shipping Address</p>
+                                <address class="mb-0 fw-medium">
+                                    123 Main St<br>
+                                    New York, NY 10001<br>
+                                    United States
+                                </address>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="order-summary-card card">
+                    <div class="card-body">
+                        <h3 class="h5 card-title mb-4 fw-semibold">Order Summary</h3>
+                        <table class="table table-borderless">
+                            <tbody>
+                                <tr>
+                                    <td>Subtotal</td>
+                                    <td class="text-end fw-medium">$<%= order.subtotal.toFixed(2) %></td>
+                                </tr>
+                                <tr>
+                                    <td>Shipping</td>
+                                    <td class="text-end fw-medium">$<%= order.delivery.toFixed(2) %></td>
+                                </tr>
+                                <tr>
+                                    <td>Discount</td>
+                                    <td class="text-end text-danger fw-medium">-$<%= order.discount.toFixed(2) %></td>
+                                </tr>
+                                <tr class="border-top">
+                                    <td class="pt-3 fw-semibold">Total</td>
+                                    <td class="text-end pt-3 fw-semibold">$<%= order.total.toFixed(2) %></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel Order Modal -->
+    <div class="modal fade" id="cancelModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Order Cancellation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to cancel this order? This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <form action="/orders/<%= order._id %>/cancel" method="POST">
+                        <button type="submit" class="btn btn-danger">Confirm Cancellation</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://kit.fontawesome.com/your-fontawesome-kit.js"></script>
+    <script>
+        // Thumbnail interaction
+        document.querySelectorAll('.thumbnail-img').forEach(thumb => {
+            thumb.addEventListener('click', () => {
+                document.querySelector('.product-img-main').src = thumb.src;
+                document.querySelectorAll('.thumbnail-img').forEach(t => t.classList.remove('active'));
+                thumb.classList.add('active');
+            });
+        });
+
+        // Animate status timeline on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const progressLine = document.querySelector('.progress-line');
+            progressLine.style.transition = 'width 1s ease-out';
+        });
+    </script>
+</body>
+</html>

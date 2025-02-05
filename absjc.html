@@ -1,93 +1,380 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magnifying Glass Effect</title>
+    <title>LuxeCommerce Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-      .image {
-  max-width: 300px;
-  margin: 25px;
-}
+        :root {
+            --primary: #FFD700;
+            --secondary: #2c2c2c;
+            --light: #FFFFFF;
+            --dark: #111111;
+            --shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
 
-.image img {
-  max-width: 100%;
-}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
 
-.loupe {
-  display: none;
-  position: absolute;
-  width: 200px;
-  height: 200px;
-  border: 1px solid black;
-  box-shadow: 5px 5px 12px black;
-  background: rgba(0, 0, 0, 0.25);
-  cursor: crosshair;
-  overflow: hidden;
-}
+        body {
+           
+            background: var(--light);
+            color: var(--secondary);
+            font-size: 18px;
+            line-height: 1.6;
+        }
 
-.loupe img {
-  position: absolute;
-  right: 0;
-}
+        .profile-container {
+            max-width: 1400px;
+            margin: 3rem auto;
+            padding: 2rem;
+        }
 
+        /* Navigation */
+        .profile-nav {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-item {
+            width: 150px;
+            height: 150px;
+            background: var(--light);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: linear-gradient(135deg, var(--primary) 0%, #ffea00 100%);
+            transform: translateY(-5px);
+        }
+
+        .nav-item i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Content Sections */
+        .profile-content {
+            background: var(--light);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: var(--shadow);
+            min-height: 60vh;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section.active { display: block; }
+
+        .section-header {
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
+
+        .section-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        /* Cards */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .user-card, .address-card, .order-card {
+            background: var(--light);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+        }
+
+        .user-card:hover, .address-card:hover, .order-card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* User Card */
+        .user-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1.5rem;
+        }
+
+        .user-avatar i { font-size: 2.5rem; }
+
+        /* Address Card */
+        .address-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .address-actions {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Orders */
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .order-status {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .order-status.delivered { background: #e8f5e9; color: #2e7d32; }
+        .order-status.processing { background: #fff3e0; color: #ef6c00; }
+        .order-status.shipped { background: #e3f2fd; color: #1565c0; }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        /* Buttons */
+        .btn-edit {
+            background: var(--primary);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-edit:hover {
+            background: #FFC400;
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 768px) {
+            .profile-nav { gap: 1rem; }
+            .nav-item { width: 120px; height: 120px; }
+            .profile-content { padding: 1.5rem; }
+        }
     </style>
 </head>
 <body>
-  <div class="container">
-    <div class="image">
-        <img src="https://images.pexels.com/photos/674010/pexels-photo-674010.jpeg?cs=srgb&dl=pexels-anjana-c-169994-674010.jpg&fm=jpg" alt="Sample Image">
+    <div class="profile-container">
+        <nav class="profile-nav">
+            <div class="nav-item active" data-section="dashboard">
+                <i class="fas fa-user"></i> Dashboard
+            </div>
+            <div class="nav-item" data-section="orders">
+                <i class="fas fa-box"></i> Orders
+            </div>
+            <div class="nav-item" data-section="address">
+                <i class="fas fa-map-marker-alt"></i> Addresses
+            </div>
+        </nav>
 
-        </div>
+        <main class="profile-content">
+            <!-- Dashboard Section -->
+            <div class="section active" id="dashboard">
+                <h2 class="section-header">Dashboard</h2>
+                <div class="dashboard-grid">
+                    <div class="user-card">
+                        <div class="user-header">
+                            <div class="user-avatar"><i class="fas fa-user"></i></div>
+                            <div>
+                                <h2>John Doe</h2>
+                                <p>john@luxecommerce.com</p>
+                            </div>
+                        </div>
+                        <button class="btn-edit" onclick="showModal('userModal')">
+                            <i class="fas fa-edit"></i> Edit Profile
+                        </button>
+                    </div>
+                    <div class="address-card">
+                        <h3>Primary Address</h3>
+                        <p>123 Luxury Avenue<br>New York, NY 10001</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Section -->
+            <div class="section" id="orders">
+                <h2 class="section-header">Order History</h2>
+                <div class="orders-grid">
+                    <div class="order-card">
+                        <div class="order-header">
+                            <div>
+                                <div>#LX-4892</div>
+                                <div>15 March 2024</div>
+                            </div>
+                            <span class="order-status delivered">Delivered</span>
+                        </div>
+                        <button class="btn-edit">View Details</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address Section -->
+            <div class="section" id="address">
+                <h2 class="section-header">Saved Addresses</h2>
+                <div class="address-grid"></div>
+                <button class="btn-edit" onclick="showModal('addressModal')">
+                    <i class="fas fa-plus"></i> Add New Address
+                </button>
+            </div>
+
+            <!-- Modals -->
+            <div id="userModal" class="modal">
+                <div class="modal-content">
+                    <span class="modal-close" onclick="closeModal()">&times;</span>
+                    <h2>Edit Profile</h2>
+                    <form onsubmit="saveUserDetails(event)">
+                        <input type="text" class="form-input" value="John Doe" required>
+                        <button type="submit" class="btn-edit">Save Changes</button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="addressModal" class="modal">
+                <div class="modal-content">
+                    <span class="modal-close" onclick="closeModal()">&times;</span>
+                    <h2>Add Address</h2>
+                    <form onsubmit="saveAddress(event)">
+                        <input type="text" class="form-input" placeholder="Street Address" required>
+                        <button type="submit" class="btn-edit">Save Address</button>
+                    </form>
+                </div>
+            </div>
+        </main>
     </div>
-    <div class="loupe"></div>
-   <script>
-    var $loupe = $(".loupe"),
-    loupeWidth = $loupe.width(),
-    loupeHeight = $loupe.height();
 
-$(document).on("mouseenter", ".image", function (e) {
-    var $currImage = $(this),
-        $img = $('<img/>')
-        .attr('src', $('img', this).attr("src"))
-        .css({ 'width': $currImage.width() * 2, 'height': $currImage.height() * 2 });
-
-    $loupe.html($img).fadeIn(100);
-    
-    $(document).on("mousemove",moveHandler);
-                   
-    function moveHandler(e) {
-        var imageOffset = $currImage.offset(),
-            fx = imageOffset.left - loupeWidth / 2,
-            fy = imageOffset.top - loupeHeight / 2,
-            fh = imageOffset.top + $currImage.height() + loupeHeight / 2,
-            fw = imageOffset.left + $currImage.width() + loupeWidth / 2;
-        
-        $loupe.css({
-            'left': e.pageX - 75,
-            'top': e.pageY - 75
+    <script>
+        // Navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.nav-item, .section').forEach(el => {
+                    el.classList.remove('active');
+                });
+                this.classList.add('active');
+                document.getElementById(this.dataset.section).classList.add('active');
+            });
         });
 
-        var loupeOffset = $loupe.offset(),
-            lx = loupeOffset.left,
-            ly = loupeOffset.top,
-            lw = lx + loupeWidth,
-            lh = ly + loupeHeight,
-            bigy = (ly - loupeHeight / 4 - fy) * 2,
-            bigx = (lx - loupeWidth / 4 - fx) * 2;
-
-        $img.css({ 'left': -bigx, 'top': -bigy });
-
-        if (lx < fx || lh > fh || ly < fy || lw > fw) {
-            $img.remove();
-            $(document).off("mousemove",moveHandler);
-            $loupe.fadeOut(100);
+        // Modal Handling
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
         }
-    }
-});
 
-   </script>
+        function closeModal() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.style.display = 'none';
+            });
+        }
+
+        // User Details
+        function saveUserDetails(e) {
+            e.preventDefault();
+            closeModal();
+            alert('Profile updated successfully!');
+        }
+
+        // Address Management
+        let addresses = [];
+        
+        function saveAddress(e) {
+            e.preventDefault();
+            addresses.push({
+                id: Date.now(),
+                street: document.querySelector('#addressModal input').value
+            });
+            renderAddresses();
+            closeModal();
+        }
+
+        function renderAddresses() {
+            const grid = document.querySelector('.address-grid');
+            grid.innerHTML = addresses.map(address => `
+                <div class="address-card">
+                    <p>${address.street}</p>
+                </div>
+            `).join('');
+        }
+
+        // Initial render
+        renderAddresses();
+    </script>
 </body>
 </html>

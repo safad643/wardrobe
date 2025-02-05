@@ -1,12 +1,18 @@
 <div class="card">
   <div class="card-body">
-    <form class="forms-sample" onsubmit="catogoryupdate(event)">
+    <form class="forms-sample" onsubmit="return catogoryupdate(event)">
       <div class="form-group">
         <input id="ogname" type="hidden" name="ogname" />
         <label for="exampleInputName1">Name</label>
-        <input name="name" type="text" class="form-control" id="updatename" placeholder="Name" required>
+        <input name="name" type="text" class="form-control" id="updatename" placeholder="Name" >
+        <small id="nameError" class="text-danger" style="display: none;">Name is required</small>
       </div>
-     
+      <div class="form-group">
+        <label for="exampleInputName1">Description</label>
+        <textarea class="form-control" id="descr" rows="3"></textarea>
+        <small id="descError" class="text-danger" style="display: none;">Description is required</small>
+      </div>
+      
       <button type="submit" class="btn btn-primary mr-2">Submit</button>
     </form>
   </div>

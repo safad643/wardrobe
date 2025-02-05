@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Banned</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Roboto:wght@300;500&display=swap');
+
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(-45deg, #2a2a2a, #0a0a0a, #1a1a1a);
+            overflow: hidden;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .glow-container {
+            position: relative;
+            padding: 5px;
+            border-radius: 15px;
+            background: linear-gradient(45deg, #ff0000, #ff4444, #ff0000);
+            animation: gradientShift 3s ease infinite;
+            box-shadow: 0 0 50px rgba(255, 0, 0, 0.3);
+        }
+
+        .banned-container {
+            position: relative;
+            background: #111;
+            padding: 40px 60px;
+            border-radius: 12px;
+            text-align: center;
+            color: white;
+            animation: containerFloat 3s ease-in-out infinite;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3em;
+            margin: 0 0 20px 0;
+            color: #ff4444;
+            text-shadow: 0 0 15px rgba(255, 68, 68, 0.5);
+            animation: shake 0.5s ease infinite;
+        }
+
+        p {
+            font-size: 1.2em;
+            margin: 15px 0;
+            opacity: 0;
+            animation: fadeIn 1s ease forwards;
+            animation-delay: 0.5s;
+        }
+
+        .redirect-message {
+            font-size: 1.3em;
+            margin-top: 30px;
+            color: #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        #countdown {
+            font-size: 1.5em;
+            color: #00ffff;
+            animation: pulse 1s ease infinite;
+        }
+
+        .particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 68, 68, 0.5);
+            border-radius: 50%;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.1); }
+        }
+
+        @keyframes containerFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .contact-link {
+            color: #00ffff;
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .contact-link:hover {
+            border-bottom: 1px solid #00ffff;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .banned-icon {
+            font-size: 4em;
+            margin: 20px 0;
+            display: block;
+            animation: iconScale 1.5s ease infinite;
+        }
+
+        @keyframes iconScale {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    
+    <div class="glow-container">
+        <div class="banned-container">
+            <div class="banned-icon">🚫</div>
+            <h1>ACCOUNT SUSPENDED</h1>
+            <p>Your account has been permanently banned due to severe violations of our terms of service.</p>
+            <p>All associated data has been erased from our systems.</p>
+            <p>For appeal consideration, contact <a href="mailto:support@example.com" class="contact-link">support@example.com</a></p>
+            <p class="redirect-message">Redirecting in <span id="countdown">5</span> seconds</p>
+        </div>
+    </div>
+
+    <script>
+        // Particle animation
+        function createParticles() {
+            const particles = document.getElementById('particles');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.width = particle.style.height = Math.random() * 5 + 2 + 'px';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animation = `
+                    particleMove ${Math.random() * 5 + 3}s linear infinite
+                `;
+                particles.appendChild(particle);
+            }
+        }
+
+        // Countdown timer
+        let seconds = 5;
+        const countdownElement = document.getElementById('countdown');
+        
+        const updateCountdown = () => {
+            seconds--;
+            countdownElement.textContent = seconds;
+            if (seconds <= 0) {
+                clearInterval(countdownInterval);
+                window.location.href = '/login';
+            }
+        };
+
+        // Initialize
+        createParticles();
+        const countdownInterval = setInterval(updateCountdown, 1000);
+        setTimeout(() => {
+            window.location.href = '/login';
+        }, 5000);
+
+        // Add particle movement animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes particleMove {
+                from {
+                    transform: translate(0, 0) rotate(0deg);
+                    opacity: 1;
+                }
+                to {
+                    transform: translate(${Math.random() * 200 - 100}vw, ${Math.random() * 200 - 100}vh) rotate(360deg);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

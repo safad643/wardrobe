@@ -33,7 +33,7 @@ const checkBan=async(req,res,next)=>{
   const email=req.session.email ||req.body.email
   const ban =await db.collection('users').find({email}).project({ list: 1 }).toArray()
   if(ban[0]?.list){
-    res.send('you bannedd ')
+    res.render('user/ban')
   }else{
     next()
   }

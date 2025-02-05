@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const passport = require('passport');
 const bcrypt = require('bcrypt');
+const { ObjectId } = require('mongodb');
 
 const loadlogin = (req, res) => {
   try {
@@ -16,10 +17,10 @@ const loadlogin = (req, res) => {
 const register = async (req, res) => {
   try {
     const db = await mongo();
-    console.log(req.body.email);
+   
 
     const user = await db.collection('users').find({ email: req.body.email }).toArray();
-    console.log(user);
+    
 
     if (!user[0]) {
       const data = {
@@ -29,7 +30,7 @@ const register = async (req, res) => {
         otp: generateOTP(),
         otpCreatedAt: Date.now(), // Store the current timestamp
       };
-      console.log(data.password);
+     
 
       console.log(data.otp);
 
@@ -71,11 +72,25 @@ const otpverify = async (req, res) => {
     }
     if (data.otp === otp) {
       delete data.otp;
-      const db = await mongo();
+     
+      
+      if(req.session.forgot){
+        req.session.authtochangepassword=true
+        res.render('user/passwordreset')
+      }
+      else{
+        const db = await mongo();
       data.createdAt = new Date().toDateString();
-      db.collection('users').insertOne(data);
+      const doc= db.collection('users').insertOne(data)
+      .then(data=>{req.session.uid=data.insertedId
+        req.session.save(); 
+      })
+      
+      console.log(req.session.uid);
+      
       req.session.user = true;
-      res.redirect('home');
+      res.redirect('home')
+      }
     } else {
       res.render('user/otp', { error: 'wrong otp' });
     }
@@ -104,9 +119,19 @@ const login = async (req, res) => {
     const { password, email } = req.body;
     const db = await mongo();
     const users = await db.collection('users').find({ email }).toArray();
-    const match = await bcrypt.compare(password, users[0]?.password);
+
+    
+    const match = await bcrypt.compare(password, users[0]?.password || "");
     if (users[0]?.email === email && match) {
-      req.session.email = email;
+      req.session.data = {email}
+      console.log(users[0]._id);
+      
+      req.session.uid=users[0]._id 
+  
+
+  
+  
+      
       req.session.user = true;
       res.redirect('home');
     } else {
@@ -133,7 +158,8 @@ const loadhome = async (req, res) => {
       const db = await mongo();
       const categories = await db.collection('catogories').find({}).toArray();
       const products = await db.collection('products').find({ list: true }).toArray();
-      res.render('user/index', { categories, products });
+      const user=await db.collection('users').find({email:req.session.data.email})
+      res.render('user/index', { categories, products ,user});
     } else {
       // Change after user-related stuff is added in home page
       const db = await mongo();
@@ -162,7 +188,7 @@ const loadshop = async (req, res) => {
     const db = await mongo();
     const categories = await db.collection('catogories').find({}).toArray();
     const products = await db.collection('products').find({ list: true }).toArray();
-    res.render('user/catogory', { categories, products });
+    res.render('user/catogory', { categories, products ,user:true});
   } catch (error) {
     console.error('Error in loadshop:', error);
     res.status(500).send('Internal Server Error');
@@ -174,12 +200,14 @@ const loadproductview = async (req, res) => {
     const { name } = req.params;
     const db = await mongo();
     const categories = await db.collection('catogories').find({}).toArray();
-    console.log(name);
+  
+    
 
     const product = await db.collection('products').find({ name }).toArray();
 
-    console.log(product);
-    res.render('user/productview', { categories, product: product[0] });
+    
+ 
+    res.render('user/productview', { categories, product: product[0] ,userid:req.session.uid,user:true});
   } catch (error) {
     console.error('Error in loadproductview:', error);
     res.status(500).send('Internal Server Error');
@@ -193,14 +221,431 @@ const loadcategory = async (req, res) => {
     const categories = await db.collection('catogories').find({}).toArray();
     const products = await db.collection('products').find({ category: name, list: true }).toArray();
 
-    res.render('user/catogory', { categories, products });
+    res.render('user/catogory', { categories, products,user:true });
   } catch (error) {
     console.error('Error in loadcategory:', error);
     res.status(500).send('Internal Server Error');
   }
+}
+
+const forgot= async(req,res)=>{
+  const {email}=req.params
+  const db= await mongo()
+  if(!await db.collection('users').findOne({email})){
+     return res.render('user/login',{error:"email doesnt exist"}) 
+  }
+  req.session.data={otp:generateOTP(),otpCreatedAt:new Date()}
+  
+  sendotp(req.session.data.otp  ,email)
+  req.session.data.otpCreatedAt=Date.now()  
+  req.session.forgot=true
+  req.session.data.email=email
+  console.log(req.session.data.otp)
+  res.render('user/otp',{error:""})
+}
+
+const resetpassword= async(req,res)=>{
+  try{
+    if(req.session.authtochangepassword){
+      const hashedpass= await bcrypt.hash(req.body.password,10)
+      const db=await mongo()
+      
+    
+      
+      
+      await db.collection('users').updateOne({email:req.session.data.email},{$set:{password:hashedpass}})
+      res.redirect('/user/login')
+    }
+    else{
+      res.redirect('/user/login')
+    }
+  }
+  catch(er){
+    console.log(er);
+    
+  }
+}
+
+const profileload = async (req, res) => {
+  try {
+    const db = await mongo();
+    const user = await db.collection('users').findOne({ _id: new ObjectId(req.session.uid)});
+    
+    const addresses = await db.collection('adress')
+      .find({ userId: req.session.uid })
+      .toArray();
+
+    // Fetch orders for the current user
+    const orders = await db.collection('orders')
+      .find({ userId: req.session.uid })
+      .sort({ createdAt: -1 }) // Sort by newest first
+      .toArray();
+
+    res.render('user/profile', { 
+      user: user,
+      addresses: addresses,
+      orders: orders // Pass orders to the view
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Server Error');
+  }
+}
+const changename=async(req,res)=>{
+  try{
+    const {name,email}= req.body
+    const db=await mongo()
+    await db.collection('users').updateOne({email},{$set:{name}})
+    res.redirect('/user/profile')
+  }catch(err){
+    console.log(err);
+    
+  }
+  
+}
+
+
+
+
+const addtocart = async (req, res) => {
+  try {
+    const { productid, qty } = req.body;
+    const userid = req.session.uid;
+    const db = await mongo();
+
+    // Check if product already exists in cart
+    const existingProduct = await db.collection('cart').findOne({
+      userid: userid,
+      "products.productid": productid
+    });
+
+    if (existingProduct) {
+      return res.status(400).json({ message: "product already exist" });
+    }
+
+    // If product doesn't exist, add it
+    const result = await db.collection('cart').updateOne(
+      { userid: userid },
+      {
+        $push: { products: { productid: productid, quantity: qty || 1 } },
+        $setOnInsert: { userid: userid }
+      },
+      { upsert: true }
+    );
+
+    res.status(200).json({ message: "product added to cart" });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Error updating cart" });
+  }
 };
 
+const laodcart= async(req,res)=>{
+  
+  const db=await mongo()
+  const products =await db.collection('products').aggregate([
+    {
+      $lookup: {
+        from: "cart", // Join with the cart collection
+        let: { productId: "$_id" }, // Store product's _id as a variable
+        pipeline: [
+          { 
+            $match: { 
+              userid: req.session.uid // Use session user ID dynamically
+            } 
+          },
+          { $unwind: "$products" }, // Split the products array into individual documents
+          { 
+            $match: { 
+              $expr: { 
+                $eq: [ 
+                  "$$productId", 
+                  { $toObjectId: "$products.productid" } 
+                ] 
+              } 
+            } 
+          },
+          { 
+            $project: { 
+              quantity: "$products.quantity", // Keep only the quantity
+              _id: 0 
+            } 
+          }
+        ],
+        as: "cartDetails" // Store matching cart info in this array
+      }
+    },
+    {
+      $addFields: {
+        quantity: { $arrayElemAt: [ "$cartDetails.quantity", 0 ] }
+      }
+    },
+    { 
+      $match: { 
+        "cartDetails.0": { $exists: true } 
+      } 
+    },
+    { 
+      $project: { 
+        cartDetails: 0 
+      } 
+    }
+  ]).toArray()
+  
+  const orders = await db.collection('orders').find({ userId: req.session.uid }).toArray();
+  
+  res.render('user/cart',{products,userid:req.session.uid,orders,user:true})
+}
+
+const removeFromCart = async (req, res) => {
+  try {
+      const productId = req.params.productid;
+      const userId = req.session.uid; // Adjust based on your auth setup
+
+      const db = await mongo();
+      
+      // Remove the product from the user's cart
+      const result = await db.collection('cart').updateOne(
+          { userid: userId },
+          { $pull: { products: { productid: productId } } }
+      ) 
+      res.redirect('/user/cart');
+  } catch (err) {
+      console.error(err);
+      req.flash('error', 'Failed to remove product from cart');
+      res.redirect('/cart');
+  }
+};
+
+const updatecart = async (req, res) => {
+  try {
+      const { productid, userid, quantity } = req.body;
+      const db = await mongo();
+
+      const result = await db.collection('cart').updateOne(
+          { userid, "products.productid": productid },
+          { $set: { "products.$.quantity": quantity } }
+      );
+
+      if (result.modifiedCount === 0) return res.status(404).json({ message: "Product not found" });
+      res.status(200).json({ message: "Quantity updated" });
+  } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Error updating quantity" });
+  }
+}
+
+const addadress = async (req, res) => {
+  try {
+    const db = await mongo();
+    const { street, city, state, country, postalCode, phone } = req.body;
+
+    const newAddress = {
+        userId: req.session.uid,
+        street,
+        city,
+        state,
+        country,
+        postalCode,
+        phone: parseInt(phone, 10)
+    };
+
+    await db.collection('adress').insertOne(newAddress);
+    
+    res.json({ 
+      status: 'success',
+      address: newAddress
+  })
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ 
+        success: false,
+        error: "Internal Server Error" 
+    });
+  } 
+}
+
+const  placeOrder = async (req, res) => {
+  try {
+  
+    
+    const db = await mongo();
+    const {
+      addressId,
+      paymentMethod,
+      products,
+      totals
+    } = req.body;
+
+    // Validate required fields
+    if (!addressId || !paymentMethod || !products?.length) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required fields"
+      });
+    }
+
+    // Calculate per-product costs
+    const productCount = products.length;
+    const deliveryPerProduct = totals.delivery / productCount;
+    const discountPerProduct = totals.discount / productCount;
+
+    // Create array of order documents
+    const orders = products.map(product => ({
+      userId: req.session.uid, // Match your address pattern
+      productId: product.productId,
+      quantity: product.quantity,
+      price: product.price,
+      addressId: addressId,
+      paymentMethod: paymentMethod,
+      status: "pending",
+      subtotal: product.price * product.quantity,
+      delivery: deliveryPerProduct,
+      discount: discountPerProduct,
+      total: (product.price * product.quantity) + deliveryPerProduct - discountPerProduct,
+      createdAt: new Date()
+    }));
+
+    // Insert all orders
+    const result = await db.collection('orders').insertMany(orders);
+   
+    
+    // Convert object of IDs to array
+    const orderIds = Object.values(result.insertedIds).map(id => id.toString());
+
+    res.render('user/checkoutsuccess')
+
+  } catch (error) {
+    console.error("Order placement error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to place order. Please try again."
+    });
+  }
+};
+
+const loadcheckout = async (req, res) => {
+  try {
+    const db = await mongo();
+    
+    
+    const productQuantities = req.body || {};
+    const productIds = Object.keys(productQuantities);
+
+    // Get products and addresses
+    const [products, addresses] = await Promise.all([
+      db.collection('products').find({
+        _id: { $in: productIds.map(id => new ObjectId(id)) }
+      }).toArray(),
+      db.collection('adress').find({}).toArray()
+    ]);
+
+    // Calculate prices
+    const subtotal = products.reduce((total, product) => {
+      const quantity = productQuantities[product._id.toString()] || 0;
+      return total + (product.price * quantity);
+    }, 0);
+    
+    const total = subtotal + 49 - 500; // Delivery: 49, Discount: 500
+
+    res.render('user/checkout', {
+      addresses,
+      products: products.map(product => ({
+        ...product,
+        quantity: productQuantities[product._id.toString()] || 0
+      })),
+      subtotal,
+      deliveryFee: 49,
+      discount: 100,
+      total
+    });
+    
+  } catch (error) {
+    console.log(error);
+    res.status(500).send('Checkout error');
+  }
+};
+
+const loadorderview=async(req,res)=>{
+  const orderid = req.params.orderid;  
+  
+  
+  const db = await mongo();
+  const order = await db.collection("orders").findOne({_id: new ObjectId(orderid)})
+  const product = await db.collection("products").findOne({ 
+    _id: new ObjectId(order.productId) 
+  });
+  res.render("user/orderviewpage", { order,product })
+}
+
+const deleteAddress = async (req, res) => {
+  try {
+      const db = await mongo();
+      const addressId = req.params.id;
+
+      const result = await db.collection('adress').deleteOne({ _id: new ObjectId(addressId) });
+
+      if (result.deletedCount === 1) {
+          res.json({ status: 'success', message: 'Address deleted successfully' });
+      } else {
+          res.status(404).json({ success: false, error: 'Address not found' });
+      }
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ success: false, error: 'Internal Server Error' });
+  }
+};
+
+
+const updateAddress = async (req, res) => {
+  try {
+    const db = await mongo();
+    const { addressId, street, city, state, country, postalCode, phone } = req.body;
+
+    const result = await db.collection("adress").updateOne(
+      { _id: new ObjectId(addressId) },
+      {
+        $set: {
+          street,
+          city,
+          state,
+          country,
+          postalCode,
+          phone: parseInt(phone, 10),
+        },
+      }
+    );
+
+  
+    if (result.modifiedCount === 0) {
+      return res.status(404).json({ success: false, error: "Address not found or no changes made." });
+    }
+
+    res.json({ success: true, message: "Address updated successfully." });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+};
+
+
 module.exports = {
+  updateAddress,
+  deleteAddress,
+  loadorderview,
+  placeOrder,
+  loadcheckout,
+  addadress,
+  removeFromCart,
+  updatecart,
+  laodcart,
+  addtocart,
+  changename,
+  profileload,
+  resetpassword,
+  forgot,
   loadcategory,
   loadproductview,
   loadshop,

@@ -1,8 +1,4 @@
-<!doctype html>
-<html class="no-js" lang="en">
-	
-<!-- Mirrored from template.hasthemes.com/hurst-v1/hurst/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Wed, 15 Jan 2025 07:05:43 GMT -->
-<head>
+<%- include("../../views/partials/user/header") %>
 	<style>
 		body {
     overflow-x: hidden;
@@ -203,309 +199,19 @@
 .pagetile{
 	cursor: pointer;
 }
+.sort-filter {
+    margin-bottom: 15px;
+}
 
+.sort-select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: white;
+}
 	</style>
-		<meta charset="utf-8">
-		<meta http-equiv="x-ua-compatible" content="ie=edge">
-		<title>Home one || Hurst</title>
-		<meta name="description" content="Hurst – Furniture Store eCommerce HTML Template is a clean and elegant design – suitable for selling flower, cookery, accessories, fashion, high fashion, accessories, digital, kids, watches, jewelries, shoes, kids, furniture, sports….. It has a fully responsive width adjusts automatically to any screen size or resolution.">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-
-		<link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
-		<!-- Place favicon.ico in the root directory -->
-
-		<!-- Google Font -->
-		<link href='https://fonts.googleapis.com/css?family=Lato:400,700,900' rel='stylesheet' type='text/css'>
-		<link href='https://fonts.googleapis.com/css?family=Bree+Serif' rel='stylesheet' type='text/css'>
-
-	<!-- all css here -->
-<!-- bootstrap v3.3.6 css -->
-<link rel="stylesheet" href="/user/css/bootstrap.min.css">
-<!-- animate css -->
-<link rel="stylesheet" href="/user/css/animate.min.css">
-<!-- jquery-ui.min css -->
-<link rel="stylesheet" href="/user/css/jquery-ui.min.css">
-<!-- meanmenu css -->
-<link rel="stylesheet" href="/user/css/meanmenu.min.css">
-<!-- nivo-slider css -->
-<link rel="stylesheet" href="/user/lib/css/nivo-slider.css">
-<link rel="stylesheet" href="/user/lib/css/preview.css">
-<!-- slick css -->
-<link rel="stylesheet" href="/user/css/slick.min.css">
-<!-- lightbox css -->
-<link rel="stylesheet" href="/user/css/lightbox.min.css">
-<!-- material-design-iconic-font css -->
-<link rel="stylesheet" href="/user/css/material-design-iconic-font.css">
-<!-- All common css of theme -->
-<link rel="stylesheet" href="/user/css/default.css">
-<!-- style css -->
-<link rel="stylesheet" href="/user/style.min.css">
-<!-- shortcode css -->
-<link rel="stylesheet" href="/user/css/shortcode.css">
-<!-- responsive css -->
-<link rel="stylesheet" href="/user/css/responsive.css">
-<!-- modernizr css -->
-<script src="/user/js/vendor/modernizr-3.11.2.min.js"></script>
-
-	</head>
-	<body>
-		<!-- WRAPPER START -->
-		<div class="wrapper">
-
-			<!-- Mobile-header-top Start -->
-			<div class="mobile-header-top d-block d-md-none">
-				<div class="container">
-					<div class="row">
-						<div class="col-12">
-							<!-- header-search-mobile start -->
-							<div class="header-search-mobile">
-								<div class="table">
-									<div class="table-cell">
-										<ul>
-											<li><a class="search-open" href="#"><i class="zmdi zmdi-search"></i></a></li>
-											<li><a href="login.html"><i class="zmdi zmdi-lock"></i></a></li>
-											<li><a href="my-account.html"><i class="zmdi zmdi-account"></i></a></li>
-											<li><a href="wishlist.html"><i class="zmdi zmdi-favorite"></i></a></li>
-										</ul>
-									</div>
-								</div>
-							</div>
-							<!-- header-search-mobile start -->
-						</div>
-					</div>
-				</div>
-			</div>
-			<!-- Mobile-header-top End -->
-			<!-- HEADER-AREA START -->
-			<header id="sticky-menu" class="header">
-				<div class="header-area">
-					<div class="container-fluid">
-						<div class="row">
-							<div class="col-md-4 offset-md-4 col-7">
-								<div class="logo text-md-center">
-									<a href="/user/home"><img src="img/logo/logo.png" alt="" /></a>
-								</div>
-							</div>
-							<div class="col-md-4 col-5">
-								<div class="mini-cart text-end">
-									<ul>
-										<li>
-											<a class="cart-icon" href="/akmskfdmak">
-												<i class="zmdi zmdi-shopping-cart"></i>
-												<span>3</span>
-											</a>
-											<div class="mini-cart-brief text-left">
-												<div class="cart-items">
-													<p class="mb-0">You have <span>03 items</span> in your shopping bag</p>
-												</div>
-												<div class="all-cart-product clearfix">
-													<div class="single-cart clearfix">
-														<div class="cart-photo">
-															<a href="#"><img src="img/cart/1.jpg" alt="" /></a>
-														</div>
-														<div class="cart-info">
-															<h5><a href="#">dummy product name</a></h5>
-															<p class="mb-0">Price : $ 100.00</p>
-															<p class="mb-0">Qty : 02 </p>
-															<span class="cart-delete"><a href="#"><i class="zmdi zmdi-close"></i></a></span>
-														</div>
-													</div>
-													<div class="single-cart clearfix">
-														<div class="cart-photo">
-															<a href="#"><img src="img/cart/2.jpg" alt="" /></a>
-														</div>
-														<div class="cart-info">
-															<h5><a href="#">dummy product name</a></h5>
-															<p class="mb-0">Price : $ 300.00</p>
-															<p class="mb-0">Qty : 01 </p>
-															<span class="cart-delete"><a href="#"><i class="zmdi zmdi-close"></i></a></span>
-														</div>
-													</div>
-												</div>
-												<div class="cart-totals">
-													<h5 class="mb-0">Total <span class="floatright">$500.00</span></h5>
-												</div>
-												<div class="cart-bottom  clearfix">
-													<a href="cart.html" class="button-one floatleft text-uppercase" data-text="View cart">View cart</a>
-													<a href="checkout.html" class="button-one floatright text-uppercase" data-text="Check out">Check out</a>
-												</div>
-											</div>
-										</li>
-									</ul>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-				<!-- MAIN-MENU START -->
-				<div class="menu-toggle hamburger hamburger--emphatic d-none d-md-block">
-					<div class="hamburger-box">
-						<div class="hamburger-inner"></div>
-					</div>
-				</div>
-				<div class="main-menu  d-none d-md-block">
-					<nav>
-						<ul>
-							<li><a href="index.html">home</a>
-								<div class="sub-menu menu-scroll">
-									<ul>
-										<li class="menu-title">Page's</li>
-										<li><a href="index.html">Home Version 1</a></li>
-										<li><a href="index-2.html">Home Version 2</a></li>
-									</ul>
-								</div>
-							</li>
-							<li><a href="shop.html">products</a>
-								<div class="mega-menu menu-scroll">
-									<div class="table">
-										<div class="table-cell">
-											<div class="half-width">
-												<ul>
-													<li class="menu-title">best brands</li>
-													<li><a href="#">henning koppel</a></li>
-													<li><a href="#">jehs + Laub</a></li>
-													<li><a href="#">vicke lindstrand</a></li>
-													<li><a href="#">don chadwick</a></li>
-													<li><a href="#">akiko kuwahata</a></li>
-													<li><a href="#">barbro berlin</a></li>
-													<li><a href="#">cecilia hall</a></li>
-													<li><a href="#">don chadwick</a></li>
-												</ul>
-											</div>
-											<div class="half-width">
-												<ul>
-													<li class="menu-title">popular brands</li>
-													<li><a href="#">akiko kuwahata</a></li>
-													<li><a href="#">barbro berlin</a></li>
-													<li><a href="#">cecilia hall</a></li>
-													<li><a href="#">don chadwick</a></li>
-													<li><a href="#">henning koppel</a></li>
-													<li><a href="#">jehs + Laub</a></li>
-													<li><a href="#">vicke lindstrand</a></li>
-													<li><a href="#">don chadwick</a></li>
-												</ul>
-											</div>
-											<div class="full-width">
-												<div class="mega-menu-img">
-													<a href="single-product.html"><img src="img/megamenu/1.jpg" alt="" /></a>
-												</div>
-											</div>
-											<div class="pb-80"></div>
-										</div>
-									</div>
-								</div>
-							</li>
-                            <li><a href="#">Shortcodes</a>
-                                <div class="sub-menu menu-scroll">
-                                    <ul>
-                                        <li class="menu-title">Shortcodes</li>
-                                        <li><a href="elements-accordions.html">Accordion</a></li>
-                                        <li><a href="elements-toggles.html">Toggles</a></li>
-                                        <li><a href="elements-tab.html">Tab</a></li>
-                                        <li><a href="elements-product-tab.html">Product Tab</a></li>
-                                        <li><a href="elements-product-tab-2.html">Product Tab 2</a></li>
-                                        <li><a href="elements-carousel.html">product carousel</a></li>
-                                        <li><a href="elements-carousel-2.html">product carousel 2</a></li>
-                                        <li><a href="elements-featured-product.html">Featured Product</a></li>
-                                        <li><a href="elements-featured-product-2.html">Featured Product 2</a></li>
-                                        <li><a href="elements-button.html">Button</a></li>
-                                        <li><a href="elements-table.html">Table</a></li>
-                                        <li><a href="elements-progress-bars.html">Progress Bar</a></li>
-                                        <li><a href="elements-blog.html">Blog</a></li>
-                                        <li><a href="elements-blog-2.html">Blog - 2</a></li>
-                                        <li><a href="elements-team.html">Team</a></li>
-                                        <li><a href="elements-footer.html">Footer</a></li>
-                                        <li><a href="elements-footer-2.html">Footer 2</a></li>
-                                        <li><a href="elements-map.html">Map</a></li>
-                                    </ul>
-                                </div>
-                            </li>
-							<li><a href="shop-sidebar.html">accesories</a></li>
-							<li><a href="shop-list.html">lookbook</a></li>
-							<li><a href="blog.html">blog</a></li>
-							<li><a href="#">pages</a>
-								<div class="sub-menu menu-scroll">
-									<ul>
-										<li class="menu-title">Page's</li>
-										<li><a href="shop.html">Shop</a></li>
-										<li><a href="shop-sidebar.html">Shop Sidebar</a></li>
-										<li><a href="shop-grid-right-sidebar.html">Shop Right Sidebar</a></li>
-										<li><a href="shop-list.html">Shop List</a></li>
-										<li><a href="shop-list-right-sidebar.html">Shop List right sidebar</a></li>
-										<li><a href="single-product.html">Single Product</a></li>
-										<li><a href="single-product-sidebar.html">Single Product Sidebar</a></li>
-										<li><a href="cart.html">Shopping Cart</a></li>
-										<li><a href="wishlist.html">Wishlist</a></li>
-										<li><a href="checkout.html">Checkout</a></li>
-										<li><a href="order.html">Order</a></li>
-										<li><a href="login.html">login / Registration</a></li>
-										<li><a href="my-account.html">My Account</a></li>
-										<li><a href="404.html">404</a></li>
-										<li><a href="blog.html">Blog</a></li>
-										<li><a href="single-blog.html">Single Blog</a></li>
-										<li><a href="single-blog-sidebar.html">Single Blog Sidebar</a></li>
-										<li><a href="about.html">About Us</a></li>
-										<li><a href="contact.html">Contact</a></li>
-									</ul>
-								</div>
-							</li>
-							<li><a href="about.html">about us</a></li>
-							<li><a href="contact.html">contact</a></li>
-						</ul>
-					</nav>
-				</div>
-				<!-- MAIN-MENU END -->
-			</header>
-			<!-- HEADER-AREA END -->
-			<!-- Mobile-menu start -->
-			<div class="mobile-menu-area">
-				<div class="container-fluid">
-					<div class="row">
-						<div class="col-xs-12 d-block d-md-none">
-							<div class="mobile-menu">
-								<nav id="dropdown">
-									<ul>
-										<li><a href="index.html">home</a>
-											<ul>
-												<li><a href="index.html">Home Version 1</a></li>
-												<li><a href="index-2.html">Home Version 2</a></li>
-											</ul>
-										</li>
-										<li><a href="shop.html">products</a></li>
-										<li><a href="shop-sidebar.html">accesories</a></li>
-										<li><a href="shop-list.html">lookbook</a></li>
-										<li><a href="blog.html">blog</a></li>
-										<li><a href="#">pages</a>
-											<ul>
-												<li><a href="shop.html">Shop</a></li>
-												<li><a href="shop-sidebar.html">Shop Sidebar</a></li>
-												<li><a href="shop-list.html">Shop List</a></li>
-												<li><a href="single-product.html">Single Product</a></li>
-												<li><a href="single-product-sidebar.html">Single Product Sidebar</a></li>
-												<li><a href="cart.html">Shopping Cart</a></li>
-												<li><a href="wishlist.html">Wishlist</a></li>
-												<li><a href="checkout.html">Checkout</a></li>
-												<li><a href="order.html">Order</a></li>
-												<li><a href="login.html">login / Registration</a></li>
-												<li><a href="my-account.html">My Account</a></li>
-												<li><a href="404.html">404</a></li>
-												<li><a href="blog.html">Blog</a></li>
-												<li><a href="single-blog.html">Single Blog</a></li>
-												<li><a href="single-blog-sidebar.html">Single Blog Sidebar</a></li>
-												<li><a href="about.html">About Us</a></li>
-												<li><a href="contact.html">Contact</a></li>
-											</ul>
-										</li>
-										<li><a href="about.html">about us</a></li>
-										<li><a href="contact.html">contact</a></li>
-									</ul>
-								</nav>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-			<!-- Mobile-menu end -->
+	
 				
 <div class="container-fluid">
     <div class="row">
@@ -519,66 +225,47 @@
     <div style="margin-left: 10px; border-top: 1px solid rgb(209, 209, 209);margin-top: 10px;padding-top: 10px;" class="row">
       <!-- Sidebar Filter -->
       <div class="col-lg-2 col-md-4">
-        <div class="filter-container">
-          <div class="filter-header">
-              <span class="filter-title">Filters</span>
-              <button class="clear-all">Clear All</button>
-          </div>
-      
-          <div class="filter-group">
-              <div class="filter-group-title">Price Range</div>
-              <div class="price-range">
-                  <input type="number" class="price-input" placeholder="Min">
-                  <input type="number" class="price-input" placeholder="Max">
-              </div>
-          </div>
-      
-          <div class="filter-group">
-              <div class="filter-group-title">Categories</div>
-              <div class="checkbox-group">
-                <% categories.forEach(function(category) { %>
-                  <label class="checkbox-item">
-                    <input type="checkbox" class="custom-checkbox">
-                    <%= category.name %>
-                  </label>
-                <% }); %>
-              </div>
-          </div>
-      
-          <div class="filter-group">
-              <div class="filter-group-title">Colors</div>
-              <div class="color-options">
-                  <div class="color-option selected" style="background-color: #000000;"></div>
-                  <div class="color-option" style="background-color: #ff4d94;"></div>
-                  <div class="color-option" style="background-color: #4d79ff;"></div>
-                  <div class="color-option" style="background-color: #ffffff; border: 1px solid #ddd;"></div>
-                  <div class="color-option" style="background-color: #ffcd4d;"></div>
-                  <div class="color-option" style="background-color: #4dff88;"></div>
-              </div>
-          </div>
-  
-          <div class="filter-group">
-              <div style="margin-bottom: 8px;" class="filter-group-title">Minimum Rating</div>
-              <div style="padding-top:0 ;" class="rating-filter">
-                  <div class="stars">
-                      <input type="radio" id="star5" name="rating" value="5">
-                      <label for="star5" title="5 stars">★</label>
-                      <input type="radio" id="star4" name="rating" value="4">
-                      <label for="star4" title="4 stars">★</label>
-                      <input type="radio" id="star3" name="rating" value="3">
-                      <label for="star3" title="3 stars">★</label>
-                      <input type="radio" id="star2" name="rating" value="2">
-                      <label for="star2" title="2 stars">★</label>
-                      <input type="radio" id="star1" name="rating" value="1">
-                      <label for="star1" title="1 star">★</label>
-                  </div>
-                  
-              </div>
-          </div>
-      
-          <button class="apply-filters">Apply Filters</button>
-      </div>
-      </div>
+				<div class="filter-container">
+						<div class="filter-header">
+								<span class="filter-title">Filters</span>
+								<button class="clear-all" onclick="clearAllFilters()">Clear All</button>
+						</div>
+		
+						<!-- Sorting Dropdown -->
+						<div class="filter-group">
+								<div class="filter-group-title">Sort By</div>
+								<select class="sort-select" id="sortSelect" onchange="sortProducts()">
+										<option value="">Default</option>
+										<option value="price_asc">Price: Low to High</option>
+										<option value="price_desc">Price: High to Low</option>
+										<option value="name_asc">Name: A-Z</option>
+										<option value="name_desc">Name: Z-A</option>
+								</select>
+						</div>
+		
+						<!-- Colors -->
+						<div class="filter-group">
+								<div class="filter-group-title">Colors</div>
+								<div class="color-options">
+										<% 
+												const colors = [];
+												products.forEach(product => {
+														const productColors = product.colors.split(',').map(c => c.trim());
+														productColors.forEach(color => {
+																if (!colors.includes(color)) colors.push(color);
+														});
+												});
+										%>
+										<% colors.forEach(color => { %>
+										<div class="color-option" 
+												 style="background-color: <%= color %>;"
+												 onclick="toggleColorFilter('<%= color %>')"
+												 data-color="<%= color %>"></div>
+										<% }); %>
+								</div>
+						</div>
+				</div>
+		</div>
   
       <!-- Product Grid -->
       <div class="col-lg-9 col-md-8">
@@ -592,7 +279,10 @@
                     <div class="row showcat">
                       <% products.forEach(product => { %>
                         
-                        <div  class="singprod tab-pane active single-product col-xl-3 col-lg-4 col-md-6 <%= product.category %>">
+                        <div class="singprod tab-pane active single-product col-xl-3 col-lg-4 col-md-6"
+     data-price="<%= product.price %>"
+     data-name="<%= product.name %>"
+     data-colors="<%= product.colors %>">
                             <div class="product-img">
                                 
                                 <a href="/user/product/<%= product.name %>"><img src="<%= product.image0 %>" alt="<%= product.name %>" /></a>
@@ -787,6 +477,63 @@
 
 	<!-- all js here -->
 <!-- jquery latest version -->
+<script>
+	function filterProducts() {
+    const selectedColors = Array.from(document.querySelectorAll('.color-option.selected'))
+        .map(co => co.dataset.color.toLowerCase());
+
+    document.querySelectorAll('.single-product').forEach(product => {
+        const colors = product.dataset.colors.toLowerCase().split(',');
+        const colorMatch = selectedColors.length === 0 || selectedColors.some(c => colors.includes(c));
+        
+        product.style.display = colorMatch ? 'block' : 'none';
+    });
+}
+
+function sortProducts() {
+    const sortValue = document.getElementById('sortSelect').value;
+    const container = document.querySelector('.showcat');
+    const products = Array.from(container.children);
+
+    products.sort((a, b) => {
+        const priceA = parseFloat(a.dataset.price);
+        const priceB = parseFloat(b.dataset.price);
+        const nameA = a.dataset.name.toLowerCase();
+        const nameB = b.dataset.name.toLowerCase();
+
+        switch(sortValue) {
+            case 'price_asc': return priceA - priceB;
+            case 'price_desc': return priceB - priceA;
+            case 'name_asc': return nameA.localeCompare(nameB);
+            case 'name_desc': return nameB.localeCompare(nameA);
+            default: return 0;
+        }
+    });
+
+    container.innerHTML = '';
+    products.forEach(product => container.appendChild(product));
+}
+
+function toggleColorFilter(color) {
+    const colorElement = document.querySelector(`.color-option[data-color="${color}"]`);
+    colorElement.classList.toggle('selected');
+    filterProducts();
+}
+
+function clearAllFilters() {
+    // Remove color selections
+    document.querySelectorAll('.color-option.selected').forEach(co => co.classList.remove('selected'));
+    
+    // Reset sort
+    document.getElementById('sortSelect').value = '';
+    
+    // Show all products
+    document.querySelectorAll('.single-product').forEach(p => p.style.display = 'block');
+    
+    // Reset sorting order
+    sortProducts();
+}
+</script>
 <script src="/user/js/vendor/jquery-3.6.0.min.js"></script>
 <script src="/user/js/vendor/jquery-migrate-3.3.2.min.js"></script>
 <!-- bootstrap js -->

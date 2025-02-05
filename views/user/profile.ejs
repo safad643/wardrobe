@@ -1,0 +1,920 @@
+<%- include("../../views/partials/user/header") %>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .delete-btn {
+    position: absolute;
+    top: 1rem;
+    right: 3rem;
+    background: none;
+    border: none;
+    color: #ff4444;
+    cursor: pointer;
+    padding: 0.5rem;
+    transition: color 0.3s ease;
+}
+
+.delete-btn:hover {
+    color: #cc0000;
+}
+        /* Add these styles to your existing CSS */
+        .user-details {
+                            display: flex;
+                            flex-direction: column;
+                            gap: 0.8rem;
+                        }
+                    
+                        .user-detail-item {
+                            display: flex;
+                            align-items: baseline;
+                            gap: 0.5rem;
+                        }
+                    
+                        .user-detail-label {
+                            font-weight: 600;
+                            color: var(--secondary);
+                            min-width: 70px;
+                            font-size: 0.9em;
+                        }
+                    
+                        .user-detail-value {
+                            color: #666;
+                            font-size: 0.95em;
+                            word-break: break-all;
+                        }
+                    
+                        /* Adjust existing user-header style */
+                        .user-header {
+                            align-items: flex-start;
+                            margin-bottom: 2rem;
+                            gap: 1.5rem;
+                        }
+        /* Add to profile's CSS */
+.main-menu {
+    display: block !important; /* Override any inline styles */
+}
+
+.hamburger {
+    display: block !important; /* Ensure hamburger is visible */
+}
+
+@media (max-width: 767px) {
+    .main-menu {
+        display: none !important;
+    }
+    .mobile-header-top {
+        display: block !important;
+    }
+}
+        :root {
+            --primary: #FFD700;
+            --secondary: #2c2c2c;
+            --light: #FFFFFF;
+            --dark: #111111;
+            --shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+           
+            background: var(--light);
+            color: var(--secondary);
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        .profile-container {
+            
+            max-width: 1400px;
+            margin: 3rem auto;
+            margin-top: 0;
+            padding-left: 2rem;
+        }
+
+        /* Navigation */
+        .profile-nav {
+            margin-bottom: 0 !important;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-item {
+            width: 150px;
+            height: 150px;
+            background: var(--light);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: linear-gradient(135deg, var(--primary) 0%, #ffea00 100%);
+            transform: translateY(-5px);
+        }
+
+        .nav-item i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Content Sections */
+        .profile-content {
+       
+            transform: scale(0.9);
+            background: var(--light);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: var(--shadow);
+            min-height: 60vh;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section.active { display: block; }
+
+        .section-header {
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
+
+        .section-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100px;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        /* Cards */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .user-card, .address-card, .order-card {
+            background: var(--light);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+        }
+
+        .user-card:hover, .address-card:hover, .order-card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* User Card */
+        .user-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1.5rem;
+        }
+
+        .user-avatar i { font-size: 2.5rem; }
+
+        /* Address Card */
+        .address-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .address-actions {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Orders */
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .order-status {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .order-status.delivered { background: #e8f5e9; color: #2e7d32; }
+        .order-status.processing { background: #fff3e0; color: #ef6c00; }
+        .order-status.shipped { background: #e3f2fd; color: #1565c0; }
+
+        /* Modals */
+        .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    overflow-y: auto; /* Enable scrolling only for modal content */
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh; /* Prevent modal from exceeding viewport height */
+    overflow-y: auto; /* Enable scrolling for long content */
+    position: relative;
+    margin: 20px; /* Add some spacing from viewport edges */
+}
+
+/* Add this to your existing CSS */
+
+        /* Buttons */
+        .btn-edit {
+            background: var(--primary);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-edit:hover {
+            background: #FFC400;
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 768px) {
+            .profile-nav { gap: 1rem; }
+            .nav-item { width: 120px; height: 120px; }
+            .profile-content { padding: 1.5rem; }
+        }
+        /* Order Cards */
+.orders-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.order-card {
+    position: relative;
+    padding: 1.5rem;
+    background: var(--light);
+    border-radius: 15px;
+    box-shadow: var(--shadow);
+    transition: transform 0.3s ease;
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.order-status {
+    padding: 0.35rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+/* Status Colors */
+.order-status.delivered { background: #e8f5e9; color: #2e7d32; }
+.order-status.processing { background: #fff3e0; color: #ef6c00; }
+.order-status.shipped { background: #e3f2fd; color: #1565c0; }
+.order-status.pending { background: #f5f5f5; color: #666; }
+.order-status.cancelled { background: #ffebee; color: #c62828; }
+
+.order-details {
+    display: grid;
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.detail-label {
+    color: var(--secondary);
+    font-weight: 500;
+}
+
+.detail-value {
+    color: #666;
+    font-weight: 600;
+}
+
+.no-orders {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+}
+
+.no-orders i {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: var(--primary);
+}
+/* Add these styles to your existing CSS */
+.address-card {
+    position: relative;
+    background: var(--light);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #eee;
+    transition: transform 0.3s ease;
+}
+
+.address-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.address-content {
+    margin-right: 2rem;
+}
+
+.address-content p {
+    margin: 0.5rem 0;
+    color: var(--secondary);
+    line-height: 1.4;
+}
+
+.edit-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: var(--primary);
+    cursor: pointer;
+    padding: 0.5rem;
+    transition: color 0.3s ease;
+}
+
+.edit-btn:hover {
+    color: #ffc400;
+}
+
+.address-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    margin-bottom: 2rem;
+}
+
+/* For the "No addresses" message */
+.address-grid > p {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+}
+    </style>
+    <div id="addressModal" class="modal">
+                <div class="modal-content">
+                    <span class="modal-close" onclick="closeModal()">&times;</span>
+                    <h2>Add Address</h2>
+                    <form id="addressForm">
+                        <div class="form-group">
+                            <label>Street Address</label>
+                            <input type="text" name="street" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label>City</label>
+                            <input type="text" name="city" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label>State</label>
+                            <input type="text" name="state" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Country</label>
+                            <input type="text" name="country" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Postal Code</label>
+                            <input type="number" name="postalCode" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="tel" name="phone" class="form-input" pattern="[0-9]{10}" required>
+                        </div>
+                        <button type="submit" class="btn-edit">
+                            <i class="fas fa-save"></i> Save Address
+                        </button>
+                    </form>
+                    
+                    
+                </div>
+            </div>
+    <div class="profile-container">
+        <nav class="profile-nav">
+            <div class="nav-item active" data-section="dashboard">
+                <i class="fas fa-user"></i> Profile 
+            </div>
+            <div class="nav-item" data-section="orders">
+                <i class="fas fa-box"></i> Orders
+            </div>
+            <div class="nav-item" data-section="address">
+                <i class="fas fa-map-marker-alt"></i> Addresses
+            </div>
+            <div class="nav-item" onclick="window.location.href='/user/cart'" >
+                <i class="fas fa-cart-shopping"></i> Cart
+            </div>
+        </nav>
+        <div id="userModal" class="modal">
+            <div class="modal-content">
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+                <h2>Edit Profile</h2>
+                <form action="/user/editname" method="post">
+                    <label> Name</label>
+                    <input type="text" class="form-input" name="name" required>
+                    <input type="text"  name="email" value="<%= user.email %>"  hidden>
+                    <button type="submit" class="btn-edit">Save Changes</button>
+                </form>
+            </div>
+        </div>
+        <main class="profile-content">
+            <!-- Dashboard Section -->
+            <div class="section active" id="dashboard">
+                <h2 class="section-header">Profile</h2>
+                <div class="dashboard-grid">
+                    <div class="user-card">
+                        <div class="user-header">
+                            <div class="user-avatar"><i class="fas fa-user"></i></div>
+                            <div class="user-details">
+                                <div class="user-detail-item">
+                                    <span class="user-detail-label">Name:</span>
+                                    <span class="user-detail-value"><%= user.name %></span>
+                                </div>
+                                <div class="user-detail-item">
+                                    <span class="user-detail-label">Email:</span>
+                                    <span class="user-detail-value"><%= user.email %></span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn-edit" onclick="showModal('userModal')">
+                            <i class="fas fa-edit"></i> Edit Profile
+                        </button>
+                    </div>
+                    
+                    <div class="address-card">
+                        <h3>Primary Address</h3>
+                        <p>123 Luxury Avenue<br>New York, NY 10001</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Section -->
+            <!-- Orders Section -->
+<div class="section" id="orders">
+    <h2 class="section-header">Order History</h2>
+    <div class="orders-grid">
+        <% if (orders.length > 0) { %>
+            <% orders.forEach(function(order) { %>
+                <div class="order-card">
+                    <div class="order-header">
+                        <div>
+                            <div>#<%= order._id.toString().slice(-6).toUpperCase() %></div>
+                            <div><%= new Date(order.createdAt).toLocaleDateString('en-IN', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric'
+                            }) %></div>
+                        </div>
+                        <span class="order-status <%= order.status %>"><%= order.status %></span>
+                    </div>
+                    
+                    <div class="order-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Items:</span>
+                            <span class="detail-value"><%= order.quantity %></span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Total:</span>
+                            <span class="detail-value">₹<%= order.total.toLocaleString('en-IN') %></span>
+                        </div>
+                    </div>
+
+                    <button class="btn-edit" onclick="viewOrder('<%= order._id %>')">
+                        <i class="fas fa-eye"></i> View Details
+                    </button>
+                </div>
+            <% }); %>
+        <% } else { %>
+            <div class="no-orders">
+                <i class="fas fa-box-open"></i>
+                <p>No orders found</p>
+            </div>
+        <% } %>
+    </div>
+</div>
+
+            <!-- Address Section -->
+           <!-- Address Section -->
+<div class="section" id="address">
+    <h2 class="section-header">Saved Addresses</h2>
+    <div class="address-grid">
+        
+        <% if (addresses.length > 0) { %>
+            <% addresses.forEach(function(address) { %>
+                <div class="address-card" data-address-id="<%= address._id %>">
+                    <div class="address-actions">
+                        <button class="edit-btn" onclick="openEditModal('<%= address._id %>')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-btn" onclick="deleteAddress('<%= address._id %>')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="address-content">
+                        <p><%= address.street %></p>
+                        <p><%= address.city %>, <%= address.state %></p>
+                        <p><%= address.postalCode %></p>
+                        <p><%= address.country %></p>
+                        <p>📞 <%= address.phone %></p>
+                    </div>
+                </div>
+            <% }); %>
+            <% } else { %>
+            <p>No saved addresses found. Add your first address!</p>
+            <% } %>
+  
+    </div>
+    <button class="btn-edit" onclick="showModal('addressModal')">
+        <i class="fas fa-plus"></i> Add New Address
+    </button>
+</div>
+
+            <!-- Modals -->
+            
+
+            
+        </main>
+    </div>
+    <div id="editAddressModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeEditModal()">&times;</span>
+            <h2>Edit Address</h2>
+            <form id="editAddressForm">
+                <input type="hidden" name="addressId" id="editAddressId">
+                <div class="form-group">
+                    <label>Street Address</label>
+                    <input type="text" name="street" id="editStreet" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label>City</label>
+                    <input type="text" name="city" id="editCity" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label>State</label>
+                    <input type="text" name="state" id="editState" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Country</label>
+                    <input type="text" name="country" id="editCountry" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Postal Code</label>
+                    <input type="text" name="postalCode" id="editPostalCode" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" name="phone" id="editPhone" class="form-input" pattern="[0-9]{10}" required>
+                </div>
+                <button type="submit" class="btn-edit">
+                    <i class="fas fa-save"></i> Update Address
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Fetch the country data
+    fetch('/countries.json')
+        .then(response => response.json())
+        .then(countries => {
+            const countryDropdown = document.querySelector('select[name="country"]');
+            
+            // Loop through the JSON and add each country to the dropdown
+            countries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country.id;  // Using 'id' as the value
+                option.textContent = country.name;  // Display the country name
+                countryDropdown.appendChild(option);
+            });
+        })
+        .catch(error => console.error("Error loading country data:", error));
+});
+
+document.getElementById("editAddressForm").addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    const addressId = document.getElementById("editAddressId").value;
+    const street = document.getElementById("editStreet").value;
+    const city = document.getElementById("editCity").value;
+    const state = document.getElementById("editState").value;
+    const country = document.getElementById("editCountry").value;
+    const postalCode = document.getElementById("editPostalCode").value;
+    const phone = document.getElementById("editPhone").value;
+
+    const response = await fetch(`/user/update-address`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ addressId, street, city, state, country, postalCode, phone })
+    });
+
+    const result = await response.json();
+    const addressCard = document.querySelector(`[data-address-id='${addressId}']`);
+    if (result.success) {
+        if (addressCard) {
+            addressCard.querySelector("p:nth-child(1)").innerText = street;
+            addressCard.querySelector("p:nth-child(2)").innerText = `${city}, ${state}`;
+            addressCard.querySelector("p:nth-child(3)").innerText = postalCode;
+            addressCard.querySelector("p:nth-child(4)").innerText = country;
+            addressCard.querySelector("p:nth-child(5)").innerText = `📞 ${phone}`;
+        }
+        Swal.fire({
+  position: "top-end",
+  icon: "success",
+  title: "Your adress has been updated",
+  showConfirmButton: false,
+  timer: 1500
+});
+closeModal()
+    } else {
+        alert("Error updating address: " + result.error);
+    }
+});
+        // Navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.nav-item, .section').forEach(el => {
+                    el.classList.remove('active');
+                });
+                this.classList.add('active');
+                document.getElementById(this.dataset.section).classList.add('active');
+            });
+        });
+
+        // Modal Handling
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+
+        function openEditModal(addressId) {
+    // Find the address card using the ID
+    const addressCard = document.querySelector(`[data-address-id='${addressId}']`);
+    
+    if (!addressCard) return;
+
+    // Extract address details from the card
+    const street = addressCard.querySelector("p:nth-child(1)").innerText;
+    const cityState = addressCard.querySelector("p:nth-child(2)").innerText.split(", ")
+    const postalCode = addressCard.querySelector("p:nth-child(3)").innerText;
+    const country = addressCard.querySelector("p:nth-child(4)").innerText;
+    const phone = addressCard.querySelector("p:nth-child(5)").innerText.replace("📞 ", "")
+
+    // Fill the modal input fields
+    document.getElementById("editAddressId").value = addressId;
+    document.getElementById("editStreet").value = street;
+    document.getElementById("editCity").value = cityState[0];
+    document.getElementById("editState").value = cityState[1];
+    document.getElementById("editPostalCode").value = postalCode;
+    document.getElementById("editCountry").value = country;
+    document.getElementById("editPhone").value = phone;
+
+    // Show the modal
+    showModal("editAddressModal");
+}
+
+        function closeModal() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.style.display = 'none';
+            });
+        }
+
+     
+
+        // Updated Address Management
+    let addresses = [];
+
+function saveAddress(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    
+    addresses.push({
+        id: Date.now(),
+        street: formData.get('street'),
+        city: formData.get('city'),
+        state: formData.get('state'),
+        country: formData.get('country'),
+        postalCode: formData.get('postalCode'),
+        phone: formData.get('phone')
+    });
+    
+    renderAddresses();
+    closeModal();
+    e.target.reset();
+}
+
+function renderAddresses() {
+    const grid = document.querySelector('.address-grid');
+    grid.innerHTML = addresses.map(address => `
+        <div class="address-card">
+            <div class="address-actions">
+                <button class="btn-icon" onclick="editAddress(${address.id})">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn-icon" onclick="deleteAddress(${address.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+            <p>${address.street}<br>
+            ${address.city}, ${address.state}<br>
+            ${address.postalCode}<br>
+            ${address.country}<br>
+            📞 ${address.phone}</p>
+        </div>
+    `).join('');
+}
+
+function closeEditModal() {
+    document.getElementById("editAddressModal").style.display = "none";
+}
+
+function viewOrder(orderid){
+  window.location.href = `/user/orderdetials/${orderid}`;  // Redirect to the specific order view page
+}
+// Add this script in your profile.ejs
+document.getElementById('addressForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = {
+        street: e.target.street.value,
+        city: e.target.city.value,
+        state: e.target.state.value,
+        country: e.target.country.value,
+        postalCode: e.target.postalCode.value,
+        phone: e.target.phone.value
+    };
+
+    try {
+        const response = await fetch('/user/adresss', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            closeModal();
+            addNewAddressToDOM(result.address);
+            e.target.reset();
+        } else {
+            alert('Error saving address');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred');
+    }
+});
+
+function addNewAddressToDOM(address) {
+    const addressGrid = document.querySelector('.address-grid');
+    
+    
+
+    // Create new address element
+    const addressDiv = document.createElement('div');
+    addressDiv.innerHTML = `
+    <div class="address-card">
+        <div class='address-content"'>
+            <p>${address.street}</p>
+            <p>${address.city}, ${address.state}</p>
+            <p>${address.postalCode}</p>
+            <p>${address.country}</p>
+            <p>📞 ${address.phone}</p>
+            <button class="edit-btn" onclick="editAddress('${address._id}')" >
+                <i class="fas fa-edit"></i>
+            </button>
+        </div>
+        </div>
+    `;
+
+    addressGrid.appendChild(addressDiv);
+}
+
+function removeAddress(addressId) {
+    const addressElement = document.querySelector(`.address-card[data-address-id='${addressId}']`);
+    if (addressElement) {
+        addressElement.remove();
+    }
+}
+
+function deleteAddress(addressId){
+    
+    
+    Swal.fire({
+  title: "Are you sure?",
+  text: "your adress will be lost",
+  icon: "warning",
+  showCancelButton: true,
+  confirmButtonColor: "#3085d6",
+  cancelButtonColor: "#d33",
+  confirmButtonText: "Yes, delete it!"
+}).then((result) => {
+  if (result.isConfirmed) {
+    fetch(`/user/delete-address/${addressId}`, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            if (data.status === 'success') {
+                removeAddress(addressId)
+                Swal.fire({
+      title: "Deleted!",
+      text: "Your file has been deleted.",
+      icon: "success"
+    });
+            } else {
+                alert('Failed to delete address');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+  }
+});
+}
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Add this right before </body> in profile.ejs -->
+<script src="/user/js/vendor/jquery-3.6.0.min.js"></script>
+<script src="/user/js/vendor/jquery-migrate-3.3.2.min.js"></script>
+<script src="/user/js/bootstrap.bundle.min.js"></script>
+<script src="/user/js/jquery.meanmenu.js"></script>
+<script src="/user/js/main.min.js"></script>
+</body>
+</html>
