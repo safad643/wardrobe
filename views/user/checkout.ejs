@@ -362,9 +362,11 @@
     color: #2874f0;
     font-size: 1rem;
     cursor: pointer;
-    color: #ddd;
-    font-size: 20px;
-    transition: color 0.2s ease-in-out;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
 }
 
 .qty-btn:hover {
@@ -372,79 +374,125 @@
     color: white;
 }
 
-.rating-text {
-    color: #666;
-    font-size: 14px;
-}
-.pagetile{
-	cursor: pointer;
-}
-.sort-filter {
-    margin-bottom: 15px;
+.qty-display {
+    width: 32px;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #2c3e50;
+    user-select: none;
 }
 
-.sort-select {
+/* Remove old input styles */
+.qty-input::-webkit-outer-spin-button,
+.qty-input::-webkit-inner-spin-button {
+    display: none;
+}
+
+.payment-error {
+    color: #dc3545;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    display: none;
+}
+
+/* Adjust responsive layout */
+@media (max-width: 1200px) {
+    .checkout-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .checkout-right {
+        width: 100%;
+        position: static;
+    }
+}
+
+/* Adjust button styles */
+.btn.full-width {
     width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    background: white;
+    justify-content: center;
+    margin-top: 1rem;
+    padding: 1rem;
+    font-size: 1.1rem;
 }
 
-.fix {
+/* Update existing styles */
+.address-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.payment-options {
     display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Order Summary Styles */
+.order-item:last-child {
+    border-bottom: none;
+}
+
+.product-image-container {
+    flex: 0 0 120px;
+}
+
+.product-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.product-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.product-specs {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
+    color: #666;
+    font-size: 0.95rem;
+    margin: 0.5rem 0;
 }
 
-.pro-price {
-    color: #c87065;
-    font-size: 18px;
-    font-weight: 700;
-    line-height: 28px;
-    display: inline-block;
-    vertical-align: middle;
+.current-price {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1.1rem;
 }
 
-.original-price {
-    margin-left: 10px;
-    text-decoration: line-through;
-    color: #999;
-    font-size: 14px;
-    display: inline-block;
-    vertical-align: middle;
-    line-height: 28px;
+.item-total-container {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    font-weight: 500;
+    color: #2c3e50;
 }
 
-.pro-rating {
-    margin-left: auto;
+/* Price Breakdown Styles */
+.price-breakdown {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    border-top: 2px dashed #eee;
+    background: #f8f9fa;
+    border-radius: 8px;
 }
 
-.wishlist-icon {
-    position: relative;
-    z-index: 2;
-}
-
-.wishlist-icon i {
-    transition: all 0.3s ease;
-}
-
-.wishlist-icon.active i {
-    color: #ff4d94;
-}
-
-.wishlist-icon i.zmdi-favorite {
-    color: #ff4d94;
-}
-
-/* Animation for heart icon */
-@keyframes heartPop {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1); }
-}
-
-.wishlist-icon.animate i {
-    animation: heartPop 0.3s ease;
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.8rem 0;
+    color: #666;
+    font-size: 1rem;
+    border-bottom: 1px solid #eee;
 }
 
 .summary-item:last-child {
@@ -742,12 +790,6 @@ function showEditModal(event, addressId) {
     document.getElementById('addressModal').style.display = 'block';
 }
 
-	<!-- all js here -->
-<!-- jquery latest version -->
-<script>
-	function filterProducts() {
-    const selectedColors = Array.from(document.querySelectorAll('.color-option.selected'))
-        .map(co => co.dataset.color.toLowerCase());
 
 // Add these new functions
         function showEditModal() {
@@ -837,6 +879,7 @@ function updateProgress(sectionId) {
             step.classList.add('active-step');
         }
     });
+}
 
 function showAddressModal() {
     document.getElementById('addressModal').style.display = 'block';
@@ -1072,3 +1115,10 @@ function removeProduct(button, productId) {
     </script>
 </body>
 </html>
+
+
+
+
+
+
+
