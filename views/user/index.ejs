@@ -2,53 +2,7 @@
 
 			<!-- HEADER-AREA END -->
 			<!-- Mobile-menu start -->
-			<div class="mobile-menu-area">
-				<div class="container-fluid">
-					<div class="row">
-						<div class="col-xs-12 d-block d-md-none">
-							<div class="mobile-menu">
-								<nav id="dropdown">
-									<ul>
-										<li><a href="index.html">home</a>
-											<ul>
-												<li><a href="index.html">Home Version 1</a></li>
-												<li><a href="index-2.html">Home Version 2</a></li>
-											</ul>
-										</li>
-										<li><a href="shop.html">products</a></li>
-										<li><a href="shop-sidebar.html">accesories</a></li>
-										<li><a href="shop-list.html">lookbook</a></li>
-										<li><a href="blog.html">blog</a></li>
-										<li><a href="#">pages</a>
-											<ul>
-												<li><a href="shop.html">Shop</a></li>
-												<li><a href="shop-sidebar.html">Shop Sidebar</a></li>
-												<li><a href="shop-list.html">Shop List</a></li>
-												<li><a href="single-product.html">Single Product</a></li>
-												<li><a href="single-product-sidebar.html">Single Product Sidebar</a></li>
-												<li><a href="cart.html">Shopping Cart</a></li>
-												<li><a href="wishlist.html">Wishlist</a></li>
-												<li><a href="checkout.html">Checkout</a></li>
-												<li><a href="order.html">Order</a></li>
-												<li><a href="login.html">login / Registration</a></li>
-												<li><a href="my-account.html">My Account</a></li>
-												<li><a href="404.html">404</a></li>
-												<li><a href="blog.html">Blog</a></li>
-												<li><a href="single-blog.html">Single Blog</a></li>
-												<li><a href="single-blog-sidebar.html">Single Blog Sidebar</a></li>
-												<li><a href="about.html">About Us</a></li>
-												<li><a href="contact.html">Contact</a></li>
-											</ul>
-										</li>
-										<li><a href="about.html">about us</a></li>
-										<li><a href="contact.html">contact</a></li>
-									</ul>
-								</nav>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
+		
 			<!-- Mobile-menu end -->
 				<div class="main">
 				<!-- SLIDER-BANNER-AREA START -->
@@ -143,29 +97,7 @@
 						<!-- Slider-area end -->
 					</div>
 					<!-- Sidebar-social-media start -->
-					<div class="sidebar-account d-none d-md-block">
-						<div class="table">
-							<div class="table-cell">
-								<ul>
-									<li><a class="search-open" href="#" title="Search"><i class="zmdi zmdi-search"></i></a></li>
-									<li><a href="#" title="Login"><i class="zmdi zmdi-lock"></i></a>
-										<div class="customer-login text-left">
-											<form action="#">
-												<h4 class="title-1 title-border text-uppercase mb-30">Registered customers</h4>
-												<p class="text-gray">If you have an account with us, Please login!</p>
-												<input type="text" name="email" placeholder="Email here..." />
-												<input type="password" placeholder="Password" />
-												<p><a class="text-gray" href="#">Forget your password?</a></p>
-												<button class="button-one submit-button mt-15" data-text="login" type="submit">login</button>
-											</form>
-										</div>
-									</li>
-									
-									<li><a href="wishlist.html" title="Wishlist"><i class="zmdi zmdi-favorite"></i></a></li>
-								</ul>
-							</div>
-						</div>
-					</div>
+					
 					<!-- Sidebar-social-media start -->
 				</section>
 				<!-- End Slider-section -->
@@ -435,8 +367,7 @@
 <script src="/user/js/vendor/jquery-migrate-3.3.2.min.js"></script>
 <!-- bootstrap js -->
 <script src="/user/js/bootstrap.bundle.min.js"></script>
-<!-- jquery.meanmenu js -->
-<script src="/user/js/jquery.meanmenu.js"></script>
+
 <!-- slick.min js -->
 <script src="/user/js/slick.min.js"></script>
 <!-- jquery.treeview js -->
@@ -457,7 +388,7 @@
 <!-- plugins js -->
 <script src="/user/js/plugins.js"></script>
 <!-- main js -->
-<script src="/user/js/main.min.js"></script>
+
 
 		<script>
 			function showcatog(name) {
@@ -489,3 +420,34 @@
 
 <!-- Mirrored from template.hasthemes.com/hurst-v1/hurst/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Wed, 15 Jan 2025 07:06:40 GMT -->
 </html>
+
+<style>
+    /* Add spacing for fixed header */
+    .main {
+        padding-top: 80px; /* Match header height */
+    }
+
+    .slider-banner-area {
+        margin-top: 0;  /* Remove any existing top margin */
+        position: relative;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 992px) {
+        .main {
+            padding-top: 70px; /* Smaller padding for mobile */
+        }
+    }
+
+    /* Remove any conflicting styles */
+    .sidebar-account,
+    .d-none,
+    .d-md-block,
+    .menu-toggle,
+    .hamburger,
+    .hamburger--emphatic {
+        display: none !important;
+    }
+</style>

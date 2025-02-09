@@ -66,7 +66,7 @@
     }
 }
         :root {
-            --primary: #FFD700;
+            --primary: rgb(114, 185, 255);
             --secondary: #2c2c2c;
             --light: #FFFFFF;
             --dark: #111111;
@@ -88,22 +88,22 @@
             line-height: 1.6;
         }
 
+        /* Profile Container */
         .profile-container {
-            
             max-width: 1400px;
-            margin: 3rem auto;
-            margin-top: 0;
-            padding-left: 2rem;
+            margin: 2rem auto;
+            margin-top: 3rem;
+            padding: 0 2rem;
         }
 
         /* Navigation */
         .profile-nav {
-            margin-bottom: 0 !important;
+            margin: 0 0 2rem 0 !important; /* Fixed margin, using !important to override any other styles */
             display: flex;
             justify-content: center;
-            gap: 2rem;
-            margin-bottom: 3rem;
+            gap: 1rem;
             flex-wrap: wrap;
+            padding: 1rem;
         }
 
         .nav-item {
@@ -122,7 +122,7 @@
 
         .nav-item:hover,
         .nav-item.active {
-            background: linear-gradient(135deg, var(--primary) 0%, #ffea00 100%);
+            background: linear-gradient(135deg, rgb(114, 185, 255) 0%, rgb(124, 195, 255) 100%);
             transform: translateY(-5px);
         }
 
@@ -133,26 +133,29 @@
 
         /* Content Sections */
         .profile-content {
-       
-            transform: scale(0.9);
+            /* Remove transform scale as it causes inconsistent spacing */
+            transform: none;
             background: var(--light);
             border-radius: 20px;
-            padding: 3rem;
+            padding: 2rem;
             box-shadow: var(--shadow);
             min-height: 60vh;
+            margin: 0; /* Reset margins */
         }
 
         .section {
-            display: none;
-            animation: fadeIn 0.4s ease;
+            display: none;  /* Hide all sections by default */
         }
 
+        .section.active { 
+            display: block;  /* Show only active section */
+        }
+
+        /* Update the fadeIn animation to not affect spacing */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-
-        .section.active { display: block; }
 
         .section-header {
             font-size: 2.5rem;
@@ -168,7 +171,7 @@
             left: 0;
             width: 100px;
             height: 4px;
-            background: var(--primary);
+            background: rgb(114, 185, 255);
             border-radius: 2px;
         }
 
@@ -188,7 +191,7 @@
             transition: transform 0.3s ease;
         }
 
-        .user-card:hover, .address-card:hover, .order-card:hover {
+        .user-card:hover, .address-card:hover{
             transform: translateY(-5px);
         }
 
@@ -202,7 +205,7 @@
         .user-avatar {
             width: 80px;
             height: 80px;
-            background: var(--primary);
+            background: rgb(114, 185, 255);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -279,7 +282,7 @@
 
         /* Buttons */
         .btn-edit {
-            background: var(--primary);
+            background: rgb(114, 185, 255);
             border: none;
             padding: 0.8rem 1.5rem;
             border-radius: 10px;
@@ -291,7 +294,7 @@
         }
 
         .btn-edit:hover {
-            background: #FFC400;
+            background: rgb(114, 185, 255);
             transform: scale(1.05);
         }
 
@@ -303,73 +306,155 @@
         /* Order Cards */
 .orders-grid {
     display: grid;
-    gap: 1.5rem;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.2rem;
+    grid-template-columns: 1fr;
+    padding: 0.5rem;
 }
 
 .order-card {
-    position: relative;
-    padding: 1.5rem;
-    background: var(--light);
-    border-radius: 15px;
-    box-shadow: var(--shadow);
-    transition: transform 0.3s ease;
+    position: static;
+    padding: 1.4rem 1.8rem;
+    background: #ffffff;
+    border: 1px solid #eaeaea;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    box-shadow: rgba(0, 0, 0, 0.04) 0px 2px 4px;
 }
 
 .order-header {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1rem;
+    align-items: center;
+    gap: 3rem;
+    border: none;
+    margin: 0;
+    padding: 0;
+    flex: 1;
 }
 
-.order-status {
-    padding: 0.35rem 1rem;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-transform: capitalize;
+.order-header div {
+    font-size: 1rem;
 }
 
-/* Status Colors */
-.order-status.delivered { background: #e8f5e9; color: #2e7d32; }
-.order-status.processing { background: #fff3e0; color: #ef6c00; }
-.order-status.shipped { background: #e3f2fd; color: #1565c0; }
-.order-status.pending { background: #f5f5f5; color: #666; }
-.order-status.cancelled { background: #ffebee; color: #c62828; }
+.order-header div div:first-child {
+    font-weight: 700;
+    color: #1a1a1a;
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+}
+
+.order-header div div:last-child {
+    font-size: 0.9rem;
+    color: #666;
+}
 
 .order-details {
-    display: grid;
-    gap: 0.75rem;
-    margin: 1.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+    margin: 0;
 }
 
 .detail-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 0.8rem;
 }
 
 .detail-label {
-    color: var(--secondary);
+    color: #666;
+    font-size: 0.9rem;
     font-weight: 500;
 }
 
 .detail-value {
-    color: #666;
+    font-weight: 700;
+    color: #1a1a1a;
+    font-size: 1rem;
+}
+
+.order-status {
+    font-size: 0.85rem;
+    padding: 0.5rem 1.2rem;
+    border-radius: 8px;
     font-weight: 600;
+    text-transform: capitalize;
+    letter-spacing: 0.3px;
 }
 
-.no-orders {
-    text-align: center;
-    padding: 2rem;
-    color: #666;
+.order-card .btn-edit {
+    padding: 0.7rem 1.4rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: #f8f9fa;
+    color: #1a1a1a;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    min-width: 120px;
+    box-shadow: rgba(0, 0, 0, 0.02) 0px 1px 2px;
 }
 
-.no-orders i {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-    color: var(--primary);
+.order-card .btn-edit:hover {
+    background: rgb(114, 185, 255);
+    border-color: rgb(114, 185, 255);
+}
+
+/* Enhanced status colors */
+.order-status.delivered { 
+    background: #dcf5dc;
+    color: #0a5d0a;
+}
+
+.order-status.processing { 
+    background: #fff0db;
+    color: #804d00;
+}
+
+.order-status.shipped { 
+    background: #dceefb;
+    color: #0c4a8c;
+}
+
+.order-status.pending { 
+    background: #f8f9fa;
+    color: #343a40;
+}
+
+.order-status.cancelled { 
+    background: #ffe3e3;
+    color: #c92a2a;
+}
+
+@media (max-width: 768px) {
+    .order-card {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1.3rem;
+    }
+
+    .order-header {
+        flex-direction: column;
+        gap: 0.7rem;
+    }
+
+    .order-details {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.7rem;
+        width: 100%;
+    }
+
+    .detail-item {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .order-card .btn-edit {
+        width: 100%;
+        margin-top: 1rem;
+    }
 }
 /* Add these styles to your existing CSS */
 .address-card {
@@ -404,14 +489,14 @@
     right: 1rem;
     background: none;
     border: none;
-    color: var(--primary);
+    color: rgb(114, 185, 255);
     cursor: pointer;
     padding: 0.5rem;
     transition: color 0.3s ease;
 }
 
 .edit-btn:hover {
-    color: #ffc400;
+    color: rgb(94, 165, 235);
 }
 
 .address-grid {
@@ -427,6 +512,64 @@
     text-align: center;
     padding: 2rem;
     color: #666;
+}
+
+/* Security Section Styles */
+.security-form-container {
+    max-width: 500px;
+    margin: 2rem auto;
+}
+
+.password-form {
+    background: var(--light);
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: var(--shadow);
+}
+
+.password-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.password-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--secondary);
+    font-weight: 500;
+}
+
+.password-form .form-input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.password-form .form-input:focus {
+    border-color: rgb(114, 185, 255);
+    outline: none;
+}
+
+.password-form .btn-edit {
+    width: 100%;
+    margin-top: 1rem;
+    justify-content: center;
+}
+
+/* Add or modify these styles in your CSS section */
+.section {
+    display: none;  /* Hide all sections by default */
+}
+
+.section.active { 
+    display: block;  /* Show only active section */
+}
+
+/* Make sure the security form is visible when its section is active */
+#security.active .security-form-container {
+    display: block;
 }
     </style>
     <div id="addressModal" class="modal">
@@ -477,6 +620,9 @@
             <div class="nav-item" data-section="address">
                 <i class="fas fa-map-marker-alt"></i> Addresses
             </div>
+            <div class="nav-item" data-section="security">
+                <i class="fas fa-shield-alt"></i> Security
+            </div>
             <div class="nav-item" onclick="window.location.href='/user/cart'" >
                 <i class="fas fa-cart-shopping"></i> Cart
             </div>
@@ -524,41 +670,43 @@
                 </div>
             </div>
 
-            <!-- Orders Section -->
-            <!-- Orders Section -->
+<!-- Orders Section -->
 <div class="section" id="orders">
     <h2 class="section-header">Order History</h2>
     <div class="orders-grid">
         <% if (orders.length > 0) { %>
             <% orders.forEach(function(order) { %>
-                <div class="order-card">
-                    <div class="order-header">
-                        <div>
-                            <div>#<%= order._id.toString().slice(-6).toUpperCase() %></div>
-                            <div><%= new Date(order.createdAt).toLocaleDateString('en-IN', {
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric'
-                            }) %></div>
+                <% order.items.forEach(function(item) { %>
+                    <div class="order-card">
+                        <div class="order-header">
+                            <div>
+                                <div>Order #<%= order._id.toString().slice(-6).toUpperCase() %></div>
+                                <div><%= new Date(order.createdAt).toLocaleDateString('en-IN', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric'
+                                }) %></div>
+                            </div>
+                            <span class="order-status <%= order.status %>"><%= order.status %></span>
                         </div>
-                        <span class="order-status <%= order.status %>"><%= order.status %></span>
-                    </div>
-                    
-                    <div class="order-details">
-                        <div class="detail-item">
-                            <span class="detail-label">Items:</span>
-                            <span class="detail-value"><%= order.quantity %></span>
+                        
+                        <div class="order-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Quantity:</span>
+                                <span class="detail-value"><%= item.quantity %></span>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <span class="detail-label">Price:</span>
+                                <span class="detail-value">₹<%= item.total.toLocaleString('en-IN') %></span>
+                            </div>
                         </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Total:</span>
-                            <span class="detail-value">₹<%= order.total.toLocaleString('en-IN') %></span>
-                        </div>
-                    </div>
 
-                    <button class="btn-edit" onclick="viewOrder('<%= order._id %>')">
-                        <i class="fas fa-eye"></i> View Details
-                    </button>
-                </div>
+                        <button class="btn-edit" onclick="viewProductOrder('<%= order._id %>', '<%= item.productId %>')">
+                            View Details
+                        </button>
+                    </div>
+                <% }); %>
             <% }); %>
         <% } else { %>
             <div class="no-orders">
@@ -609,6 +757,29 @@
             
 
             
+            <div class="section" id="security">  
+                <h2 class="section-header">Security Settings</h2>
+                <div class="security-form-container">
+                    <form id="passwordChangeForm" class="password-form" onsubmit="changepassowrd(event)">
+                        <div class="form-group">
+                            <label>Current Password</label>
+                            <input type="password" name="currentPassword" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>New Password</label>
+                            <input type="password" name="newPassword" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm New Password</label>
+                            <input type="password" name="confirmPassword" class="form-input">
+                        </div>
+                        <button type="submit" class="btn-edit">
+                            <i class="fas fa-key"></i> Change Password
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
         </main>
     </div>
     <div id="editAddressModal" class="modal">
@@ -647,7 +818,6 @@
             </form>
         </div>
     </div>
-    
     <script>
 document.addEventListener("DOMContentLoaded", function() {
     // Fetch the country data
@@ -907,6 +1077,94 @@ function deleteAddress(addressId){
         .catch(error => console.error('Error:', error));
   }
 });
+}
+function viewProductOrder(orderId, productId) {
+  window.location.href = `/user/orderdetails/${orderId}/${productId}`;
+}
+
+function changepassowrd(event) {
+    event.preventDefault();
+    
+    // Remove any existing error messages
+    const errorMessages = document.querySelectorAll('.password-error');
+    errorMessages.forEach(msg => msg.remove());
+    
+    const currentPassword = event.target.currentPassword.value;
+    const newPassword = event.target.newPassword.value;
+    const confirmPassword = event.target.confirmPassword.value;
+    
+    // Validation function to add error message
+    const showError = (inputName, message) => {
+        const input = document.querySelector(`input[name="${inputName}"]`);
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'password-error';
+        errorDiv.style.color = '#ff0000';
+        errorDiv.style.fontSize = '0.8rem';
+        errorDiv.style.marginTop = '0.5rem';
+        errorDiv.textContent = message;
+        input.parentNode.appendChild(errorDiv);
+    };
+    
+    // Validate all fields are filled
+    let isValid = true;
+    if (!currentPassword) {
+        showError('currentPassword', 'Current password is required');
+        isValid = false;
+    }
+    if (!newPassword) {
+        showError('newPassword', 'New password is required');
+        isValid = false;
+    }
+    if (!confirmPassword) {
+        showError('confirmPassword', 'Confirm password is required');
+        isValid = false;
+    }
+    
+    // Check if passwords match
+    if (newPassword !== confirmPassword) {
+        showError('confirmPassword', 'Passwords do not match');
+        isValid = false;
+    }
+    
+    // Only proceed with fetch if validation passes
+    if (isValid) {
+        fetch('/user/change-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                currentPassword,
+                newPassword,
+                confirmPassword
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                Swal.fire({
+                    position: "top-end",
+                    icon: "success",
+                    title: "Password changed successfully",
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                event.target.reset();
+            } else {
+                showError('confirmPassword', data.message || 'Failed to change password');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+                position: "top-end",
+                icon: "error",
+                title: "An error occurred",
+                showConfirmButton: false,
+                timer: 1500
+            });
+        });
+    }
 }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

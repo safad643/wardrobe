@@ -1,10 +1,10 @@
 const mongo=require('../mongodb/mongo')
 
 const usersession=(req,res,next)=>{
-  if(req.session.user){
+  if(req.session.uid){
     next()
   }else{
-    res.redirect('/user/login')
+    res.status(302).redirect('/user/login')
   }
 }
 

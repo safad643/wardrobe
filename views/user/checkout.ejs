@@ -19,54 +19,46 @@
             }
     
             .checkout-container {
-                max-width: 1200px;
-                margin: 0 auto;
+                max-width: 100%;
+                padding: 1rem;
+                margin: 0;
+            }
+    
+            .checkout-grid {
+                display: grid;
+                grid-template-columns: 1fr 500px;
+                gap: 1.5rem;
+                max-width: 100%;
+            }
+    
+            .checkout-left {
+                display: flex;
+                flex-direction: column;
+                gap: 1.5rem;
+                width: 100%;
+                min-width: 0;
+            }
+    
+            .checkout-right {
+                position: sticky;
+                top: 2rem;
+                height: fit-content;
+                width: 500px;
+            }
+    
+            .checkout-section {
+                width: 100%;
                 background: white;
                 border-radius: 12px;
                 box-shadow: 0 2px 15px rgba(0,0,0,0.1);
-                padding: 2rem;
-                position: relative;
+                padding: 1.5rem;
+                margin: 0;
             }
     
-            .progress-bar {
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 3rem;
-                position: relative;
-            }
-    
-            .progress-line {
-                position: absolute;
-                top: 50%;
-                left: 5%;
-                right: 5%;
-                height: 2px;
-                background: #ddd;
-                z-index: 1;
-            }
-    
-            .progress-step {
-                width: 30%;
-                text-align: center;
-                padding: 1rem;
-                position: relative;
-                z-index: 2;
-                background: white;
-                color: #666;
-            }
-    
-            .active-step {
-                color: #2874f0;
-                font-weight: 500;
-            }
-    
-            .section {
-                display: none;
-                animation: fadeIn 0.3s ease;
-            }
-    
-            .active-section {
-                display: block;
+            .checkout-section h2 {
+                margin-bottom: 1.5rem;
+                color: #2c3e50;
+                font-size: 1.5rem;
             }
     
             .address-card {
@@ -139,17 +131,19 @@
     
             .order-item {
                 display: flex;
-                align-items: center;
-                padding: 1rem;
+                gap: 1.8rem;
+                padding: 1.8rem;
                 border-bottom: 1px solid #eee;
+                position: relative;
             }
     
             .product-image {
-                width: 80px;
-                height: 80px;
+                width: 120px;
+                height: 120px;
                 object-fit: cover;
                 margin-right: 1.5rem;
-                border-radius: 4px;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             }
     
             .order-summary {
@@ -161,14 +155,28 @@
             .summary-item {
                 display: flex;
                 justify-content: space-between;
-                margin-bottom: 0.8rem;
+                padding: 0.8rem 0;
                 color: #666;
+                font-size: 1rem;
+                border-bottom: 1px solid #eee;
             }
     
-            .total {
-                font-weight: bold;
-                color: #2c3e50;
+            .summary-item:last-child {
+                border-bottom: none;
+            }
+    
+            .summary-item.total {
                 font-size: 1.2rem;
+                font-weight: 600;
+                color: #2c3e50;
+                border-top: 2px solid #eee;
+                margin-top: 0.5rem;
+                padding-top: 1rem;
+                border-bottom: none;
+            }
+    
+            .amount {
+                font-weight: 500;
             }
     
             .action-btns {
@@ -335,195 +343,343 @@
     display: block;
 }
 .quantity-control {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-top: 0.5rem;
-    }
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-top: 0.5rem;
+    background: #f8f9fa;
+    padding: 0.3rem 0.3rem 0.3rem 0.3rem;
+    border-radius: 25px;
+    width: fit-content;
+}
 
-    .qty-btn {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        border: 1px solid #2874f0;
-        background: white;
-        color: #2874f0;
-        font-size: 1rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+.qty-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid #2874f0;
+    background: white;
+    color: #2874f0;
+    font-size: 1rem;
+    cursor: pointer;
+    color: #ddd;
+    font-size: 20px;
+    transition: color 0.2s ease-in-out;
+}
 
-    .qty-btn:hover {
-        background: #2874f0;
-        color: white;
-    }
+.qty-btn:hover {
+    background: #2874f0;
+    color: white;
+}
 
-    .qty-input {
-        width: 50px;
-        text-align: center;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        padding: 6px;
-        font-size: 14px;
-        -moz-appearance: textfield;
-    }
+.rating-text {
+    color: #666;
+    font-size: 14px;
+}
+.pagetile{
+	cursor: pointer;
+}
+.sort-filter {
+    margin-bottom: 15px;
+}
 
-    .qty-input::-webkit-outer-spin-button,
-    .qty-input::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
-    .payment-error {
+.sort-select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: white;
+}
+
+.fix {
+    display: flex;
+    align-items: center;
+}
+
+.pro-price {
+    color: #c87065;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 28px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.original-price {
+    margin-left: 10px;
+    text-decoration: line-through;
+    color: #999;
+    font-size: 14px;
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 28px;
+}
+
+.pro-rating {
+    margin-left: auto;
+}
+
+.wishlist-icon {
+    position: relative;
+    z-index: 2;
+}
+
+.wishlist-icon i {
+    transition: all 0.3s ease;
+}
+
+.wishlist-icon.active i {
+    color: #ff4d94;
+}
+
+.wishlist-icon i.zmdi-favorite {
+    color: #ff4d94;
+}
+
+/* Animation for heart icon */
+@keyframes heartPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.wishlist-icon.animate i {
+    animation: heartPop 0.3s ease;
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+}
+
+.summary-item.total {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+    border-top: 2px solid #eee;
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+    border-bottom: none;
+}
+
+.amount {
+    font-weight: 500;
+}
+
+/* Place Order Button */
+.btn.full-width {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    gap: 0.8rem;
+}
+
+/* Remove arrows from number input */
+.qty-input::-webkit-outer-spin-button,
+.qty-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.qty-input {
+    -moz-appearance: textfield;
+}
+
+/* Animation styles for smooth removal */
+.order-item {
+    transition: all 0.3s ease;
+}
+
+.order-item.removing {
+    opacity: 0;
+    transform: translateX(100px);
+    height: 0;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+}
+
+.delete-btn {
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    padding: 4px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+}
+
+.delete-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.out-of-stock-message {
     color: #dc3545;
     font-size: 0.9rem;
+    font-weight: 500;
     margin-top: 0.5rem;
-    display: none;
+    padding: 0.5rem;
+    background-color: rgba(220, 53, 69, 0.1);
+    border-radius: 4px;
+    text-align: center;
 }
 </style>
     </head>
 <body>
     <div class="checkout-container">
-        <!-- Address Section -->
-        <div class="section active-section" id="addressSection">
-            <h2>Select Delivery Address</h2>
-            <% addresses.forEach((address, index) => { %>
-                <div class="address-card <%= index === 0 ? 'selected-address' : '' %>" 
-                     data-address-id="<%= address.id %>" 
-                     onclick="selectAddress(this, '<%= address._id %>')">
-                    <i class="fas fa-edit edit-icon" onclick="showEditModal(event, '<%= address._id %>')"></i>
-                    <h3><%= address.street %></h3>
-                    <p><%= address.city %>, <%= address.state %></p>
-                    <p><%= address.country %>, <%= address.postalCode %></p>
-                    <p>Phone: <%= address.phone %></p>
-                </div>
-            <% }); %>
-            <button class="btn" onclick="showAddressModal()">
-                <i class="fas fa-plus"></i>
-                Add New Address
-            </button>
-            <div class="action-btns">
-                <button class="btn" onclick="nextSection('paymentSection')">
-                    <i class="fas fa-arrow-right"></i>
-                    Continue
-                </button>
-            </div>
-        </div>
-
-        
-
-        <!-- Review Section -->
-        <div class="section" id="reviewSection">
-            <h2>Review Your Order</h2>
-            <div class="order-items">
-                <% products.forEach(product => { %>
-                    <div class="order-item">
-                        <img src="<%= product.image0 %>" class="product-image" alt="<%= product.name %>">
-                        <div>
-                            <h3><%= product.name %></h3>
-                            <p>Color: <%= product.colors %></p>
-                            <div class="quantity-control">
-                                <span>Quantity:</span>
-                                <button class="qty-btn minus" onclick="adjustQuantity(this, -1)">-</button>
-                                <input type="number" class="qty-input" 
-                                       value="1" 
-                                       min="1" 
-                                       data-price="<%= product.price %>"
-                                       data-product-id="<%= product._id %>"
-                                       onchange="updateQuantity(this)">
-                                <button class="qty-btn plus" onclick="adjustQuantity(this, 1)">+</button>
+        <div class="checkout-grid">
+            <!-- Left Column: Address and Payment -->
+            <div class="checkout-left">
+                <!-- Address Section -->
+                <div class="checkout-section" id="addressSection">
+                    <h2>Delivery Address</h2>
+                    <div class="address-grid">
+                        <% addresses.forEach((address, index) => { %>
+                            <div class="address-card <%= index === 0 ? 'selected-address' : '' %>" 
+                                 data-address-id="<%= address.id %>" 
+                                 onclick="selectAddress(this, '<%= address._id %>')">
+                                <i class="fas fa-edit edit-icon" onclick="showEditModal(event, '<%= address._id %>')"></i>
+                                <h3><%= address.street %></h3>
+                                <p><%= address.city %>, <%= address.state %></p>
+                                <p><%= address.country %>, <%= address.postalCode %></p>
+                                <p>Phone: <%= address.phone %></p>
                             </div>
-                            <p>₹<span class="item-total"><%= product.price %></span></p>
+                        <% }); %>
+                    </div>
+                    <button class="btn" onclick="showAddressModal()">
+                        <i class="fas fa-plus"></i>
+                        Add New Address
+                    </button>
+                </div>
+
+                <!-- Payment Section -->
+                <div class="checkout-section" id="paymentSection">
+                    <h2>Payment Method</h2>
+                    <div class="payment-options">
+                        <div class="payment-option" onclick="togglePayment(this)">
+                            <label>
+                                <input type="radio" name="payment" value="cod">
+                                <i class="fas fa-money-bill-wave"></i>
+                                Cash on Delivery
+                            </label>
+                        </div>
+                        
+                        <div class="payment-option" onclick="togglePayment(this)">
+                            <label>
+                                <input type="radio" name="payment" value="card">
+                                <i class="fas fa-credit-card"></i>
+                                Credit/Debit Card
+                            </label>
+                            <div class="payment-fields">
+                                <input type="text" placeholder="Card Number" class="form-input full-width">
+                                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                                    <input type="text" placeholder="MM/YY" class="form-input half-width">
+                                    <input type="text" placeholder="CVV" class="form-input half-width">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="payment-option" onclick="togglePayment(this)">
+                            <label>
+                                <input type="radio" name="payment" value="upi">
+                                <i class="fas fa-mobile-alt"></i>
+                                UPI Payment
+                            </label>
+                            <div class="payment-fields">
+                                <input type="text" placeholder="UPI ID" class="form-input full-width">
+                            </div>
                         </div>
                     </div>
-                <% }); %>
-            </div>
-            <div class="order-summary">
-                <div class="summary-item">
-                    <span>Subtotal (<span class="item-count"><%= products.length %></span> items):</span>
-                    <span>₹<span class="subtotal-value"><%= subtotal %></span></span>
-                </div>
-                <div class="summary-item">
-                    <span>Delivery Fee:</span>
-                    <span>₹<span class="delivery-fee"><%= deliveryFee %></span></span>
-                </div>
-                <div class="summary-item">
-                    <span>Discount:</span>
-                    <span>-₹<span class="discount-value"><%= discount %></span></span>
-                </div>
-                <div class="summary-item total">
-                    <span>Total Amount:</span>
-                    <span>₹<span class="total-value"><%= total %></span></span>
+
+                    <!-- Add error message and action buttons -->
+                    <div class="payment-error" id="paymentError">
+                        Please select a payment method
+                    </div>
                 </div>
             </div>
 
-            <div class="action-btns">
-                <button class="btn" onclick="prevSection('paymentSection')">
-                    <i class="fas fa-arrow-left"></i>
-                    Back
-                </button>
-                <button class="btn" onclick="placeOrder()">
-                    <i class="fas fa-check"></i>
-                    Place Order
-                </button>
+            <!-- Right Column: Order Summary -->
+            <div class="checkout-right">
+                <div class="checkout-section" id="orderSummary">
+                    <h2>Order Summary</h2>
+                    <div class="order-items">
+                        <% products.forEach(product => { %>
+                            <div class="order-item">
+                                <div class="product-image-container">
+                                    <img src="<%= product.image0 %>" class="product-image" alt="<%= product.name %>">
+                                </div>
+                                <div class="product-details">
+                                    <div class="product-header">
+                                        <h3 class="product-name"><%= product.name %></h3>
+                                        <button class="delete-btn" onclick="removeProduct(this, '<%= product._id %>')">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                    <div class="product-specs">
+                                        <span class="spec-item">
+                                            <i class="fas fa-palette"></i>
+                                            Color: <%= product.colors %>
+                                        </span>
+                                        <span class="current-price">₹<%= product.price %></span>
+                                    </div>
+                                    <div class="quantity-control">
+                                        <button class="qty-btn minus" onclick="adjustQuantity(this, -1)">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                        <span class="qty-display" 
+                                        data-price="<%= product.price %>"
+                                        data-product-id="<%= product._id %>"
+                                        data-offer="<%= product.offer%>"><%=product.quantity%></span>
+                                        <button class="qty-btn plus" onclick="adjustQuantity(this, 1,'<%= product.count %>')">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                    <div class="item-total-container">
+                                        <span>Item Total:</span>
+                                        <span class="item-total">₹<%= product.price %></span>
+                                    </div>
+                                   
+                                        <div class="out-of-stock-message" style="display: none;">
+                                            Out of stock - Remove this product to proceed
+                                        </div>
+                                   
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                    
+                    <div class="price-breakdown">
+                        <div class="summary-item">
+                            <span>Subtotal (<span class="item-count"><%= products.length %></span> items)</span>
+                            <span class="amount">₹<span class="subtotal-value"><%= subtotal %></span></span>
+                        </div>
+                        <div class="summary-item">
+                            <span>Delivery Fee</span>
+                            <span class="amount">₹<span class="delivery-fee"><%= deliveryFee %></span></span>
+                        </div>
+                        <div class="summary-item discount">
+                            <span>Discount Applied</span>
+                            <span class="amount">-₹<span class="discount-value"><%= discount %></span></span>
+                        </div>
+                        <div class="summary-item total">
+                            <span>Total Amount</span>
+                            <span class="amount">₹<span class="total-value"><%= total %></span></span>
+                        </div>
+                    </div>
+
+                    <button class="btn full-width" onclick="placeOrder()">
+                        <i class="fas fa-shopping-bag"></i>
+                        Place Order
+                    </button>
+                </div>
             </div>
         </div>
-        <!-- Update your payment section with these corrected payment options -->
-<!-- Payment Section -->
-<div class="section" id="paymentSection">
-    <h2>Select Payment Method</h2>
-    <div class="payment-option" onclick="togglePayment(this)">
-        <label>
-            <input type="radio" name="payment" value="cod">
-            <i class="fas fa-money-bill-wave"></i>
-            Cash on Delivery
-        </label>
-    </div>
-    
-    <div class="payment-option" onclick="togglePayment(this)">
-        <label>
-            <input type="radio" name="payment" value="card">
-            <i class="fas fa-credit-card"></i>
-            Credit/Debit Card
-        </label>
-        <div class="payment-fields">
-            <input type="text" placeholder="Card Number" class="form-input full-width">
-            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                <input type="text" placeholder="MM/YY" class="form-input half-width">
-                <input type="text" placeholder="CVV" class="form-input half-width">
-            </div>
-        </div>
-    </div>
 
-    <div class="payment-option" onclick="togglePayment(this)">
-        <label>
-            <input type="radio" name="payment" value="upi">
-            <i class="fas fa-mobile-alt"></i>
-            UPI Payment
-        </label>
-        <div class="payment-fields">
-            <input type="text" placeholder="UPI ID" class="form-input full-width">
-        </div>
-    </div>
-
-    <!-- Add error message and action buttons -->
-    <div class="payment-error" id="paymentError">
-        Please select a payment method
-    </div>
-
-    <div class="action-btns">
-        <button class="btn" onclick="prevSection('addressSection')">
-            <i class="fas fa-arrow-left"></i>
-            Back
-        </button>
-        <button class="btn" onclick="nextSection('reviewSection')">
-            <i class="fas fa-arrow-right"></i>
-            Continue
-        </button>
-    </div>
-</div>
         <!-- Address Modal -->
         <div class="add-address-modal" id="addressModal">
             <div class="modal-content">
@@ -586,6 +742,12 @@ function showEditModal(event, addressId) {
     document.getElementById('addressModal').style.display = 'block';
 }
 
+	<!-- all js here -->
+<!-- jquery latest version -->
+<script>
+	function filterProducts() {
+    const selectedColors = Array.from(document.querySelectorAll('.color-option.selected'))
+        .map(co => co.dataset.color.toLowerCase());
 
 // Add these new functions
         function showEditModal() {
@@ -675,7 +837,6 @@ function updateProgress(sectionId) {
             step.classList.add('active-step');
         }
     });
-}
 
 function showAddressModal() {
     document.getElementById('addressModal').style.display = 'block';
@@ -697,10 +858,8 @@ function togglePayment(option) {
     document.getElementById('paymentError').style.display = 'none';
 }
 
+// Update the placeOrder function to collect product data including offers
 async function placeOrder() {
-   
-    
-    // Validate required information
     if (!selectedAddressId) {
         alert('Please select a delivery address!');
         return;
@@ -711,12 +870,22 @@ async function placeOrder() {
         return;
     }
 
-    // Collect product data
+    // Hide all out-of-stock messages first
+    document.querySelectorAll('.out-of-stock-message').forEach(msg => {
+        msg.style.display = 'none';
+    });
+
+    // Collect product data with offers
     const products = Array.from(document.querySelectorAll('.order-item')).map(item => {
+        const qtyDisplay = item.querySelector('.qty-display');
+      
         return {
-            productId: item.querySelector('.qty-input').dataset.productId,
-            quantity: parseInt(item.querySelector('.qty-input').value),
-            price: parseFloat(item.querySelector('.qty-input').dataset.price)
+            productId: qtyDisplay.dataset.productId,
+            quantity: parseInt(qtyDisplay.textContent),
+            price: parseFloat(qtyDisplay.dataset.price),
+            offer: parseInt(qtyDisplay.dataset.offer || 0) 
+            
+            // Add offer from data attribute
         };
     });
 
@@ -725,37 +894,50 @@ async function placeOrder() {
     const subtotal = parseFloat(document.querySelector('.subtotal-value').textContent);
     const deliveryFee = parseFloat(document.querySelector('.delivery-fee').textContent);
     const discount = parseFloat(document.querySelector('.discount-value').textContent);
+
     try {
-    const response = await fetch('/user/placeOrder', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            addressId: selectedAddressId,
-            paymentMethod: selectedPaymentMethod,
-            products: products,
-            totals: {
-                subtotal: subtotal,
-                delivery: deliveryFee,
-                discount: discount,
-                total: totalAmount
+        const response = await fetch('/user/placeOrder', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                addressId: selectedAddressId,
+                paymentMethod: selectedPaymentMethod,
+                products: products,
+                totals: {
+                    subtotal: subtotal,
+                    delivery: deliveryFee,
+                    discount: discount,
+                    total: totalAmount
+                }
+            })
+        });
+
+        
+
+        if (response.ok) {
+            const html = await response.text();
+            document.documentElement.innerHTML = html; // Assuming your success response includes a redirect URL
+        } else {
+            const result = await response.json();
+            if (result.stockIssue) {
+                // Show out-of-stock message for the specific product
+                const productElement = document.querySelector(`[data-product-id="${result.productId}"]`);
+                if (productElement) {
+                    const outOfStockMessage = productElement.closest('.order-item').querySelector('.out-of-stock-message');
+                    if (outOfStockMessage) {
+                        outOfStockMessage.style.display = 'block';
+                    }
+                }
+            } else {
+                alert('Order failed: ' + (result.error || 'Unknown error'));
             }
-        })
-    });
-
-    if (response.ok) {
-        const html = await response.text(); // Get the full HTML response
-        document.documentElement.innerHTML = html; // Replace entire page content
-    } else {
-        const result = await response.json();
-        alert('Order failed: ' + (result.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to place order. Please try again.');
     }
-} catch (error) {
-    console.error('Error:', error);
-    alert('Failed to place order. Please try again.');
-}
-
 }
 function saveAddress(e) {
     e.preventDefault();
@@ -817,48 +999,76 @@ function createAddressElement(address) {
     div.onclick = () => selectAddress(div);
     return div;
 }
-function adjustQuantity(button, change) {
-        const input = button.parentElement.querySelector('.qty-input');
-        const newValue = parseInt(input.value) + change;
-        input.value = newValue < 1 ? 1 : newValue;
-        updateQuantity(input);
+function adjustQuantity(button, change,max) {
+    console.log(typeof max);
+    
+    
+    const qtyDisplay = button.parentElement.querySelector('.qty-display');
+    const currentQty = parseInt(qtyDisplay.textContent);
+    if(max){
+        if(parseInt(max)<=currentQty || currentQty>=5){
+        return
     }
-
-    function updateQuantity(input) {
-        const price = parseFloat(input.dataset.price);
-        const quantity = parseInt(input.value);
-        const itemTotal = input.parentElement.parentElement.querySelector('.item-total');
-        itemTotal.textContent = (price * quantity).toFixed(2);
-        
-        updateOrderSummary();
     }
+    const newQty = Math.max(1, currentQty + change); // Ensure minimum is 1
+    qtyDisplay.textContent = newQty;
+    updateQuantity(qtyDisplay);
+}
 
-    function updateOrderSummary() {
+function updateQuantity(element) {
+    const price = parseFloat(element.dataset.price);
+    const quantity = parseInt(element.textContent);
+    const itemTotal = element.parentElement.parentElement.querySelector('.item-total');
+    const total = price * quantity;
+    // Format number to remove .00
+    itemTotal.textContent = '₹' + (total % 1 === 0 ? total : total.toFixed(2));
+    
+    updateOrderSummary();
+}
+
+function updateOrderSummary() {
     let subtotal = 0;
-    document.querySelectorAll('.qty-input').forEach(input => {
-        subtotal += parseFloat(input.dataset.price) * parseInt(input.value);
+    document.querySelectorAll('.qty-display').forEach(display => {
+        subtotal += parseFloat(display.dataset.price) * parseInt(display.textContent);
     });
 
-    // Get values from server-side variables
-    const deliveryFee = <%= deliveryFee %>;
-    const discount = <%= discount %>;
+    // Update displayed values with formatted numbers
+    const subtotalElement = document.querySelector('.subtotal-value');
+    subtotalElement.textContent = subtotal % 1 === 0 ? subtotal : subtotal.toFixed(2);
     
-    // Update displayed values
-    document.querySelector('.subtotal-value').textContent = subtotal.toFixed(2);
-    document.querySelector('.delivery-fee').textContent = deliveryFee.toFixed(2);
-    document.querySelector('.discount-value').textContent = discount.toFixed(2);
+    // Get values from server-side variables
+    const deliveryFee = parseFloat(document.querySelector('.delivery-fee').textContent);
+    const discount = parseFloat(document.querySelector('.discount-value').textContent);
     
     // Calculate total
     const total = subtotal + deliveryFee - discount;
-    document.querySelector('.total-value').textContent = total.toFixed(2);
+    const totalElement = document.querySelector('.total-value');
+    totalElement.textContent = total % 1 === 0 ? total : total.toFixed(2);
+}
+
+function removeProduct(button, productId) {
+    const orderItem = button.closest('.order-item');
+    orderItem.classList.add('removing');
+
+    // Wait for animation
+    setTimeout(() => {
+        // Remove the item from DOM
+        orderItem.remove();
+        
+        // Update order summary
+        updateOrderSummary();
+
+        // Update item count
+        const itemCountElement = document.querySelector('.item-count');
+        const currentCount = parseInt(itemCountElement.textContent);
+        itemCountElement.textContent = currentCount - 1;
+
+        // If this was the last item, redirect to cart
+        if (currentCount - 1 === 0) {
+            window.location.href = '/cart';
+        }
+    }, 300);
 }
     </script>
 </body>
 </html>
-
-
-
-
-
-
-

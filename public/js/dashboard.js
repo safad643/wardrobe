@@ -222,11 +222,7 @@ function productAdder(e) {
   }
 
   // Validate Colors
-  const colorsInput = document.querySelector('input[name="colors"]');
-  if (!colorsInput.value || colorsInput.value.split(',').length === 0) {
-    showError(colorsInput, 'Please provide at least one color.');
-    return;
-  }
+
 
   // Validate Description
   const descrInput = document.querySelector('textarea[name="descr"]');
@@ -458,3 +454,126 @@ function laodordermanagment(){
   
   
 }
+function addVariant(){
+const color = document.getElementById('modalColorSelect').value;
+const size = document.getElementById('modalSizeSelect').value;
+
+if (!color || !size) {
+  alert('Please select both color and size');
+  return;
+}
+
+const selectedVariantsDiv = document.getElementById('selectedVariants');
+
+// Create container for the variant
+const variantContainer = document.createElement('div');
+variantContainer.className = 'mb-3';
+
+// Create label
+const label = document.createElement('label');
+label.textContent = `Count of ${color} - ${size}`;
+label.className = 'form-label';
+
+// Create input field
+const input = document.createElement('input');
+input.type = 'number';
+input.name = `variant_${color}_${size}`;
+input.className = 'form-control';
+
+// Create remove button
+const removeBtn = document.createElement('button');
+removeBtn.type = 'button';
+removeBtn.className = 'btn btn-danger btn-sm mt-2';
+removeBtn.textContent = 'Remove';
+
+// Add elements to container
+variantContainer.appendChild(label);
+variantContainer.appendChild(input);
+variantContainer.appendChild(removeBtn);
+
+// Add container to selectedVariants div
+selectedVariantsDiv.appendChild(variantContainer);
+
+// Reset modal selections
+document.getElementById('modalColorSelect').value = '';
+document.getElementById('modalSizeSelect').value = '';
+
+// Close modal
+$('#variantModal').modal('hide');
+}
+
+function updateProductStatus(orderId, productId, status) {
+  fetch(`/admin/orders/update-status`, {
+      method: 'PUT',
+      headers: {
+          'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+          orderId,
+          productId,
+          status
+      })
+  })
+  .then(async response => {
+      if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Update failed');
+      }
+      showToast('Product status updated successfully', 'success');
+  })
+  .catch(error => {
+      console.error('Error:', error);
+      showToast(error.message || 'Error updating product status', 'error');
+  });
+}
+
+// Toast notification helper
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+  
+  document.body.appendChild(toast);
+  
+  // Auto-remove after 3 seconds
+  setTimeout(() => toast.remove(), 3000);
+  
+  return toast;
+}
+
+// Add this CSS to your existing styles
+const styles = `
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 24px;
+    border-radius: 4px;
+    color: white;
+    z-index: 1000;
+    animation: slideIn 0.3s ease-out;
+  }
+  
+  .toast-info {
+    background-color: #3498db;
+  }
+  
+  .toast-success {
+    background-color: #2ecc71;
+  }
+  
+  .toast-error {
+    background-color: #e74c3c;
+  }
+  
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+`;

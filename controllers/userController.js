@@ -124,7 +124,7 @@ const login = async (req, res) => {
     const match = await bcrypt.compare(password, users[0]?.password || "");
     if (users[0]?.email === email && match) {
       req.session.data = {email}
-      console.log(users[0]._id);
+      
       
       req.session.uid=users[0]._id 
   
@@ -159,7 +159,7 @@ const loadhome = async (req, res) => {
       const categories = await db.collection('catogories').find({}).toArray();
       const products = await db.collection('products').find({ list: true }).toArray();
       const user=await db.collection('users').find({email:req.session.data.email})
-      res.render('user/index', { categories, products ,user});
+      res.render('user/index', { categories, products ,user,profilepic:req?.user?.profilepic});
     } else {
       // Change after user-related stuff is added in home page
       const db = await mongo();
@@ -200,14 +200,31 @@ const loadproductview = async (req, res) => {
     const { name } = req.params;
     const db = await mongo();
     const categories = await db.collection('catogories').find({}).toArray();
-  
     
-
-    const product = await db.collection('products').find({ name }).toArray();
-
+    // Get the current product
+    const product = await db.collection('products').findOne({ name });
     
- 
-    res.render('user/productview', { categories, product: product[0] ,userid:req.session.uid,user:true});
+    if (!product) {
+      return res.status(404).send('Product not found');
+    }
+
+    // Get related products from the same category (excluding current product)
+    const relatedProducts = await db.collection('products')
+      .find({ 
+        category: product.category, 
+        name: { $ne: product.name },  // Exclude current product
+        list: true  // Only listed products
+      })
+      .limit(10)  // Limit to 10 products
+      .toArray();
+
+    res.render('user/productview', { 
+      categories, 
+      product, 
+      relatedProducts,
+      userid: req.session.uid,
+      user: true 
+    });
   } catch (error) {
     console.error('Error in loadproductview:', error);
     res.status(500).send('Internal Server Error');
@@ -323,7 +340,13 @@ const addtocart = async (req, res) => {
       return res.status(400).json({ message: "product already exist" });
     }
 
-    // If product doesn't exist, add it
+    // Remove from wishlist if exists
+    await db.collection('wishlist').updateOne(
+      { userId: userid },
+      { $pull: { products: productid } }
+    );
+
+    // Add product to cart
     const result = await db.collection('cart').updateOne(
       { userid: userid },
       {
@@ -466,74 +489,82 @@ const addadress = async (req, res) => {
   } 
 }
 
-const  placeOrder = async (req, res) => {
-  try {
-  
+  const placeOrder = async (req, res) => {
+    try {
+        const db = await mongo();
+        const { addressId, paymentMethod, products, totals } = req.body;
     
-    const db = await mongo();
-    const {
-      addressId,
-      paymentMethod,
-      products,
-      totals
-    } = req.body;
+        // Check stock availability for all products
+        for (const pair of products) {
+            const product = await db.collection('products').findOne({_id: new ObjectId(pair['productId'])});
+            if (product.count === 0) {
+                return res.status(400).json({stockIssue:true,productId:product._id});
+            }
+        }
+        
+        // Update product counts
+        products.forEach(async (pair) => {
+            await db.collection('products').updateOne(
+                {_id: new ObjectId(pair['productId'])},
+                {$inc: {count: -pair['quantity']}}
+            );
+        });
 
-    // Validate required fields
-    if (!addressId || !paymentMethod || !products?.length) {
-      return res.status(400).json({
-        success: false,
-        error: "Missing required fields"
-      });
+        // Create items array from products with offer and calculated values
+        const items = products.map(product => ({
+            status: 'pending',
+            productId: product.productId,
+            quantity: product.quantity,
+            price: product.price,
+            offer: product.offer,
+            subtotal: product.price * product.quantity,
+            total: product.offer ? 
+                (product.price * product.quantity) * (1 - product.offer/100) : 
+                (product.price * product.quantity)
+        }));
+
+        // Create the order document
+        const order = {
+            userId: req.session.uid,
+            addressId: addressId,
+            paymentMethod: paymentMethod,
+            items: items,
+            subtotal: totals.subtotal,
+            delivery: totals.delivery,
+            discount: totals.discount,
+            total: totals.total,
+            createdAt: new Date()
+        };
+
+        // Insert the order
+        const result = await db.collection('orders').insertOne(order);
+        
+        // If more than one product, clear cart (checkout from cart)
+        if (products.length > 1) {
+            await db.collection('cart').deleteOne({ userid: req.session.uid });
+        }
+        
+        res.render('user/checkoutsuccess', {id: result.insertedId});
+    } catch (error) {
+        console.error("Order placement error:", error);
+        res.status(500).json({
+            success: false,
+            error: "Failed to place order. Please try again."
+        });
     }
-
-    // Calculate per-product costs
-    const productCount = products.length;
-    const deliveryPerProduct = totals.delivery / productCount;
-    const discountPerProduct = totals.discount / productCount;
-
-    // Create array of order documents
-    const orders = products.map(product => ({
-      userId: req.session.uid, // Match your address pattern
-      productId: product.productId,
-      quantity: product.quantity,
-      price: product.price,
-      addressId: addressId,
-      paymentMethod: paymentMethod,
-      status: "pending",
-      subtotal: product.price * product.quantity,
-      delivery: deliveryPerProduct,
-      discount: discountPerProduct,
-      total: (product.price * product.quantity) + deliveryPerProduct - discountPerProduct,
-      createdAt: new Date()
-    }));
-
-    // Insert all orders
-    const result = await db.collection('orders').insertMany(orders);
-   
-    
-    // Convert object of IDs to array
-    const orderIds = Object.values(result.insertedIds).map(id => id.toString());
-
-    res.render('user/checkoutsuccess')
-
-  } catch (error) {
-    console.error("Order placement error:", error);
-    res.status(500).json({
-      success: false,
-      error: "Failed to place order. Please try again."
-    });
-  }
 };
-
 const loadcheckout = async (req, res) => {
+  console.log('dfuigkdkjhm');
+  
   try {
     const db = await mongo();
-    
-    
     const productQuantities = req.body || {};
     const productIds = Object.keys(productQuantities);
+    const prdctidndqty = Object.entries(productQuantities)
+    prdctidndqty.forEach(async (pair)=>{
+       await db.collection('products').findOne({_id:new ObjectId(pair[0])})
+    })
 
-    // Get products and addresses
     const [products, addresses] = await Promise.all([
       db.collection('products').find({
         _id: { $in: productIds.map(id => new ObjectId(id)) }
@@ -541,13 +572,32 @@ const loadcheckout = async (req, res) => {
       db.collection('adress').find({}).toArray()
     ]);
 
-    // Calculate prices
-    const subtotal = products.reduce((total, product) => {
+    // Replicate cart calculation logic
+    let totalWithoutOffers = 0;
+    let discount = 0;
+    let deliveryCharges = 0;
+    let totalItems = 0;
+
+    products.forEach(product => {
+      const price = product.price;
       const quantity = productQuantities[product._id.toString()] || 0;
-      return total + (product.price * quantity);
-    }, 0);
-    
-    const total = subtotal + 49 - 500; // Delivery: 49, Discount: 500
+      const offer = product.offer || 0;
+
+      totalWithoutOffers += price * quantity;
+      totalItems += quantity;
+
+      if (offer > 0) {
+        discount += (price * (offer / 100)) * quantity;
+      }
+
+      const discountedPricePerItem = price * (1 - (offer / 100));
+      if (discountedPricePerItem * quantity < 500) {
+        deliveryCharges += 40 * quantity;
+      }
+    });
+
+    const subtotal = totalWithoutOffers - discount;
+    const totalAmount = subtotal + deliveryCharges;
 
     res.render('user/checkout', {
       addresses,
@@ -555,28 +605,68 @@ const loadcheckout = async (req, res) => {
         ...product,
         quantity: productQuantities[product._id.toString()] || 0
       })),
-      subtotal,
-      deliveryFee: 49,
-      discount: 100,
-      total
+      subtotal: Math.round(subtotal),
+      deliveryFee: Math.round(deliveryCharges),
+      discount: Math.round(discount),
+      total: Math.round(totalAmount)
     });
-    
+
   } catch (error) {
     console.log(error);
     res.status(500).send('Checkout error');
   }
 };
 
-const loadorderview=async(req,res)=>{
-  const orderid = req.params.orderid;  
-  
-  
-  const db = await mongo();
-  const order = await db.collection("orders").findOne({_id: new ObjectId(orderid)})
-  const product = await db.collection("products").findOne({ 
-    _id: new ObjectId(order.productId) 
-  });
-  res.render("user/orderviewpage", { order,product })
+const loadorderview = async(req,res) => {
+  try {
+    const orderid = req.params.orderid;
+    const productid = req.params.productid;
+    const db = await mongo();
+    
+    // Get order details
+    const order = await db.collection("orders").findOne({
+      _id: new ObjectId(orderid)
+    });
+    
+    // Get address details
+    const address = await db.collection("adress").findOne({
+      _id: new ObjectId(order.addressId)
+    });
+    
+    // Find the specific product from order items
+    let orderProduct = order.items.find(item => item.productId === productid);
+    
+    // Get product details
+    const productDetails = await db.collection("products").findOne({
+      _id: new ObjectId(productid)
+    });
+    
+    // Combine order item details with product details
+    const product = {
+      ...productDetails,
+      ...orderProduct,
+      quantity: orderProduct.quantity,
+      offer: productDetails.offer || 0
+    };
+
+    // Add address to order object
+    order.address = {
+      street: address.street,
+      city: address.city,
+      state: address.state,
+      country: address.country,
+      pincode: address.postalCode,
+      mobile: address.phone
+    };
+
+    // Set the order status based on the specific item's status
+    order.status = orderProduct.status;
+    
+    res.render("user/orderviewpage", { order, product });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error loading order view");
+  }
 }
 
 const deleteAddress = async (req, res) => {
@@ -630,8 +720,201 @@ const updateAddress = async (req, res) => {
   }
 };
 
+const changepassword=async (req,res)=>{
+  const {currentPassword,newPassword}=req.body
+  const db= await mongo()
+  const data = await db.collection('users').findOne({ _id: new ObjectId(req.session.uid) }); 
+  
+  
+  const ismatch =await bcrypt.compare(currentPassword,data.password)
+  
+  
+  if(ismatch){
+    const hashed = await bcrypt.hash(newPassword,10)
+    await db.collection('users').updateOne({_id:new ObjectId(req.session.uid)},{$set:{password:hashed}}) 
+    res.json({status:'success'})
+  }
+  else{
+    res.json({message:'current password is wrong'})
+  }
+}
+
+
+const cancelOrder = async (req, res) => {
+  try {
+      const orderId = req.params.orderId;
+      const db = await mongo();
+      
+      // First get the order details to know the product and quantity
+      const order = await db.collection('orders').findOne({ _id: new ObjectId(orderId) });
+      
+      if (!order) {
+          return res.status(404).json({ success: false, message: 'Order not found' });
+      }
+
+      // Update order status to cancelled
+      await db.collection('orders').updateOne(
+          { _id: new ObjectId(orderId) },
+          { $set: { "items.$[].status": 'cancelled' } }
+      );
+
+      // For each item in the order, increase the product count
+      for (const item of order.items) {
+          await db.collection('products').updateOne(
+              { _id: new ObjectId(item.productId) },
+              { $inc: { count: Number(item.quantity) || 1 } }
+          );
+      }
+         
+      res.redirect(`/user/orderdetails/${orderId}/${order.items[0].productId}`);
+
+  } catch (error) {
+      console.error('Error cancelling order:', error);
+      res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+const loadWishlist = async (req, res) => {
+  try {
+      const db = await mongo();
+      const userId = req.session.uid;
+   
+      // Get user's wishlist
+      const userWishlist = await db.collection('wishlist').findOne({
+          userId: userId
+      });
+     
+      let products = [];
+      if (userWishlist && userWishlist.products.length > 0) {
+          // Get the product details for wishlist items
+          const productIds = userWishlist.products.map(id => new ObjectId(id));
+          products = await db.collection('products')
+              .find({ _id: { $in: productIds } })
+              .toArray();
+      }
+
+      res.render('user/wishlist', {
+          products: products,
+          user: true
+      });
+  } catch (error) {
+      console.error('Error loading wishlist:', error);
+      res.status(500).send('Internal Server Error');
+  }
+};
+
+const addToWishlist = async (req, res) => {
+  try {
+      const db = await mongo();
+      const productId = req.params.productId;
+      const userId = req.session.uid;
+
+      // Check if product exists in cart
+      const cart = await db.collection('cart').findOne({
+          userid: userId,
+          'products.productid': productId
+      });
+
+      if (cart) {
+          return res.status(400).json({ message: "Product is in cart" });
+      }
+
+      // Find user's wishlist document
+      const userWishlist = await db.collection('wishlist').findOne({
+          userId: userId
+      });
+
+      // Check if product already exists in wishlist array
+      if (userWishlist && userWishlist.products.includes(productId)) {
+          return res.status(400).json({ message: "Product already in wishlist" });
+      }
+
+      if (userWishlist) {
+          // Add product to existing wishlist
+          await db.collection('wishlist').updateOne(
+              { userId: userId },
+              { 
+                  $push: { 
+                      products: productId
+                  }
+              }
+          );
+      } else {
+          // Create new wishlist document for user
+          await db.collection('wishlist').insertOne({
+              userId: userId,
+              products: [productId]
+          });
+      }
+
+      res.status(200).json({ message: "Added to wishlist" });
+  } catch (error) {
+      console.error('Error adding to wishlist:', error);
+      res.status(500).json({ message: "Error adding to wishlist" });
+  }
+};
+
+const removeFromWishlist = async (req, res) => {
+  try {
+      const db = await mongo();
+      const productId = req.params.productId;
+      const userId = req.session.uid;
+
+      // Find user's wishlist document
+      const userWishlist = await db.collection('wishlist').findOne({
+          userId: userId
+      });
+
+      if (!userWishlist) {
+          return res.status(404).json({ message: "Wishlist not found" });
+      }
+
+      // Remove product from wishlist array
+      await db.collection('wishlist').updateOne(
+          { userId: userId },
+          { $pull: { products: productId } }
+      );
+
+      res.status(200).json({ message: "Removed from wishlist" });
+  } catch (error) {
+      console.error('Error removing from wishlist:', error);
+      res.status(500).json({ message: "Error removing from wishlist" });
+  }
+};
+
+const checkWishlist = async (req, res) => {
+    try {
+        const db = await mongo();
+        const userId = req.session.uid;
+
+        if (!userId) {
+            return res.status(400).json({ 
+                message: "User not logged in" 
+            });
+        }
+
+        // Find user's wishlist
+        const userWishlist = await db.collection('wishlist').findOne({
+            userId: userId
+        });
+
+        // Return the products array or empty array if no wishlist found
+        const products = userWishlist ? userWishlist.products : [];
+        res.json(products);
+
+    } catch (error) {
+        console.error('Error checking wishlist:', error);
+        res.status(500).json({ 
+            message: "Internal server error" 
+        });
+    }
+};
 
 module.exports = {
+  loadWishlist,
+  addToWishlist,
+  removeFromWishlist,
+  checkWishlist,
+  cancelOrder,
   updateAddress,
   deleteAddress,
   loadorderview,
@@ -658,6 +941,7 @@ module.exports = {
   login,
   googleauth,
   loadhome,
+  changepassword
 };
 
 function generateOTP(length = 6) {

@@ -14,12 +14,12 @@ passport.use(
       console.log(JSON.stringify(profile, null, 2));
 
       if (existingUser) {
-        console.log('User already exists:', existingUser);
+       
         done(null, existingUser); // Pass the existing user to Passport
       } else {
         const newUser = { gid: profile.id, name: profile.displayName,profilepic:profile.photos[0].value ,createdAt:new Date()};
         await db.collection('users').insertOne(newUser);
-        console.log('New user created:', newUser);
+      
         done(null, newUser); // Pass the new user to Passport
       }
     }

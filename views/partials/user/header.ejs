@@ -6,8 +6,483 @@
 	<style>
 		body {
     overflow-x: hidden;
+    padding-top: 80px;
 }
 
+:root {
+    --primary: #FFD700;
+    --primary-dark: #FFC000;
+    --primary-light: #FFF8DC;
+    --success: #34a853;
+    --warning: #fbbc05;
+    --danger: #ea4335;
+    --dark: #202124;
+    --light: #f8f9fa;
+    --border-radius: 12px;
+    --shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.e-commerce-header {
+    background: white;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    padding: 0.5rem 2rem;
+    transition: all 0.3s ease;
+}
+
+.header-top {
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 1rem;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logo {
+    font-size: 1.8rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.main-nav {
+    flex: 1;
+}
+
+.nav-links {
+    display: flex;
+    gap: 1.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: #444;
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 0.5rem 0.8rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+    color: #DAA520;
+    background: var(--primary-light);
+}
+
+.dropdown {
+    position: relative;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    min-width: 180px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    padding: 0.5rem 0;
+    z-index: 1000;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+.dropdown-content a {
+    padding: 0.8rem 1.2rem;
+    display: block;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+}
+
+.action-link {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    color: #444;
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.action-link:hover {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.action-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--primary);
+    color: #333;
+    font-size: 0.7rem;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 2px solid white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 1200px) {
+    .nav-links {
+        gap: 1rem;
+    }
+    
+    .nav-links a {
+        font-size: 0.9rem;
+        padding: 0.4rem 0.6rem;
+    }
+    
+    .header-actions {
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .e-commerce-header {
+        padding: 0.5rem 1rem;
+    }
+
+    .header-top {
+        height: auto;
+        flex-wrap: wrap;
+        gap: 0.8rem;
+        padding: 0.5rem 0;
+    }
+
+    .logo-section {
+        flex: 0 0 auto;
+    }
+
+    .logo {
+        font-size: 1.5rem;
+    }
+
+    .search-section {
+        order: 3;
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin: 0;
+    }
+
+    .nav-links {
+        font-size: 0.85rem;
+        gap: 0.8rem;
+    }
+
+    .header-actions {
+        gap: 0.8rem;
+    }
+
+    .action-link {
+        width: 35px;
+        height: 35px;
+    }
+}
+
+@media (max-width: 768px) {
+    .nav-links {
+        display: none;
+    }
+
+    .header-top {
+        justify-content: center;
+        flex-wrap: nowrap;
+        gap: 10px;
+        height: 70px;
+    }
+
+    /* Hide wishlist and cart icons */
+    .action-link[href="/user/wishlist"],
+    .action-link[href="/user/cart"] {
+        display: none;
+    }
+
+    /* Logo on left */
+    .logo-section {
+        
+      
+        flex: 0 0 auto;
+    }
+
+    /* Search in center */
+    .search-section {
+        order: 2;
+        flex: 0 0 calc(100% - 120px);
+        margin: 0 10px;
+    }
+
+    /* Profile icon on right */
+    .header-actions {
+        order: 3;
+        margin: 0;
+    }
+
+    .action-link[href="/user/profile"] {
+        display: flex;
+    }
+
+    .search-input::placeholder {
+        content: "Search";
+    }
+    
+    .search-input {
+        margin-bottom: 0 !important;
+        /* Override the default placeholder text for mobile */
+        &[placeholder] {
+            text-overflow: ellipsis;
+            placeholder: "Search";
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    .e-commerce-header {
+        padding: 0.5rem;
+    }
+
+    .logo {
+        
+        font-size: 1.3rem;
+    }
+
+    .action-link {
+        width: 32px;
+        height: 32px;
+    }
+
+    .search-section {
+        flex: 0 0 calc(100% - 100px);
+        margin: 0 8px;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.e-commerce-header.scrolled {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+    padding: 0.3rem 2rem;
+}
+
+.e-commerce-header.scrolled .logo {
+    font-size: 1.6rem;
+}
+
+.e-commerce-header.scrolled .action-link {
+    width: 35px;
+    height: 35px;
+}
+
+/* Add or modify these styles */
+.checkout-header .menu-toggle,
+.checkout-header .mobile-menu {
+    display: none !important;
+}
+
+.checkout-header .logo-section {
+    margin: 0 auto;
+    text-align: center;
+}
+
+.checkout-header .header-top {
+    justify-content: center;
+}
+
+@media (max-width: 992px) {
+    .checkout-header .menu-toggle {
+        display: none !important;
+    }
+}
+
+.search-section {
+    flex: 1;
+    max-width: 500px;
+}
+
+.search-container {
+    position: relative;
+    width: 100%;
+}
+
+.search-form {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    position: relative;
+}
+
+.search-input {
+    margin-bottom: 0 !important;
+    width: 100%;
+    height: 44px; /* Increased height for better touch target */
+    padding: 0 45px 0 16px; /* Increased right padding to accommodate the icon */
+    border: 1px solid #e0e0e0;
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+    margin: 0;
+    line-height: 44px; /* Match the height for vertical centering */
+}
+
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: white;
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.search-button {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    padding: 0 16px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.search-button i {
+    font-size: 16px;
+}
+
+.search-button:hover {
+    color: var(--primary-dark);
+}
+
+.search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    margin-top: 5px;
+    display: none;
+    z-index: 1000;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.suggestion-item {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.suggestion-item:hover {
+    background-color: var(--primary-light);
+}
+
+.suggestion-image {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.suggestion-content {
+    flex: 1;
+}
+
+.suggestion-category {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 2px;
+}
+
+.suggestion-text {
+    color: #1a73e8;
+}
+
+@media (max-width: 992px) {
+    .search-section {
+        margin: 0 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-top {
+        flex-wrap: wrap;
+    }
+    
+    .search-section {
+        order: 3;
+        max-width: 100%;
+        margin: 0.5rem 0;
+        width: 100%;
+    }
+}
 	</style>
 		<meta charset="utf-8">
 		<meta http-equiv="x-ua-compatible" content="ie=edge">
@@ -51,6 +526,9 @@
 <!-- modernizr css -->
 <script src="/user/js/vendor/modernizr-3.11.2.min.js"></script>
 
+<!-- Add this at the top of the header partial -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
 	</head>
 	<body>
 		<!-- WRAPPER START -->
@@ -81,149 +559,194 @@
 			</div>
 			<!-- Mobile-header-top End -->
 			<!-- HEADER-AREA START -->
-			<header  id="sticky-menu" class="header">
-				<div class="header-area">
-					<div class="container-fluid">
-						<div class="row">
-							<div class="col-md-4 offset-md-4 col-7">
-								<!-- logo -->
-							</div>
-							<div class="col-md-4 col-5">
-								<div class="mini-cart text-end">
-									<ul>
-										<li>
-										
-											<a style="margin-right: 8px;" class="cart-icon" href="<%= typeof user !== 'undefined' ? '/user/profile' : '/user/login' %>"> 
-
-												
-											
-												<i class="zmdi zmdi-account"></i>
-												
-											</a>
-											
-										</li>
-									</ul>
-								</div>
-							</div>
+			<header class="e-commerce-header">
+				<div class="header-top">
+					<div class="logo-section">
+						<a href="/" class="logo">WARDROBE</a>
+					</div>
+					<div class="search-section">
+						<div class="search-container">
+							<form action="/search" method="GET" class="search-form">
+								<input 
+									type="text" 
+									name="q" 
+									id="searchInput"
+									placeholder="Search products..." 
+									class="search-input mobile-search"
+									data-mobile-placeholder="Search"
+									autocomplete="off"
+								>
+								<button type="submit" class="search-button">
+									<i class="fas fa-search"></i>
+								</button>
+							</form>
+							<div class="search-suggestions" id="searchSuggestions"></div>
 						</div>
 					</div>
-				</div>
-				<!-- MAIN-MENU START -->
-				<div class="menu-toggle hamburger hamburger--emphatic d-none d-md-block">
-					<div class="hamburger-box">
-						<div class="hamburger-inner"></div>
-					</div>
-				</div>
-				<div class="main-menu  d-none d-md-block">
-					<nav>
-						<ul>
-							<li><a href="index.html">home</a>
-								<div class="sub-menu menu-scroll">
-									<ul>
-										<li class="menu-title">Page's</li>
-										<li><a href="index.html">Home Version 1</a></li>
-										<li><a href="index-2.html">Home Version 2</a></li>
-									</ul>
+					<nav class="main-nav" id="main-nav">
+						<ul class="nav-links">
+							
+							<li class="dropdown">
+								<a href="/products"><i class="fas fa-tshirt"></i> All Products <i class="fas fa-chevron-down"></i></a>
+								<div class="dropdown-content">
+									<a href="/men"><i class="fas fa-male"></i> Men's Wear</a>
+									<a href="/women"><i class="fas fa-female"></i> Women's Wear</a>
+									<a href="/kids"><i class="fas fa-child"></i> Kids Wear</a>
 								</div>
 							</li>
-							<li><a href="shop.html">products</a>
-								<div class="mega-menu menu-scroll">
-									<div class="table">
-										<div class="table-cell">
-											<div class="half-width">
-												<ul>
-													<li class="menu-title">best brands</li>
-													<li><a href="#">henning koppel</a></li>
-													<li><a href="#">jehs + Laub</a></li>
-													<li><a href="#">vicke lindstrand</a></li>
-													<li><a href="#">don chadwick</a></li>
-													<li><a href="#">akiko kuwahata</a></li>
-													<li><a href="#">barbro berlin</a></li>
-													<li><a href="#">cecilia hall</a></li>
-													<li><a href="#">don chadwick</a></li>
-												</ul>
-											</div>
-											<div class="half-width">
-												<ul>
-													<li class="menu-title">popular brands</li>
-													<li><a href="#">akiko kuwahata</a></li>
-													<li><a href="#">barbro berlin</a></li>
-													<li><a href="#">cecilia hall</a></li>
-													<li><a href="#">don chadwick</a></li>
-													<li><a href="#">henning koppel</a></li>
-													<li><a href="#">jehs + Laub</a></li>
-													<li><a href="#">vicke lindstrand</a></li>
-													<li><a href="#">don chadwick</a></li>
-												</ul>
-											</div>
-											<div class="full-width">
-												<div class="mega-menu-img">
-													<a href="single-product.html"><img src="img/megamenu/1.jpg" alt="" /></a>
-												</div>
-											</div>
-											<div class="pb-80"></div>
-										</div>
-									</div>
-								</div>
-							</li>
-                            <li><a href="#">Shortcodes</a>
-                                <div class="sub-menu menu-scroll">
-                                    <ul>
-                                        <li class="menu-title">Shortcodes</li>
-                                        <li><a href="elements-accordions.html">Accordion</a></li>
-                                        <li><a href="elements-toggles.html">Toggles</a></li>
-                                        <li><a href="elements-tab.html">Tab</a></li>
-                                        <li><a href="elements-product-tab.html">Product Tab</a></li>
-                                        <li><a href="elements-product-tab-2.html">Product Tab 2</a></li>
-                                        <li><a href="elements-carousel.html">product carousel</a></li>
-                                        <li><a href="elements-carousel-2.html">product carousel 2</a></li>
-                                        <li><a href="elements-featured-product.html">Featured Product</a></li>
-                                        <li><a href="elements-featured-product-2.html">Featured Product 2</a></li>
-                                        <li><a href="elements-button.html">Button</a></li>
-                                        <li><a href="elements-table.html">Table</a></li>
-                                        <li><a href="elements-progress-bars.html">Progress Bar</a></li>
-                                        <li><a href="elements-blog.html">Blog</a></li>
-                                        <li><a href="elements-blog-2.html">Blog - 2</a></li>
-                                        <li><a href="elements-team.html">Team</a></li>
-                                        <li><a href="elements-footer.html">Footer</a></li>
-                                        <li><a href="elements-footer-2.html">Footer 2</a></li>
-                                        <li><a href="elements-map.html">Map</a></li>
-                                    </ul>
-                                </div>
-                            </li>
-							<li><a href="shop-sidebar.html">accesories</a></li>
-							<li><a href="shop-list.html">lookbook</a></li>
-							<li><a href="blog.html">blog</a></li>
-							<li><a href="#">pages</a>
-								<div class="sub-menu menu-scroll">
-									<ul>
-										<li class="menu-title">Page's</li>
-										<li><a href="shop.html">Shop</a></li>
-										<li><a href="shop-sidebar.html">Shop Sidebar</a></li>
-										<li><a href="shop-grid-right-sidebar.html">Shop Right Sidebar</a></li>
-										<li><a href="shop-list.html">Shop List</a></li>
-										<li><a href="shop-list-right-sidebar.html">Shop List right sidebar</a></li>
-										<li><a href="single-product.html">Single Product</a></li>
-										<li><a href="single-product-sidebar.html">Single Product Sidebar</a></li>
-										<li><a href="cart.html">Shopping Cart</a></li>
-										<li><a href="wishlist.html">Wishlist</a></li>
-										<li><a href="checkout.html">Checkout</a></li>
-										<li><a href="order.html">Order</a></li>
-										<li><a href="login.html">login / Registration</a></li>
-										<li><a href="my-account.html">My Account</a></li>
-										<li><a href="404.html">404</a></li>
-										<li><a href="blog.html">Blog</a></li>
-										<li><a href="single-blog.html">Single Blog</a></li>
-										<li><a href="single-blog-sidebar.html">Single Blog Sidebar</a></li>
-										<li><a href="about.html">About Us</a></li>
-										<li><a href="contact.html">Contact</a></li>
-									</ul>
-								</div>
-							</li>
-							<li><a href="about.html">about us</a></li>
-							<li><a href="contact.html">contact</a></li>
+							<li><a href="/new-arrivals"><i class="fas fa-star"></i> New Arrivals</a></li>
+				
+							<li><a href="/deals"><i class="fas fa-tags"></i> Deals</a></li>
 						</ul>
 					</nav>
+					<div class="header-actions">
+						<a href="/user/wishlist" class="action-link">
+							<i class="fas fa-heart"></i>
+							<span class="action-badge">0</span>
+						</a>
+						<a href="/user/cart" class="action-link">
+							<i class="fas fa-shopping-cart"></i>
+							<span class="action-badge">0</span>
+						</a>
+						<a href="/user/profile" class="action-link">
+							<% if (typeof profilepic !== 'undefined' && profilepic) { %>
+								<img  src="<%= profilepic %>" alt="Profile" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+							<% } else { %>
+								<i class="fas fa-user"></i>
+							<% } %>
+						</a>
+					</div>
 				</div>
-				<!-- MAIN-MENU END -->
 			</header>
+		</div>
+
+		<script>
+			window.addEventListener('scroll', function() {
+				const header = document.querySelector('.e-commerce-header');
+				if (window.scrollY > 50) {
+					header.classList.add('scrolled');
+				} else {
+					header.classList.remove('scrolled');
+				}
+			});
+		</script>
+
+		<script>
+			document.addEventListener('DOMContentLoaded', function() {
+				const dropdowns = document.querySelectorAll('.dropdown');
+
+				// Handle dropdown toggles in mobile view
+				dropdowns.forEach(dropdown => {
+					const link = dropdown.querySelector('a');
+					link.addEventListener('click', function(e) {
+						if(window.innerWidth <= 992) {
+							e.preventDefault();
+							dropdown.classList.toggle('active');
+							const content = dropdown.querySelector('.dropdown-content');
+							content.style.display = dropdown.classList.contains('active') ? 'block' : 'none';
+						}
+					});
+				});
+			});
+		</script>
+
+		<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			const searchInput = document.getElementById('searchInput');
+			const searchSuggestions = document.getElementById('searchSuggestions');
+			let debounceTimer;
+
+			// Dummy data for suggestions
+			const dummyProducts = [
+				{
+					title: "Floral Summer Dress",
+					category: "Women's Dresses",
+					image: "https://placehold.co/100x100",
+					url: "/product/floral-summer-dress"
+				},
+				{
+					title: "Dressing Table Modern",
+					category: "Furniture",
+					image: "https://placehold.co/100x100",
+					url: "/product/dressing-table"
+				},
+				{
+					title: "Evening Dress Black",
+					category: "Women's Fashion",
+					image: "https://placehold.co/100x100",
+					url: "/product/evening-dress"
+				},
+				{
+					title: "Dress Shoes Leather",
+					category: "Footwear",
+					image: "https://placehold.co/100x100",
+					url: "/product/dress-shoes"
+				}
+			];
+
+			searchInput.addEventListener('input', function() {
+				clearTimeout(debounceTimer);
+				const query = this.value.trim().toLowerCase();
+				
+				if (query.length < 1) {
+					searchSuggestions.style.display = 'none';
+					return;
+				}
+
+				debounceTimer = setTimeout(() => {
+					// Filter dummy data based on search query
+					const filteredResults = dummyProducts.filter(item => 
+						item.title.toLowerCase().includes(query) || 
+						item.category.toLowerCase().includes(query)
+					);
+
+					if (filteredResults.length > 0) {
+						searchSuggestions.innerHTML = filteredResults.map(item => `
+							<div class="suggestion-item" onclick="window.location.href='${item.url}'">
+								<img src="${item.image}" alt="${item.title}" class="suggestion-image">
+								<div class="suggestion-content">
+									<div>${item.title}</div>
+									<div class="suggestion-category">in <span class="suggestion-text">${item.category}</span></div>
+								</div>
+							</div>
+						`).join('');
+						searchSuggestions.style.display = 'block';
+					} else {
+						searchSuggestions.style.display = 'none';
+					}
+				}, 300);
+			});
+
+			// Close suggestions when clicking outside
+			document.addEventListener('click', function(e) {
+				if (!searchInput.contains(e.target) && !searchSuggestions.contains(e.target)) {
+					searchSuggestions.style.display = 'none';
+				}
+			});
+
+			// Prevent form submission when selecting suggestion
+			searchInput.closest('form').addEventListener('submit', function(e) {
+				if (searchSuggestions.style.display === 'block') {
+					e.preventDefault();
+				}
+			});
+		});
+		</script>
+
+		<script>
+		// Add this to your existing script
+		function updatePlaceholder() {
+			const searchInput = document.getElementById('searchInput');
+			if (window.innerWidth <= 768) {
+				searchInput.placeholder = "Search";
+			} else {
+				searchInput.placeholder = "Search products...";
+			}
+		}
+
+		// Run on page load and window resize
+		window.addEventListener('load', updatePlaceholder);
+		window.addEventListener('resize', updatePlaceholder);
+		</script>
+	</body>
+</html>

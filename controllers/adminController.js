@@ -2,6 +2,7 @@ const { buffer } = require("stream/consumers");
 const mongo = require("../mongodb/mongo");
 const fs = require("fs");
 const { error } = require("console");
+const { ObjectId } = require("mongodb");
 
 const loadlogin = (req, res) => {
   try {
@@ -268,6 +269,7 @@ const productadd = async (req, res) => {
       req.body[`image${imgarray.indexOf(i)}`] = `/images/${req.body.name}/image${imgarray.indexOf(i)}.png`;
     }
     req.body.list = true;
+    req.body.count=parseInt(req.body.count)
     await db.collection("products").insertOne(req.body);
     const products = await db.collection("products").find({}).toArray();
     res.render("admin/nav/products", { products });
@@ -316,14 +318,38 @@ const productupdate = async (req, res) => {
   }
 };
 
-
-
 const loadordermanagment = async (req, res) => {
   try {
     const db = await mongo();
-    const orders = await db.collection("orders").find({}).toArray();
- 
-    res.render("admin/nav/ordermanagment", { orders });
+    const orders = await db.collection("orders").find({}).sort({ createdAt: -1 }).toArray();
+    
+    // Create separate documents for each item in orders
+    const flattenedOrders = await Promise.all(orders.flatMap(async (order) => {
+      return Promise.all(order.items.map(async (item) => {
+        const product = await db.collection("products").findOne({ _id: new ObjectId(item.productId) });
+        
+        return {
+          orderId: order._id,
+          userId: order.userId,
+          createdAt: order.createdAt,
+          paymentMethod: order.paymentMethod,
+          paymentStatus: order.paymentStatus || 'pending',
+          deliveryStatus: order.deliveryStatus || 'pending',
+          productId: item.productId,
+          productName: product?.name || 'Product Not Found',
+          productImage: product?.image0 || '',
+          quantity: item.quantity,
+          price: item.price,
+          total: item.total,
+          status: item.status
+        };
+      }));
+    }));
+
+    // Flatten the array of arrays into a single array
+    const allOrderItems = flattenedOrders.flat();
+
+    res.render("admin/nav/ordermanagment", { orders: allOrderItems });
   } catch (err) {
     console.error(err);
     res.status(500).send("Internal Server Error");
@@ -331,43 +357,46 @@ const loadordermanagment = async (req, res) => {
 };
 
 
-const updateOrderStatus = async (req, res) => {
-  try {
-    const { orderId } = req.params;
-    const { deliveryStatus, paymentStatus } = req.body;
 
-    const db = await mongo();
-    
-    // Update the order
-    const result = await db.collection("orders").updateOne(
-      { _id: new ObjectId(orderId) },
-      { 
-        $set: { 
-          deliveryStatus: deliveryStatus.trim(),
-          paymentStatus: paymentStatus.trim(),
-          updatedAt: new Date()
-        } 
-      }
-    );
+const updateProductStatus = async (req, res) => {
+    try {
+        const { orderId, productId, status } = req.body;
+        
+        const db = await mongo();
+        
+        // Update the specific product's status in the order
+        const result = await db.collection("orders").updateOne(
+            { 
+                _id: new ObjectId(orderId),
+                "items.productId": productId 
+            },
+            { 
+                $set: { 
+                    "items.$.status": status,
+                    updatedAt: new Date()
+                } 
+            }
+        );
 
-    if (result.matchedCount === 0) {
-      return res.status(404).json({ error: "Order not found." });
+        if (result.matchedCount === 0) {
+            return res.status(404).json({ error: "Order or product not found." });
+        }
+
+        res.json({ 
+            success: true, 
+            message: "Product status updated successfully" 
+        });
+        
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ 
+            error: "An error occurred while updating the product status." 
+        });
     }
-
-    res.json({ 
-      success: true, 
-      message: "Order status updated successfully" 
-    });
-    
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ 
-      error: "An error occurred while updating the order status." 
-    });
-  }
 };
+
 module.exports = {
-  updateOrderStatus,
+  updateProductStatus,
   loadordermanagment,
   productupdate,
   productadd,
@@ -387,4 +416,5 @@ module.exports = {
   loadcatogupdate,
   catogoryupdate,
   deletecatogory,
+  updateProductStatus,
 };

@@ -210,6 +210,62 @@
     border-radius: 6px;
     background: white;
 }
+
+.fix {
+    display: flex;
+    align-items: center;
+}
+
+.pro-price {
+    color: #c87065;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 28px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.original-price {
+    margin-left: 10px;
+    text-decoration: line-through;
+    color: #999;
+    font-size: 14px;
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 28px;
+}
+
+.pro-rating {
+    margin-left: auto;
+}
+
+.wishlist-icon {
+    position: relative;
+    z-index: 2;
+}
+
+.wishlist-icon i {
+    transition: all 0.3s ease;
+}
+
+.wishlist-icon.active i {
+    color: #ff4d94;
+}
+
+.wishlist-icon i.zmdi-favorite {
+    color: #ff4d94;
+}
+
+/* Animation for heart icon */
+@keyframes heartPop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.wishlist-icon.animate i {
+    animation: heartPop 0.3s ease;
+}
 	</style>
 	
 				
@@ -243,27 +299,7 @@
 								</select>
 						</div>
 		
-						<!-- Colors -->
-						<div class="filter-group">
-								<div class="filter-group-title">Colors</div>
-								<div class="color-options">
-										<% 
-												const colors = [];
-												products.forEach(product => {
-														const productColors = product.colors.split(',').map(c => c.trim());
-														productColors.forEach(color => {
-																if (!colors.includes(color)) colors.push(color);
-														});
-												});
-										%>
-										<% colors.forEach(color => { %>
-										<div class="color-option" 
-												 style="background-color: <%= color %>;"
-												 onclick="toggleColorFilter('<%= color %>')"
-												 data-color="<%= color %>"></div>
-										<% }); %>
-								</div>
-						</div>
+					
 				</div>
 		</div>
   
@@ -287,7 +323,12 @@
                                 
                                 <a href="/user/product/<%= product.name %>"><img src="<%= product.image0 %>" alt="<%= product.name %>" /></a>
                                 <div class="product-action clearfix">
-                                    <a href="wishlist.html" data-bs-toggle="tooltip" data-placement="top" title="Wishlist"><i class="zmdi zmdi-favorite-outline"></i></a>
+                                    <a href="javascript:void(0)" 
+                                       onclick="toggleWishlist(this, '<%= product._id %>')" 
+                                       class="wishlist-icon" 
+                                       data-product-id="<%= product._id %>">
+                                        <i class="zmdi zmdi-favorite-outline"></i>
+                                    </a>
                                     <a href="#" data-bs-toggle="modal" data-bs-target="#productModal" title="Quick View"><i class="zmdi zmdi-zoom-in"></i></a>
                                     <a href="#" data-bs-toggle="tooltip" data-placement="top" title="Compare"><i class="zmdi zmdi-refresh"></i></a>
                                     <a href="cart.html" data-bs-toggle="tooltip" data-placement="top" title="Add To Cart"><i class="zmdi zmdi-shopping-cart-plus"></i></a>
@@ -298,7 +339,13 @@
                                     <h4 class="post-title floatleft"><a href="/user/product/<%= product.name %>"><%= product.name %></a></h4>
                                 </div>
                                 <div class="fix">
-                                    <span class="pro-price floatleft">	<%= product.price %></span>
+                                    <% if (product.offer && product.offer > 0) { %>
+                                        <% const discountedPrice = Math.floor(product.price - (product.price * product.offer / 100)) %>
+                                        <span class="pro-price floatleft">₹<%= discountedPrice %></span>
+                                        <span class="original-price floatleft">₹<%= Math.floor(product.price) %></span>
+                                    <% } else { %>
+                                        <span class="pro-price floatleft">₹<%= Math.floor(product.price) %></span>
+                                    <% } %>
                                     <span class="pro-rating floatright">
                                         <a href="#"><i class="zmdi zmdi-star"></i></a>
                                         <a href="#"><i class="zmdi zmdi-star"></i></a>
@@ -514,11 +561,6 @@ function sortProducts() {
     products.forEach(product => container.appendChild(product));
 }
 
-function toggleColorFilter(color) {
-    const colorElement = document.querySelector(`.color-option[data-color="${color}"]`);
-    colorElement.classList.toggle('selected');
-    filterProducts();
-}
 
 function clearAllFilters() {
     // Remove color selections
@@ -533,6 +575,83 @@ function clearAllFilters() {
     // Reset sorting order
     sortProducts();
 }
+
+async function toggleWishlist(element, productId) {
+    try {
+        const isActive = element.classList.contains('active');
+        const method = isActive ? 'DELETE' : 'POST';
+        const endpoint = isActive 
+            ? `/user/wishlist/remove/${productId}`
+            : `/user/wishlist/add/${productId}`;
+
+        const response = await fetch(endpoint, { method });
+
+        // Handle both JSON and HTML responses
+        let data;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            data = await response.json();
+        } else {
+            // If HTML response, likely needs redirect
+            window.location.href = response.url;
+            return;
+        }
+
+      
+
+        if (response.ok) {
+            // Toggle the active class
+            element.classList.toggle('active');
+            
+            // Toggle the heart icon
+            const icon = element.querySelector('i');
+            icon.classList.toggle('zmdi-favorite-outline');
+            icon.classList.toggle('zmdi-favorite');
+            
+            // Add animation class
+            element.classList.add('animate');
+            setTimeout(() => element.classList.remove('animate'), 300);
+
+            // Update wishlist count in header
+            const wishlistBadge = document.querySelector('.action-link[href="/user/wishlist"] .action-badge');
+            if (wishlistBadge) {
+                const currentCount = parseInt(wishlistBadge.textContent);
+                wishlistBadge.textContent = isActive ? currentCount - 1 : currentCount + 1;
+            }
+        }
+    } catch (error) {
+        console.error('Error in toggleWishlist:', error);
+    }
+}
+// When page loads, check which products are in wishlist
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch('/user/wishlist/check', { method: 'GET' });
+        if (response.ok) {
+            const wishlistProducts = await response.json();
+            
+            // Get all wishlist icons on the page
+            const wishlistIcons = document.querySelectorAll('.wishlist-icon');
+            
+            wishlistIcons.forEach(icon => {
+                const productId = icon.dataset.productId;
+                // Check if this product is in the wishlist
+                if (wishlistProducts.includes(productId)) {
+                    // Add active class to the icon container
+                    icon.classList.add('active');
+                    // Update the heart icon
+                    const heartIcon = icon.querySelector('i');
+                    if (heartIcon) {
+                        heartIcon.classList.remove('zmdi-favorite-outline');
+                        heartIcon.classList.add('zmdi-favorite');
+                    }
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Error checking wishlist status:', error);
+    }
+});
 </script>
 <script src="/user/js/vendor/jquery-3.6.0.min.js"></script>
 <script src="/user/js/vendor/jquery-migrate-3.3.2.min.js"></script>

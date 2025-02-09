@@ -7,9 +7,11 @@
               <th>Date</th>
               <th>Total</th>
               <th>Delivery Status</th>
+              <th>payment method</th>
               <th>Payment Status</th>
-              <th>Created At</th>
-              <th>Updated At</th>
+              
+              <th>ordered At</th>
+             
              
           </tr>
       </thead>
@@ -17,43 +19,35 @@
           <% let index = 0; %>
           <% orders.forEach(order => { %>
               <tr <% if (++index >= 4) { %> style="display: none;" <% } %> id="row<%= index %>">
-                  <td><%= order._id %></td>
+                  <td><%= order.orderId.toString() %></td>
                  
                   <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
-                  <td>$<%= order.total.toFixed(2) %></td>
+                  <td><%= order.total.toFixed(2) %></td>
                   <td>
-                      <select class="form-select delivery-status" id="delivery<%= order._id %>">
-                          <option value="pending" <%= order.deliveryStatus === 'pending' ? 'selected' : '' %>>Pending</option>
-                          <option value="shipped" <%= order.deliveryStatus === 'shipped' ? 'selected' : '' %>>Shipped</option>
-                          <option value="delivered" <%= order.deliveryStatus === 'delivered' ? 'selected' : '' %>>Delivered</option>
-                          <option value="cancelled" <%= order.deliveryStatus === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                      <select class="form-select delivery-status" 
+                              id="delivery<%= order.orderId.toString() %>_<%= order.productId %>"
+                              onchange="updateProductStatus('<%= order.orderId.toString() %>', '<%= order.productId %>', this.value)">
+                          <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                          <option value="processing" <%= order.status === 'conformed' ? 'selected' : '' %>>conformed</option>
+                          <option value="shipped" <%= order.status === 'shipped' ? 'selected' : '' %>>Shipped</option>
+                          <option value="delivered" <%= order.status === 'delivered' ? 'selected' : '' %>>Delivered</option>
+                          <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
                       </select>
                   </td>
+                  <td><%= order.paymentMethod %></td>
                   <td>
-                      <select class="form-select payment-status" id="payment<%= order._id %>">
-                          <option value="pending" <%= order.paymentStatus === 'pending' ? 'selected' : '' %>>Pending</option>
-                          <option value="paid" <%= order.paymentStatus === 'paid' ? 'selected' : '' %>>Paid</option>
-                          <option value="refunded" <%= order.paymentStatus === 'refunded' ? 'selected' : '' %>>Refunded</option>
-                          <option value="failed" <%= order.paymentStatus === 'failed' ? 'selected' : '' %>>Failed</option>
-                      </select>
+                      <%= order.paymentStatus %>
                   </td>
                   <td><%= new Date(order.createdAt).toLocaleString() %></td>
-                  <td><%= new Date(order.updatedAt).toLocaleString() %></td>
-                  
+                
+                  <!-- <td><button class="btn btn-primary btn-rounded">view order</button></td> -->
               </tr>
           <% }); %>
+
       </tbody>
   </table>
 
-  <!-- Pagination (same as products but for orders) -->
-  <div id="unique-example">
-      <div style="color: black; cursor: pointer;" id="unique-example-text-prev" class="unique-example-text" onclick="pageback()">previous</div>
-      <div id="unique-example-counter" class="unique-example-counter">
-          <span id="pageno" class="unique-example-number">01</span>
-      </div>
-      <div style="color: black; cursor: pointer;" id="unique-example-text-next" class="unique-example-text" onclick="pagenext()">next</div>
-  </div>
-</div>
+  <%- include('../nav/shared/pagination.ejs') %>
 
 <style>
   /* Keep existing pagination styles */
@@ -69,141 +63,8 @@
 </style>
 
 <script>
-function updateOrder(orderId) {
-  const deliveryStatus = document.getElementById(delivery${orderId}).value;
-  const paymentStatus = document.getElementById(payment${orderId}).value;
 
-  fetch(/admin/orders/${orderId}, {
-      method: 'PUT',
-      headers: {
-          'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-          deliveryStatus,
-          paymentStatus
-      })
-  })
-  .then(response => {
-      if (!response.ok) throw new Error('Update failed');
-      location.reload(); // Or update UI dynamically
-  })
-  .catch(error => {
-      console.error('Error:', error);
-      alert('Error updating order status');
-  });
-}
 
-function viewOrderDetails(orderId) {
-  window.location.href = /admin/orders/${orderId};
-}
 
-// Keep existing pagination functions
-function pageback() { /* ... */ }
-function pagenext() { /* ... */ }
-</script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-  // Add change event listeners to all status dropdowns
-  const deliveryDropdowns = document.querySelectorAll('.delivery-status');
-  const paymentDropdowns = document.querySelectorAll('.payment-status');
-  
-  [...deliveryDropdowns, ...paymentDropdowns].forEach(dropdown => {
-    dropdown.addEventListener('change', function() {
-      const orderId = this.id.replace('delivery', '').replace('payment', '');
-      updateOrderStatus(orderId);
-    });
-  });
-});
 
-function updateOrderStatus(orderId) {
-  const deliveryStatus = document.getElementById(`delivery${orderId}`).value;
-  const paymentStatus = document.getElementById(`payment${orderId}`).value;
-  
-  // Show loading state
-  const loadingToast = showToast('Updating order status...', 'info');
-  
-  fetch(`/admin/orders/${orderId}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      deliveryStatus,
-      paymentStatus
-    })
-  })
-  .then(async response => {
-    // Hide loading toast
-    loadingToast.remove();
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Update failed');
-    }
-    
-    showToast('Order status updated successfully', 'success');
-    
-    // Update the updatedAt cell without reloading
-    const row = document.querySelector(`tr:has(#delivery${orderId})`);
-    if (row) {
-      const updatedAtCell = row.cells[row.cells.length - 1];
-      updatedAtCell.textContent = new Date().toLocaleString();
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    showToast(error.message || 'Error updating order status', 'error');
-  });
-}
-
-// Toast notification helper
-function showToast(message, type = 'info') {
-  const toast = document.createElement('div');
-  toast.className = `toast toast-${type}`;
-  toast.textContent = message;
-  
-  document.body.appendChild(toast);
-  
-  // Auto-remove after 3 seconds
-  setTimeout(() => toast.remove(), 3000);
-  
-  return toast;
-}
-
-// Add this CSS to your existing styles
-const styles = `
-  .toast {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    padding: 12px 24px;
-    border-radius: 4px;
-    color: white;
-    z-index: 1000;
-    animation: slideIn 0.3s ease-out;
-  }
-  
-  .toast-info {
-    background-color: #3498db;
-  }
-  
-  .toast-success {
-    background-color: #2ecc71;
-  }
-  
-  .toast-error {
-    background-color: #e74c3c;
-  }
-  
-  @keyframes slideIn {
-    from {
-      transform: translateX(100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
-  }
-`;
-</script>
+ 

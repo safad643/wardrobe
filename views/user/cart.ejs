@@ -9,16 +9,16 @@
     
             body {
                 background-color: #ffffff;
-                padding: 2rem;
                 margin: 0;
-		padding: 0;
+                padding: 2rem 0;
             }
     
             .cart-container {
                 max-width: 1200px;
-                margin: 0 auto;
+                margin: 6rem auto;
                 display: flex;
                 gap: 2rem;
+                padding: 0 2rem;
             }
     
             .cart-items {
@@ -409,7 +409,8 @@
             const quantity = parseInt(item.querySelector('.quantity').textContent);
             cartItems[productId] = quantity;
         });
-
+   
+        
         try {
             const response = await fetch('/user/checkout', {
                 method: 'POST',

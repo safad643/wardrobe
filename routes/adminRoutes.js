@@ -32,7 +32,8 @@ router.post('/productadd',midddlewares.adminsession,admincontroller.productadd)
 router.post('/delete',midddlewares.adminsession,admincontroller.Delete)
 
 
-router.post('/ordermanagment',admincontroller.loadordermanagment)
-router.put('/orders/:orderId',admincontroller.updateOrderStatus)
+router.get('/ordermanagment',admincontroller.loadordermanagment)
+router.put('/orders/:orderId',admincontroller.updateProductStatus)
+router.put('/orders/update-status', admincontroller.updateProductStatus)
 
 module.exports=router
