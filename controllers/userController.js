@@ -569,7 +569,7 @@ const loadcheckout = async (req, res) => {
       db.collection('products').find({
         _id: { $in: productIds.map(id => new ObjectId(id)) }
       }).toArray(),
-      db.collection('adress').find({}).toArray()
+      db.collection('adress').find({ userId: req.session.uid }).toArray()
     ]);
 
     // Replicate cart calculation logic
