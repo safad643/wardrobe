@@ -1,6 +1,3 @@
-
-
-
 function loadcatogory(){
   fetch('/admin/catogory',{
     method:'get'})
@@ -178,116 +175,7 @@ function productadd(){
   })
 }
 
-function productAdder(e) {
-  e.preventDefault();
 
-  // Clear previous error messages
-  document.querySelectorAll('.error-message').forEach(el => el.remove());
-
-  // Helper function to display error messages
-  function showError(input, message) {
-    const error = document.createElement('div');
-    error.className = 'error-message';
-    error.style.color = 'red';
-    error.textContent = message;
-    input.parentNode.insertBefore(error, input.nextSibling);
-  }
-
-  // Validate Name
-  const nameInput = document.querySelector('input[name="name"]');
-  if (!nameInput.value || nameInput.value.length < 3) {
-    showError(nameInput, 'Name must be at least 3 characters long.');
-    return;
-  }
-
-  // Validate Price
-  const priceInput = document.querySelector('input[name="price"]');
-  if (!priceInput.value || parseFloat(priceInput.value) <= 0) {
-    showError(priceInput, 'Price must be a positive number.');
-    return;
-  }
-
-  // Validate Category
-  const categoryInput = document.querySelector('select[name="category"]');
-  if (!categoryInput.value) {
-    showError(categoryInput, 'Please select a category.');
-    return;
-  }
-
-  // Validate Count
-  const countInput = document.querySelector('input[name="count"]');
-  if (!countInput.value || parseInt(countInput.value) <= 0) {
-    showError(countInput, 'Count must be a positive integer.');
-    return;
-  }
-
-  // Validate Colors
-
-
-  // Validate Description
-  const descrInput = document.querySelector('textarea[name="descr"]');
-  if (!descrInput.value || descrInput.value.length < 10) {
-    showError(descrInput, 'Description must be at least 10 characters long.');
-    return;
-  }
-
-  // Validate Images
-  const imageInputs = [document.getElementById('image1'), document.getElementById('image2'), document.getElementById('image3')];
-  const images = imageInputs.filter(input => input.files.length > 0);
-  if (images.length === 0) {
-    showError(imageInputs[0], 'Please upload at least one image.');
-    return;
-  }
-
-  // Prepare images from croppers
-  let imageData = [];
-  for (let i = 1; i < 4; i++) {
-    const canvas = croppers[i].getCroppedCanvas();
-    if (canvas) {
-      const base64Image = canvas.toDataURL('image/png');
-      imageData.push(base64Image);
-    }
-  }
-
-  // Create FormData from the form
-  const formdata = new FormData(e.target);
-
-  // Append images to FormData
-  imageData.forEach((image, index) => {
-    formdata.append(`image${index}`, image);
-  });
-
-  // Convert FormData to a plain object
-  const formObject = {};
-  formdata.forEach((value, key) => {
-    formObject[key] = value;
-  });
-
-  // Send the data to the server
-  fetch('/admin/productadd', {
-    method: 'POST',
-    body: JSON.stringify(formObject),
-    headers: { 'Content-Type': 'application/json' },
-  })
-    .then((response) => {
-      const contentType = response.headers.get('Content-Type');
-
-      if (contentType && contentType.includes('application/json')) {
-        return response.json().then((data) => {
-          const errorMessage = data.error || "An error occurred";
-          document.getElementById('errp').innerHTML = errorMessage;
-        });
-      } else {
-        return response.text().then((html) => {
-          document.querySelector('.main-panel').innerHTML = html;
-        });
-      }
-    })
-    .catch((error) => {
-      console.error('Error during fetch:', error);
-      document.querySelector('#error-message').innerHTML = "An error occurred while processing your request.";
-    });
-}
 
 
 let croppers={}
@@ -454,6 +342,121 @@ function laodordermanagment(){
   
   
 }
+
+
+
+function productAdder(e) {
+  e.preventDefault();
+
+  // Clear previous error messages
+  document.querySelectorAll('.error-message').forEach(el => el.remove());
+
+  // Helper function to display error messages
+  function showError(input, message) {
+    const error = document.createElement('div');
+    error.className = 'error-message';
+    error.style.color = 'red';
+    error.textContent = message;
+    input.parentNode.insertBefore(error, input.nextSibling);
+  }
+
+  // Validate Name
+  const nameInput = document.querySelector('input[name="name"]');
+  if (!nameInput.value || nameInput.value.length < 3) {
+    showError(nameInput, 'Name must be at least 3 characters long.');
+    return;
+  }
+
+  // Validate Price
+  const priceInput = document.querySelector('input[name="price"]');
+  if (!priceInput.value || parseFloat(priceInput.value) <= 0) {
+    showError(priceInput, 'Price must be a positive number.');
+    return;
+  }
+
+  // Validate Category
+  const categoryInput = document.querySelector('select[name="category"]');
+  if (!categoryInput.value) {
+    showError(categoryInput, 'Please select a category.');
+    return;
+  }
+
+  // Validate Count
+  const countInput = document.querySelector('input[name="count"]');
+  if (!countInput.value || parseInt(countInput.value) <= 0) {
+    showError(countInput, 'Count must be a positive integer.');
+    return;
+  }
+
+  // Validate Colors
+
+
+  // Validate Description
+  const descrInput = document.querySelector('textarea[name="descr"]');
+  if (!descrInput.value || descrInput.value.length < 10) {
+    showError(descrInput, 'Description must be at least 10 characters long.');
+    return;
+  }
+
+  // Validate Images
+  const imageInputs = [document.getElementById('image1'), document.getElementById('image2'), document.getElementById('image3')];
+  const images = imageInputs.filter(input => input.files.length > 0);
+  if (images.length === 0) {
+    showError(imageInputs[0], 'Please upload at least one image.');
+    return;
+  }
+
+  // Prepare images from croppers
+  let imageData = [];
+  for (let i = 1; i < 4; i++) {
+    const canvas = croppers[i].getCroppedCanvas();
+    if (canvas) {
+      const base64Image = canvas.toDataURL('image/png');
+      imageData.push(base64Image);
+    }
+  }
+
+  // Create FormData from the form
+  const formdata = new FormData(e.target);
+
+  // Convert FormData to a plain object
+  const formObject = {};
+  formdata.forEach((value, key) => {
+    formObject[key] = value;
+  });
+
+  // Add images to the form object
+  imageData.forEach((image, index) => {
+    formObject[`image${index}`] = image;
+  });
+
+ 
+
+  // Send the data to the server
+  fetch('/admin/productadd', {
+    method: 'POST',
+    body: JSON.stringify(formObject),
+    headers: { 'Content-Type': 'application/json' },
+  })
+    .then((response) => {
+      const contentType = response.headers.get('Content-Type');
+
+      if (contentType && contentType.includes('application/json')) {
+        return response.json().then((data) => {
+          const errorMessage = data.error || "An error occurred";
+          document.getElementById('errp').innerHTML = errorMessage;
+        });
+      } else {
+        return response.text().then((html) => {
+          document.querySelector('.main-panel').innerHTML = html;
+        });
+      }
+    })
+    .catch((error) => {
+      console.error('Error during fetch:', error);
+      document.querySelector('#error-message').innerHTML = "An error occurred while processing your request.";
+    });
+}
 function addVariant(){
 const color = document.getElementById('modalColorSelect').value;
 const size = document.getElementById('modalSizeSelect').value;
@@ -463,11 +466,22 @@ if (!color || !size) {
   return;
 }
 
+// Check if variant already exists
+const existingVariant = document.querySelector(`input[name="variant_${color}_${size}"]`);
+if (existingVariant) {
+  alert('This variant combination already exists');
+  return;
+}
+
 const selectedVariantsDiv = document.getElementById('selectedVariants');
+
+// Generate unique ID for the variant container
+const variantId = `variant_${color}_${size}_${Date.now()}`;
 
 // Create container for the variant
 const variantContainer = document.createElement('div');
 variantContainer.className = 'mb-3';
+variantContainer.id = variantId;
 
 // Create label
 const label = document.createElement('label');
@@ -485,6 +499,7 @@ const removeBtn = document.createElement('button');
 removeBtn.type = 'button';
 removeBtn.className = 'btn btn-danger btn-sm mt-2';
 removeBtn.textContent = 'Remove';
+removeBtn.setAttribute('onclick', `removeVariant('${variantId}')`);
 
 // Add elements to container
 variantContainer.appendChild(label);
@@ -501,7 +516,15 @@ document.getElementById('modalSizeSelect').value = '';
 // Close modal
 $('#variantModal').modal('hide');
 }
-
+function removeVariant(id) {
+  const variantElement = document.getElementById(id);
+  if (variantElement) {
+    variantElement.remove();
+  }
+  else{
+    alert('sdnjskd')
+  }
+  }
 function updateProductStatus(orderId, productId, status) {
   fetch(`/admin/orders/update-status`, {
       method: 'PUT',
@@ -540,6 +563,7 @@ function showToast(message, type = 'info') {
   
   return toast;
 }
+
 
 // Add this CSS to your existing styles
 const styles = `

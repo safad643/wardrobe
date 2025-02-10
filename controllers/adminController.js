@@ -240,6 +240,8 @@ const productaddload = async (req, res) => {
 
 const productadd = async (req, res) => {
   try {
+    
+    
     const db = await mongo();
     const existingProduct = await db.collection("products").findOne({ name: req.body.name });
     if (existingProduct) {
@@ -270,6 +272,22 @@ const productadd = async (req, res) => {
     }
     req.body.list = true;
     req.body.count=parseInt(req.body.count)
+     // Extract variants from request body
+     const variants = [];
+     for (const [key, value] of Object.entries(req.body)) {
+       if (key.startsWith('variant_')) {
+         const [_, color, size] = key.split('_');
+         variants.push({
+           color: color,
+           size: size, 
+           count: parseInt(value)
+         });
+         delete req.body[key];
+       }
+     }
+     
+     // Add variants array to request body
+     req.body.variants = variants;
     await db.collection("products").insertOne(req.body);
     const products = await db.collection("products").find({}).toArray();
     res.render("admin/nav/products", { products });
@@ -308,7 +326,7 @@ const productupdate = async (req, res) => {
       }
       req.body[`image${imgarray.indexOf(i)}`] = `/images/${req.body.ogname}/image${imgarray.indexOf(i)}.png`;
     }
-    
+   
     await db.collection("products").updateOne({ name: req.body.ogname }, { $set: req.body });
     const products = await db.collection("products").find({}).toArray();
     res.render("admin/nav/products", { products });
