@@ -70,20 +70,26 @@
 					}
 
 					.reset-button {
-							background: #f8f9fa;
-							border: 1px solid #ddd;
-							padding: 5px 12px;
-							border-radius: 4px;
-							font-size: 12px;
+							background: transparent;
+							border: none;
+							padding: 8px;
+							border-radius: 50%;
 							cursor: pointer;
 							transition: all 0.3s ease;
-							margin-left: 10px;
 							color: #666;
+							display: flex;
+							align-items: center;
+							justify-content: center;
+					}
+
+					.reset-button i {
+							font-size: 18px;
 					}
 
 					.reset-button:hover {
-							background: #e9ecef;
+							background: #f5f5f5;
 							color: #333;
+							transform: rotate(180deg);
 					}
 
 					.filter-header {
@@ -410,6 +416,128 @@
 							background: #ffebee;
 							color: #c62828;
 					}
+
+					.rating-section {
+							display: flex;
+							align-items: center;
+							gap: 10px;
+							margin-top: 10px;
+					}
+
+					.rating-section .stars {
+							display: flex;
+							gap: 2px;
+					}
+
+					.rating-section .stars i {
+							color: #ffc107;
+							font-size: 18px;
+					}
+
+					.rating-section .rating-count {
+							color: #666;
+							font-size: 14px;
+					}
+
+					.color-filter {
+							display: flex;
+							flex-direction: column;
+					}
+
+					.filter-header {
+							display: flex;
+							align-items: center;
+							justify-content: space-between;
+							margin-bottom: 10px;
+					}
+
+					.color-filter ul {
+							display: flex;
+							align-items: center;
+							gap: 10px;
+							list-style: none;
+							padding: 0;
+							margin: 0;
+					}
+
+					.color-filter ul:first-child {
+							margin-right: 15px;
+					}
+
+					.color-title {
+							font-weight: 600;
+							color: #333;
+							text-transform: capitalize;
+					}
+
+					.color-option {
+							width: 25px;
+							height: 25px;
+							border-radius: 50%;
+							cursor: pointer;
+							position: relative;
+							display: block;
+					}
+
+					.color-option .color {
+							width: 100%;
+							height: 100%;
+							border-radius: 50%;
+							display: block;
+					}
+
+					.size-filter input[type="radio"] {
+							display: none;
+					}
+
+					.size-filter .size-option {
+							display: inline-block;
+							padding: 8px 16px;
+							border: 2px solid #e0e0e0;
+							border-radius: 8px;
+							cursor: pointer;
+							transition: all 0.2s ease;
+							font-weight: 600;
+							color: #444;
+							margin: 0 5px;
+					}
+
+					.size-filter input[type="radio"]:checked + .size-option {
+							background: #007bff;
+							color: white;
+							border-color: #007bff;
+							transform: translateY(-2px);
+							box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+					}
+
+					.size-filter .size-option:hover {
+							border-color: #007bff;
+							color: #007bff;
+							transform: translateY(-2px);
+							box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+					}
+
+					.size-filter .size-option.disabled {
+							opacity: 0.5;
+							pointer-events: none;
+							cursor: not-allowed;
+					}
+
+					.size-filter {
+							display: flex;
+							flex-direction: column;
+							gap: 15px;
+					}
+
+					.size-options-container {
+							display: flex;
+							flex-wrap: wrap;
+							gap: 10px;
+					}
+
+					.size-option-wrapper {
+							display: inline-block;
+					}
 		</style>
 
 	 		
@@ -653,14 +781,17 @@
 															<span class="pro-price">₹<%= Math.floor(Number(product.price)) %></span>
 													<% } %>
 												</div>
-												<span class="pro-rating floatright">
-													<a href="#"><i class="zmdi zmdi-star"></i></a>
-													<a href="#"><i class="zmdi zmdi-star"></i></a>
-													<a href="#"><i class="zmdi zmdi-star"></i></a>
-													<a href="#"><i class="zmdi zmdi-star-half"></i></a>
-													<a href="#"><i class="zmdi zmdi-star-half"></i></a>
-													<span>(27 Ratings)</span>
-												</span>
+												<!-- Replacing the rating section -->
+												<div class="rating-section">
+													<div class="stars">
+														<i class="zmdi zmdi-star"></i>
+														<i class="zmdi zmdi-star"></i>
+														<i class="zmdi zmdi-star"></i>
+														<i class="zmdi zmdi-star-half"></i>
+														<i class="zmdi zmdi-star-outline"></i>
+													</div>
+													<span class="rating-count">(27 Reviews)</span>
+												</div>
 											</div>
 								
 											<!-- Color Section -->
@@ -669,11 +800,13 @@
 													<ul>
 														<li><span class="color-title text-capitalize">color</span></li>
 													</ul>
-													<button onclick="resetFilters()" class="reset-button">Reset Filters</button>
+													<button onclick="resetFilters()" class="reset-button">
+														<i class="zmdi zmdi-refresh"></i>
+													</button>
 												</div>
 												<ul>
 													<% 
-													// Get unique colors
+												
 													const uniqueColors = [...new Set(product.variants.map(variant => variant.color))];
 													uniqueColors.forEach((color, index) => { 
 													%>
@@ -688,19 +821,29 @@
 								
 											<!-- Size Section -->
 											<div class="size-filter single-pro-size mb-35 clearfix">
-												<ul>
-													<li><span class="color-title text-capitalize">size</span></li>
+												<span class="color-title text-capitalize">size</span>
+												<div class="size-options-container">
 													<% 
 													// Get unique sizes
 													const uniqueSizes = [...new Set(product.variants.map(variant => variant.size))];
 													uniqueSizes.forEach((size, index) => { 
 													%>
-														<li>
-															<a onclick="selectvarient(event,'size')" class="size-option <%= index === 0 ? 'active' : '' %>" 
-															   data-size="<%= size %>"><%= size %></a>
-														</li>
+														<div class="size-option-wrapper">
+															<input type="radio" 
+																   id="size-<%= size %>" 
+																   name="size" 
+																   value="<%= size %>" 
+																   class="size-radio" 
+																   <%= index === 0 ? 'checked' : '' %>
+																   onchange="selectvarient(event, 'size')">
+															<label for="size-<%= size %>" 
+																   class="size-option <%= index === 0 ? 'active' : '' %>" 
+																   data-size="<%= size %>">
+																<%= size %>
+															</label>
+														</div>
 													<% }); %>
-												</ul>
+												</div>
 											</div>
 								<!-- new start -->
 											<!-- Quantity and Actions -->
@@ -976,7 +1119,6 @@
 															<a href="#"><i class="zmdi zmdi-star-outline"></i></a>
 															<a href="#"><i class="zmdi zmdi-star-outline"></i></a>
 															<a href="#"><i class="zmdi zmdi-star-outline"></i></a>
-															<a href="#"><i class="zmdi zmdi-star-outline"></i></a>
 														</span>
 													</div>
 													<div class="reply-box">
@@ -1244,9 +1386,13 @@
 
 
 	function addtocart(userid, productid) {
+		if(!(Object.keys(varienttosend).length === 2)){
+			alert('select color and size')
+			return;
+		}
 		fetch('/user/addtocart', {
 			method: 'post',
-			body: JSON.stringify({ productid, userid }),
+			body: JSON.stringify({ productid, userid,varient:varienttosend }),
 			headers: { 'Content-Type': 'application/json' }
 		})
 		.then(response => response.json()) // Parse the JSON response
@@ -1406,101 +1552,100 @@
 		
 		// Reset size options
 		document.querySelectorAll('.size-option').forEach(option => {
-			option.classList.remove('active');
+			option.classList.remove('active', 'disabled');
 			option.style.pointerEvents = 'auto';
 			option.style.opacity = '1';
 		});
 		
-		// Set first color and size as active
-		const firstColor = document.querySelector('.color-option');
-		const firstSize = document.querySelector('.size-option');
-		if (firstColor) firstColor.classList.add('active');
-		if (firstSize) firstSize.classList.add('active');
+		// Reset radio buttons
+		document.querySelectorAll('input[type="radio"][name="size"]').forEach(radio => {
+			radio.checked = false;
+		});
+
+		// Clear the varienttosend object
+		varienttosend = {};
 	}
+	let varienttosend={};
 const varients=<%- JSON.stringify(product.variants)%>
-	function selectvarient(event,varient){
+	function selectvarient(event, varient){
 		if(varient==='size'){
-			const selectedsize = event.target.dataset.size
+			const selectedsize = event.target.value
+			varienttosend.size = selectedsize;
 			
-			// Filter variants that match the selected size
-			const matchingVariants = varients.filter(variant => variant.size === selectedsize);
-	
-			// Extract colors from matching variants
-			const availableColors = matchingVariants.map(variant => variant.color);
-			
-			// Remove active class from all color options
-			document.querySelectorAll('.color-option').forEach(option => {
+			// Remove active class and decrease opacity for all size options
+			document.querySelectorAll('.size-option').forEach(option => {
 				option.classList.remove('active');
-				option.style.pointerEvents = 'none'; // Make unclickable
-				option.style.opacity = '0.5'; // Visual indication of disabled state
+				if(option.dataset.size !== selectedsize) {
+					option.classList.add('disabled');
+				}
 			});
 
-			// Show and enable only available colors
+			// Add active class to clicked size
+			const selectedLabel = document.querySelector(`label[data-size="${selectedsize}"]`);
+			selectedLabel.classList.add('active');
+			selectedLabel.classList.remove('disabled');
+
+			// Filter variants that match the selected size
+			const matchingVariants = varients.filter(variant => variant.size === selectedsize);
+			const availableColors = matchingVariants.map(variant => variant.color);
+			
+			// Update color options
 			document.querySelectorAll('.color-option').forEach(option => {
 				const color = option.dataset.color;
-				
 				if (availableColors.includes(color)) {
-					option.style.pointerEvents = 'auto'; // Make clickable
-					option.style.opacity = '1'; // Full opacity for available options
-					// Make first available color active
+					option.style.pointerEvents = 'auto';
+					option.style.opacity = '1';
 					if (!document.querySelector('.color-option.active')) {
 						option.classList.add('active');
 					}
+				} else {
+					option.classList.remove('active');
+					option.style.pointerEvents = 'none';
+					option.style.opacity = '0.5';
 				}
 			});
-		} else{
+
+		} else {
 			const selectedColor = event.target.dataset.color;
-	
-			// Filter variants that match the selected color
-			const matchingVariants = varients.filter(variant => variant.color === selectedColor);
-	
-			// Extract sizes from matching variants
-			const availableSizes = matchingVariants.map(variant => variant.size);
+			varienttosend.color = selectedColor;
 			
-			// Remove active class from all size options
-			document.querySelectorAll('.size-option').forEach(option => {
+			// Remove active class and decrease opacity for all color options
+			document.querySelectorAll('.color-option').forEach(option => {
 				option.classList.remove('active');
-				option.style.pointerEvents = 'none'; // Make unclickable
-				option.style.opacity = '0.5'; // Visual indication of disabled state
+				if(option.dataset.color !== selectedColor) {
+					option.style.pointerEvents = 'none';
+					option.style.opacity = '0.5';
+				}
 			});
 
-			// Show and enable only available sizes
+			// Add active class to clicked color
+			event.target.closest('.color-option').classList.add('active');
+			event.target.closest('.color-option').style.pointerEvents = 'auto';
+			event.target.closest('.color-option').style.opacity = '1';
+
+			// Filter variants that match the selected color
+			const matchingVariants = varients.filter(variant => variant.color === selectedColor);
+			const availableSizes = matchingVariants.map(variant => variant.size);
+			
+			// Update size options
 			document.querySelectorAll('.size-option').forEach(option => {
 				const size = option.dataset.size;
 				if (availableSizes.includes(size)) {
-					option.style.pointerEvents = 'auto'; // Make clickable
-					option.style.opacity = '1'; // Full opacity for available options
-					// Make first available size active
+					option.style.pointerEvents = 'auto';
+					option.style.opacity = '1';
 					if (!document.querySelector('.size-option.active')) {
 						option.classList.add('active');
 					}
+				} else {
+					option.classList.remove('active');
+					option.style.pointerEvents = 'none';
+					option.style.opacity = '0.5';
 				}
 			});
 		}
 	}
 
-	function resetFilters() {
-		// Reset color options
-		document.querySelectorAll('.color-option').forEach(option => {
-			option.classList.remove('active');
-			option.style.pointerEvents = 'auto';
-			option.style.opacity = '1';
-		});
-		
-		// Reset size options
-		document.querySelectorAll('.size-option').forEach(option => {
-			option.classList.remove('active');
-			option.style.pointerEvents = 'auto';
-			option.style.opacity = '1';
-		});
-		
-		// Set first color and size as active
-		const firstColor = document.querySelector('.color-option');
-		const firstSize = document.querySelector('.size-option');
-		if (firstColor) firstColor.classList.add('active');
-		if (firstSize) firstSize.classList.add('active');
-	}
-	</script>
+</script>
 		</body>
 
 	<!-- Mirrored from template.hasthemes.com/hurst-v1/hurst/single-product.html by HTTrack Website Copier/3.x [XR&CO'2014], Wed, 15 Jan 2025 07:07:04 GMT -->

@@ -225,6 +225,20 @@
                     width: fit-content;
                 }
             }
+    
+            .product-variants {
+                margin: 0.5rem 0;
+                font-size: 0.9rem;
+                color: #666;
+            }
+    
+            .variant-info {
+                display: inline-block;
+                margin-right: 1rem;
+                padding: 0.2rem 0.5rem;
+                background-color: #f5f5f5;
+                border-radius: 4px;
+            }
         </style>
     </head>
 <body>
@@ -245,12 +259,16 @@
     <div class="item-details">
         <h2 class="item-title"><%= product.name %></h2>
         <p class="item-price">₹<%= product.price %></p>
+        <div class="product-variants">
+            <span class="variant-info">Size: <%= product.varient.size %></span>
+            <span class="variant-info">Color: <%= product.varient.color %></span>
+        </div>
         <div class="quantity-controls">
             <button class="quantity-btn minus">-</button>
             <span class="quantity"><%= product.quantity %></span>
             <button class="quantity-btn plus">+</button>
         </div>
-        <a href="cartremove/<%= product._id %>" class="remove-item">× Remove</a>
+        <a href="cartremove/<%= product._id %>?size=<%= product.varient.size %>&color=<%= product.varient.color %>" class="remove-item">× Remove</a>
     </div>
 </div>
             <% }) %>
@@ -323,31 +341,42 @@
             const quantitySpan = cartItem.querySelector('.quantity');
             let quantity = parseInt(quantitySpan.textContent);
             const stock = parseInt(cartItem.dataset.productStock);
+            
+            // Extract variant information
+            const variantInfo = cartItem.querySelectorAll('.variant-info');
+            const varient = {
+                size: variantInfo[0].textContent.split(': ')[1],
+                color: variantInfo[1].textContent.split(': ')[1]
+            };
+
             // Optimistic UI update
-            if (isPlus && quantity < 5 && quantity!==stock) {
-            quantity += 1;
-        } else if (!isPlus && quantity > 1 ) {
-            quantity -= 1;
-        } else {
-            return; // Stop if already at min or max
-        }
+            if (isPlus && quantity < 5 && quantity !== stock) {
+                quantity += 1;
+            } else if (!isPlus && quantity > 1) {
+                quantity -= 1;
+            } else {
+                return; // Stop if already at min or max
+            }
             quantitySpan.textContent = quantity;
 
             try {
                 const response = await fetch('/user/updatecart', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ productid: productId, userid: userId, quantity })
+                    body: JSON.stringify({ 
+                        productid: productId, 
+                        userid: userId, 
+                        quantity,
+                        varient // Include variant information in the request
+                    })
                 });
 
                 if (!response.ok) throw new Error('Update failed');
                 
-               
-                calculateTotals()
+                calculateTotals();
                 updateItemCount();
             } catch (error) {
                 console.error(error);
-               
                 quantitySpan.textContent = parseInt(quantitySpan.textContent) + (isPlus ? -1 : 1);
                 alert('Failed to update. Please try again.');
             }

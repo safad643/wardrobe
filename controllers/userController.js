@@ -326,14 +326,22 @@ const changename=async(req,res)=>{
 
 const addtocart = async (req, res) => {
   try {
-    const { productid, qty } = req.body;
+    const { productid, qty ,varient} = req.body;
+    
+    
     const userid = req.session.uid;
     const db = await mongo();
 
     // Check if product already exists in cart
     const existingProduct = await db.collection('cart').findOne({
       userid: userid,
-      "products.productid": productid
+      products: {
+        $elemMatch: {
+          productid: productid,
+          "varient.color": varient.color,
+          "varient.size": varient.size
+        }
+      }
     });
 
     if (existingProduct) {
@@ -350,7 +358,7 @@ const addtocart = async (req, res) => {
     const result = await db.collection('cart').updateOne(
       { userid: userid },
       {
-        $push: { products: { productid: productid, quantity: qty || 1 } },
+        $push: { products: { productid: productid, quantity: 1,varient } },
         $setOnInsert: { userid: userid }
       },
       { upsert: true }
@@ -363,58 +371,55 @@ const addtocart = async (req, res) => {
   }
 };
 
-const laodcart= async(req,res)=>{
-  
-  const db=await mongo()
-  const products =await db.collection('products').aggregate([
+const laodcart = async(req,res) => {
+  const db = await mongo()
+  const products = await db.collection('products').aggregate([
     {
       $lookup: {
-        from: "cart", // Join with the cart collection
-        let: { productId: "$_id" }, // Store product's _id as a variable
+        from: "cart",
+        let: { productId: "$_id" },
         pipeline: [
-          { 
-            $match: { 
-              userid: req.session.uid // Use session user ID dynamically
-            } 
+          {
+            $match: {
+              userid: req.session.uid
+            }
           },
-          { $unwind: "$products" }, // Split the products array into individual documents
-          { 
-            $match: { 
-              $expr: { 
-                $eq: [ 
-                  "$$productId", 
-                  { $toObjectId: "$products.productid" } 
-                ] 
-              } 
-            } 
+          { $unwind: "$products" },
+          {
+            $match: {
+              $expr: {
+                $eq: [
+                  "$$productId",
+                  { $toObjectId: "$products.productid" }
+                ]
+              }
+            }
           },
-          { 
-            $project: { 
-              quantity: "$products.quantity", // Keep only the quantity
-              _id: 0 
-            } 
+          {
+            $project: {
+              quantity: "$products.quantity",
+              varient: "$products.varient",
+              _id: 0
+            }
           }
         ],
-        as: "cartDetails" // Store matching cart info in this array
+        as: "cartDetails"
+      }
+    },
+    { $unwind: "$cartDetails" },
+    {
+      $addFields: {
+        quantity: "$cartDetails.quantity",
+        varient: "$cartDetails.varient"
       }
     },
     {
-      $addFields: {
-        quantity: { $arrayElemAt: [ "$cartDetails.quantity", 0 ] }
+      $project: {
+        cartDetails: 0
       }
-    },
-    { 
-      $match: { 
-        "cartDetails.0": { $exists: true } 
-      } 
-    },
-    { 
-      $project: { 
-        cartDetails: 0 
-      } 
     }
   ]).toArray()
-  
+
   const orders = await db.collection('orders').find({ userId: req.session.uid }).toArray();
   
   res.render('user/cart',{products,userid:req.session.uid,orders,user:true})
@@ -423,30 +428,54 @@ const laodcart= async(req,res)=>{
 const removeFromCart = async (req, res) => {
   try {
       const productId = req.params.productid;
-      const userId = req.session.uid; // Adjust based on your auth setup
+      const userId = req.session.uid;
+      const { size, color } = req.query;
 
       const db = await mongo();
       
-      // Remove the product from the user's cart
+      // Remove only the specific product variant from the cart
       const result = await db.collection('cart').updateOne(
           { userid: userId },
-          { $pull: { products: { productid: productId } } }
-      ) 
+          { 
+            $pull: { 
+              products: { 
+                productid: productId,
+                'varient.size': size,
+                'varient.color': color
+              } 
+            } 
+          }
+      );
+
+      if (result.modifiedCount === 0) {
+        req.flash('error', 'Product not found in cart');
+      }
+
       res.redirect('/user/cart');
   } catch (err) {
       console.error(err);
       req.flash('error', 'Failed to remove product from cart');
-      res.redirect('/cart');
+      res.redirect('/user/cart');
   }
 };
 
 const updatecart = async (req, res) => {
   try {
-      const { productid, userid, quantity } = req.body;
+      const { productid, userid, quantity, varient } = req.body;
+      
       const db = await mongo();
 
       const result = await db.collection('cart').updateOne(
-          { userid, "products.productid": productid },
+          { 
+              userid, 
+              "products": {
+                  $elemMatch: {
+                      productid: productid,
+                      "varient.size": varient.size,
+                      "varient.color": varient.color
+                  }
+              }
+          },
           { $set: { "products.$.quantity": quantity } }
       );
 
