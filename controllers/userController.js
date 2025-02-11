@@ -323,14 +323,34 @@ const changename=async(req,res)=>{
 
 
 
-
 const addtocart = async (req, res) => {
   try {
-    const { productid, qty ,varient} = req.body;
-    
-    
+    const { productid, qty, varient } = req.body;
     const userid = req.session.uid;
     const db = await mongo();
+
+    // Get product details and variant count
+    const product = await db.collection('products').findOne({
+      _id: new ObjectId(productid),
+      variants: {
+        $elemMatch: {
+          color: varient.color,
+          size: varient.size
+        }
+      }
+    });
+
+    if (!product) {
+      return res.status(404).json({ message: "Product or variant not found" });
+    }
+
+    // Get count from matching variant
+    const matchingVariant = product.variants.find(v => 
+      v.color === varient.color && v.size === varient.size
+    );
+    
+    // Add count to varient object
+    varient.count = matchingVariant.count;
 
     // Check if product already exists in cart
     const existingProduct = await db.collection('cart').findOne({
@@ -358,7 +378,7 @@ const addtocart = async (req, res) => {
     const result = await db.collection('cart').updateOne(
       { userid: userid },
       {
-        $push: { products: { productid: productid, quantity: 1,varient } },
+        $push: { products: { productid: productid, quantity: 1, varient } },
         $setOnInsert: { userid: userid }
       },
       { upsert: true }
@@ -397,7 +417,7 @@ const laodcart = async(req,res) => {
           },
           {
             $project: {
-              quantity: "$products.quantity",
+              quantity: "$products.quantity", 
               varient: "$products.varient",
               _id: 0
             }
@@ -410,7 +430,33 @@ const laodcart = async(req,res) => {
     {
       $addFields: {
         quantity: "$cartDetails.quantity",
-        varient: "$cartDetails.varient"
+        varient: {
+          $let: {
+            vars: {
+              matchingVariant: {
+                $arrayElemAt: [
+                  {
+                    $filter: {
+                      input: "$variants",
+                      cond: {
+                        $and: [
+                          { $eq: ["$$this.color", "$cartDetails.varient.color"] },
+                          { $eq: ["$$this.size", "$cartDetails.varient.size"] }
+                        ]
+                      }
+                    }
+                  },
+                  0
+                ]
+              }
+            },
+            in: {
+              color: "$cartDetails.varient.color",
+              size: "$cartDetails.varient.size",
+              count: "$$matchingVariant.count"
+            }
+          }
+        }
       }
     },
     {
@@ -420,9 +466,7 @@ const laodcart = async(req,res) => {
     }
   ]).toArray()
 
-  const orders = await db.collection('orders').find({ userId: req.session.uid }).toArray();
-  
-  res.render('user/cart',{products,userid:req.session.uid,orders,user:true})
+  res.render('user/cart',{products,userid:req.session.uid,user:true})
 }
 
 const removeFromCart = async (req, res) => {
@@ -520,6 +564,8 @@ const addadress = async (req, res) => {
 
   const placeOrder = async (req, res) => {
     try {
+      console.log(req.body.products);
+      
         const db = await mongo();
         const { addressId, paymentMethod, products, totals } = req.body;
     
@@ -546,6 +592,10 @@ const addadress = async (req, res) => {
             quantity: product.quantity,
             price: product.price,
             offer: product.offer,
+            varient: {
+                size: product.size,
+                color: product.color
+            },
             subtotal: product.price * product.quantity,
             total: product.offer ? 
                 (product.price * product.quantity) * (1 - product.offer/100) : 
@@ -583,18 +633,21 @@ const addadress = async (req, res) => {
     }
 };
 const loadcheckout = async (req, res) => {
-  console.log('dfuigkdkjhm');
+  console.log(req.body);
   
   try {
     const db = await mongo();
     const productQuantities = req.body || {};
-    const productIds = Object.keys(productQuantities);
-    const prdctidndqty = Object.entries(productQuantities)
-    prdctidndqty.forEach(async (pair)=>{
-       await db.collection('products').findOne({_id:new ObjectId(pair[0])})
-    })
+    
+    // Extract product IDs and details from numbered entries
+    const products = [];
+    const productIds = [];
+    Object.values(productQuantities).forEach(item => {
+      productIds.push(item.productId);
+      products.push(item);
+    });
 
-    const [products, addresses] = await Promise.all([
+    const [dbProducts, addresses] = await Promise.all([
       db.collection('products').find({
         _id: { $in: productIds.map(id => new ObjectId(id)) }
       }).toArray(),
@@ -607,22 +660,26 @@ const loadcheckout = async (req, res) => {
     let deliveryCharges = 0;
     let totalItems = 0;
 
-    products.forEach(product => {
-      const price = product.price;
-      const quantity = productQuantities[product._id.toString()] || 0;
-      const offer = product.offer || 0;
+    dbProducts.forEach(dbProduct => {
+      const matchingProducts = products.filter(p => p.productId === dbProduct._id.toString());
+      
+      matchingProducts.forEach(product => {
+        const price = dbProduct.price;
+        const quantity = product.quantity;
+        const offer = dbProduct.offer || 0;
 
-      totalWithoutOffers += price * quantity;
-      totalItems += quantity;
+        totalWithoutOffers += price * quantity;
+        totalItems += quantity;
 
-      if (offer > 0) {
-        discount += (price * (offer / 100)) * quantity;
-      }
+        if (offer > 0) {
+          discount += (price * (offer / 100)) * quantity;
+        }
 
-      const discountedPricePerItem = price * (1 - (offer / 100));
-      if (discountedPricePerItem * quantity < 500) {
-        deliveryCharges += 40 * quantity;
-      }
+        const discountedPricePerItem = price * (1 - (offer / 100));
+        if (discountedPricePerItem * quantity < 500) {
+          deliveryCharges += 40 * quantity;
+        }
+      });
     });
 
     const subtotal = totalWithoutOffers - discount;
@@ -630,13 +687,18 @@ const loadcheckout = async (req, res) => {
 
     res.render('user/checkout', {
       addresses,
-      products: products.map(product => ({
-        ...product,
-        quantity: productQuantities[product._id.toString()] || 0
-      })),
+      products: dbProducts.map(dbProduct => {
+        const matchingProducts = products.filter(p => p.productId === dbProduct._id.toString());
+        return matchingProducts.map(product => ({
+          ...dbProduct,
+          quantity: product.quantity,
+          size: product.size,
+          color: product.color
+        }));
+      }).flat(),
       subtotal: Math.round(subtotal),
       deliveryFee: Math.round(deliveryCharges),
-      discount: Math.round(discount),
+      discount: Math.round(discount), 
       total: Math.round(totalAmount)
     });
 

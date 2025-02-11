@@ -243,7 +243,7 @@
     </head>
 <body>
     <div class="cart-container">
-        <div class="cart-items">
+        <div class="cart-items" >
             <div class="cart-header">
                 <h1>Your Cart (<%= products.reduce((total, product) => total + parseInt(product.quantity), 0) %> Items)</h1>
             </div>
@@ -251,11 +251,15 @@
             <% products.forEach(product => { %>
                 <!-- Inside the cart-items loop -->
 <div class="cart-item" 
-     data-product-id="<%= product._id %>" 
-     data-product-price="<%= product.price %>"
-     data-product-offer="<%= product.offer %>"
-     data-product-stock="<%= product.count %>">
-    <img src="<%= product.image0 %>" alt="<%= product.name %>" class="item-image">
+    data-productStock='<%= product.varient.count%>'
+    data-product-id="<%= product._id %>" 
+    data-product-price="<%= product.price %>"
+    data-product-offer="<%= product.offer %>"
+    data-product-stock="<%= product.count %>"
+    data-product-size="<%= product.varient.size %>"
+    data-product-color="<%= product.varient.color %>">
+     
+    <img src="<%= product.images[0] %>" alt="<%= product.name %>" class="item-image">
     <div class="item-details">
         <h2 class="item-title"><%= product.name %></h2>
         <p class="item-price">₹<%= product.price %></p>
@@ -265,7 +269,7 @@
         </div>
         <div class="quantity-controls">
             <button class="quantity-btn minus">-</button>
-            <span class="quantity"><%= product.quantity %></span>
+            <span class="quantity"><%= product.quantity > product.varient.count ? product.varient.count : product.quantity %></span>
             <button class="quantity-btn plus">+</button>
         </div>
         <a href="cartremove/<%= product._id %>?size=<%= product.varient.size %>&color=<%= product.varient.color %>" class="remove-item">× Remove</a>
@@ -340,7 +344,9 @@
             const productId = cartItem.dataset.productId;
             const quantitySpan = cartItem.querySelector('.quantity');
             let quantity = parseInt(quantitySpan.textContent);
-            const stock = parseInt(cartItem.dataset.productStock);
+            const stock = parseInt(cartItem.dataset.productstock);
+          
+            
             
             // Extract variant information
             const variantInfo = cartItem.querySelectorAll('.variant-info');
@@ -433,13 +439,23 @@
         const cartItems = {};
         
         // Collect all product IDs and quantities
+        let counter = 1;
         document.querySelectorAll('.cart-item').forEach(item => {
             const productId = item.dataset.productId;
             const quantity = parseInt(item.querySelector('.quantity').textContent);
-            cartItems[productId] = quantity;
+            const size = item.dataset.productSize;
+            const color = item.dataset.productColor;
+            
+            cartItems[counter] = {
+                productId: productId,
+                quantity: quantity,
+                size: size,
+                color: color
+            };
+            counter++;
         });
    
-        
+       
         try {
             const response = await fetch('/user/checkout', {
                 method: 'POST',

@@ -689,7 +689,7 @@
                         <% products.forEach(product => { %>
                             <div class="order-item">
                                 <div class="product-image-container">
-                                    <img src="<%= product.image0 %>" class="product-image" alt="<%= product.name %>">
+                                    <img src="<%= product.images[0] %>" class="product-image" alt="<%= product.name %>">
                                 </div>
                                 <div class="product-details">
                                     <div class="product-header">
@@ -698,15 +698,18 @@
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </div>
-                                   
+                                    <div class="product-specs">
+                                        <span>Color: <%= product.color %></span>
+                                        <span>Size: <%= product.size %></span>
+                                    </div>
                                     <div class="quantity-control">
                                         <button class="qty-btn minus" onclick="adjustQuantity(this, -1)">
                                             <i class="fas fa-minus"></i>
                                         </button>
                                         <span class="qty-display" 
-                                        data-price="<%= product.price %>"
-                                        data-product-id="<%= product._id %>"
-                                        data-offer="<%= product.offer%>"><%=product.quantity%></span>
+                                            data-price="<%= product.price %>"
+                                            data-product-id="<%= product._id %>"
+                                            data-offer="<%= product.offer%>"><%=product.quantity%></span>
                                         <button class="qty-btn plus" onclick="adjustQuantity(this, 1,'<%= product.count %>')">
                                             <i class="fas fa-plus"></i>
                                         </button>
@@ -715,11 +718,9 @@
                                         <span>Item Total:</span>
                                         <span class="item-total">₹<%= product.price %></span>
                                     </div>
-                                   
-                                        <div class="out-of-stock-message" style="display: none;">
-                                            Out of stock - Remove this product to proceed
-                                        </div>
-                                   
+                                    <div class="out-of-stock-message" style="display: none;">
+                                        Out of stock - Remove this product to proceed
+                                    </div>
                                 </div>
                             </div>
                         <% }); %>
@@ -942,17 +943,22 @@ async function placeOrder() {
         msg.style.display = 'none';
     });
 
-    // Collect product data with offers
+    // Collect product data with offers, color, and size
     const products = Array.from(document.querySelectorAll('.order-item')).map(item => {
         const qtyDisplay = item.querySelector('.qty-display');
-      
+        const productSpecs = item.querySelector('.product-specs');
+        
+        // Extract color and size from product specs
+        const color = productSpecs.querySelector('span:nth-child(1)').textContent.replace('Color: ', '');
+        const size = productSpecs.querySelector('span:nth-child(2)').textContent.replace('Size: ', '');
+        
         return {
             productId: qtyDisplay.dataset.productId,
             quantity: parseInt(qtyDisplay.textContent),
             price: parseFloat(qtyDisplay.dataset.price),
-            offer: parseInt(qtyDisplay.dataset.offer || 0) 
-            
-            // Add offer from data attribute
+            offer: parseInt(qtyDisplay.dataset.offer || 0),
+            color: color,
+            size: size
         };
     });
 

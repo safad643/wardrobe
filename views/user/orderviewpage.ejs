@@ -775,6 +775,41 @@
             25% { transform: translateX(-5px); }
             75% { transform: translateX(5px); }
         }
+
+        .order-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.2rem;
+            padding: 1.2rem;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .variant-info {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+
+        .variant-label, .quantity-label {
+            background: #f8f9fa;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: #444;
+        }
+
+        @media (max-width: 992px) {
+            .order-item {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .mt-4 {
+            margin-top: 1.5rem;
+        }
     </style>
 </head>
 <body>
@@ -877,38 +912,48 @@
                 </div>
 
                 <div class="product-section">
-                    <div class="product-gallery">
-                        <div class="main-image-container">
-                            <div class="product-image-container">
-                                <img src="<%= product.image0 %>" alt="<%= product.name %>" class="product-image" id="mainImage">
+                    <% order.items.forEach((item, index) => { %>
+                        <div class="order-item <%= index > 0 ? 'mt-4' : '' %>">
+                            <div class="product-gallery">
+                                <div class="main-image-container">
+                                    <div class="product-image-container">
+                                        <%console.log(product)%>
+                                        <%console.log('asiudkbjaskjdma')%>
+                                        <img src="<%= item.product.images[0] %>" alt="<%= item.product.name %>" class="product-image" id="mainImage<%= index %>">
+                                    </div>
+                                </div>
+                                <div class="product-thumbnails">
+                                    <% [item.product.images[0], item.product.images[1], item.product.images[2]].forEach((img, imgIndex) => { %>
+                                        <% if (img) { %>
+                                            <img src="<%= img %>" 
+                                                 alt="Product view <%= imgIndex + 1 %>" 
+                                                 class="thumbnail <%= imgIndex === 0 ? 'active' : '' %>"
+                                                 onclick="changeImage(this.src, <%= index %>)">
+                                        <% } %>
+                                    <% }) %>
+                                </div>
+                            </div>
+
+                            <div class="product-info">
+                                <h2 class="product-name"><%= item.product.name %></h2>
+                                <div class="variant-info">
+                                    <span class="variant-label">Size: <%= item.varient.size %></span>
+                                    <span class="variant-label">Color: <%= item.varient.color %></span>
+                                    <span class="quantity-label">Quantity: <%= item.quantity %></span>
+                                </div>
+                                <div class="price-info">
+                                    <span class="current-price">₹<%= item.total %></span>
+                                    <span class="original-price">₹<%= item.subtotal %></span>
+                                    <% if (item.offer > 0) { %>
+                                        <span class="discount-badge"><%= item.offer %>% OFF</span>
+                                    <% } %>
+                                </div>
+                                <div class="product-details">
+                                    <p class="description-text"><%= item.product.descr %></p>
+                                </div>
                             </div>
                         </div>
-                        <div class="product-thumbnails">
-                            <% [product.image0, product.image1, product.image2].forEach((img, index) => { %>
-                                <% if (img) { %>
-                                    <img src="<%= img %>" 
-                                         alt="Product view <%= index + 1 %>" 
-                                         class="thumbnail <%= index === 0 ? 'active' : '' %>"
-                                         onclick="changeImage(this.src)">
-                                <% } %>
-                            <% }) %>
-                        </div>
-                    </div>
-
-                    <div class="product-info">
-                        <h2 class="product-name"><%= product.name %></h2>
-                        <div class="price-info">
-                            <% const discountedPrice = product.price - (product.price * product.offer / 100) %>
-                            <span class="current-price">₹<%= discountedPrice %></span>
-                            <span class="original-price">₹<%= product.price %></span>
-                            <% if (product.offer > 0) { %>
-                                <span class="discount-badge"><%= product.offer %>% OFF</span>
-                            <% } %>
-                        </div>
-                        <div class="product-details">
-                            <p class="description-text"><%= product.descr %></p>
-                        </div>
-                    </div>
+                    <% }) %>
                 </div>
             </div>
 
@@ -926,40 +971,29 @@
                 <div class="order-summary">
                     <h3 class="summary-title">Order Summary</h3>
                     <div class="summary-content">
-                        <% 
-                        // Calculate all values up front
-                        const subtotal = product.price * product.quantity;
-                        const offerDiscount = product.offer ? (subtotal * (product.offer/100)) : 0;
-                        const priceAfterDiscount = product.price * (1 - (product.offer/100));
-                        const deliveryFee = (priceAfterDiscount * product.quantity) < 500 ? 40 : 0;
-                        const total = subtotal - offerDiscount + deliveryFee;
-                        %>
-
-                        <div class="summary-row">
-                            <span>Product Price</span>
-                            <span>₹<%= product.price %></span>
-                        </div>
-                        <div class="summary-row">
-                            <span>Quantity</span>
-                            <span>× <%= product.quantity %></span>
-                        </div>
+                        <% order.items.forEach(item => { %>
+                            <div class="summary-row">
+                                <span><%= item.product.name %> (<%= item.varient.size %>/<%= item.varient.color %>)</span>
+                                <span>₹<%= item.subtotal %></span>
+                            </div>
+                        <% }) %>
                         <div class="summary-row">
                             <span>Subtotal</span>
-                            <span>₹<%= subtotal %></span>
+                            <span>₹<%= order.subtotal %></span>
                         </div>
-                        <% if (product.offer > 0) { %>
+                        <% if (order.discount > 0) { %>
                             <div class="summary-row">
-                                <span>Discount (<%= product.offer %>%)</span>
-                                <span class="discount-amount">-₹<%= Math.round(offerDiscount) %></span>
+                                <span>Discount</span>
+                                <span class="discount-amount">-₹<%= order.discount %></span>
                             </div>
                         <% } %>
                         <div class="summary-row">
                             <span>Delivery Charges</span>
-                            <span>₹<%= deliveryFee %></span>
+                            <span>₹<%= order.delivery %></span>
                         </div>
                         <div class="summary-row total">
                             <span>Total Amount</span>
-                            <span>₹<%= Math.round(total) %></span>
+                            <span>₹<%= order.total %></span>
                         </div>
                     </div>
                 </div>
@@ -1025,9 +1059,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function changeImage(src) {
-            document.getElementById('mainImage').src = src;
-            document.querySelectorAll('.thumbnail').forEach(thumb => {
+        function changeImage(src, index) {
+            document.getElementById(`mainImage${index}`).src = src;
+            const thumbnails = document.querySelectorAll(`.product-thumbnails:eq(${index}) .thumbnail`);
+            thumbnails.forEach(thumb => {
                 thumb.classList.remove('active');
                 if (thumb.src === src) {
                     thumb.classList.add('active');

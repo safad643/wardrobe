@@ -238,7 +238,7 @@ const productaddload = async (req, res) => {
   }
 };
 
-const productadd = async (req, res) => {
+  const productadd = async (req, res) => {
   try {
     const db = await mongo();
     const existingProduct = await db.collection("products").findOne({ name: req.body.name });
@@ -326,6 +326,9 @@ const productupdate = async (req, res) => {
     }
     const productId = product._id;
 
+    // Remove ogname from req.body so it doesn't get added to document
+    delete req.body.ogname;
+
     // Handle variants
     const variants = [];
     for (const key in req.body) {
@@ -351,27 +354,35 @@ const productupdate = async (req, res) => {
     }
     req.body.variants = variants;
 
-    const imgarray = [req.body.image0, req.body.image1, req.body.image2];
-    for (let i of imgarray) {
-      if (i) {
-        delete req.body[`image${imgarray.indexOf(i)}`];
-        const base64Data = i.replace(/^data:image\/\w+;base64,/, "");
+    // Handle images
+    const imageData = [req.body.image0, req.body.image1, req.body.image2];
+    delete req.body.image0;
+    delete req.body.image1;
+    delete req.body.image2;
+
+    // Process and save each image individually
+    for (let i = 0; i < imageData.length; i++) {
+      if (imageData[i]) {
+        const base64Data = imageData[i].replace(/^data:image\/\w+;base64,/, "");
         const binary = Buffer.from(base64Data, "base64");
-        fs.writeFile(`./images/${productId}/image${imgarray.indexOf(i)}.png`,
-          binary,
-          (err) => {
-            if (err) {
-              console.log(err);
-            } else {
-              console.log("images uploaded");
-            }
-          }
+        const imagePath = `/images/${productId}/image${i}.png`;
+        
+        fs.writeFileSync(`./images/${productId}/image${i}.png`, binary);
+
+        // Update the specific image index in the database
+        await db.collection("products").updateOne(
+          { _id: productId },
+          { $set: { [`images.${i}`]: imagePath } }
         );
       }
-      req.body[`image${imgarray.indexOf(i)}`] = `/images/${productId}/image${imgarray.indexOf(i)}.png`;
     }
-   
-    await db.collection("products").updateOne({ _id: productId }, { $set: req.body });
+
+    // Update other product fields
+    await db.collection("products").updateOne(
+      { _id: productId }, 
+      { $set: { ...req.body } }
+    );
+
     const products = await db.collection("products").find({}).toArray();
     res.render("admin/nav/products", { products });
   } catch (err) {
