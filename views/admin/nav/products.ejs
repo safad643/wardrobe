@@ -25,7 +25,7 @@
         style="display: none;"
       <% } %> 
       id="row<%= index %>">
-                    <td><button onclick="showproductimages('<%= product.image0 %>','<%= product.image1 %>','<%= product.image2 %>')" class="btn btn-primary">show</button></td>
+                    <td><button onclick="showproductimages('<%= product.images[0] %>','<%= product.images[1] %>','<%= product.images[2] %>')" class="btn btn-primary">show</button></td>
                     <td><%= product.name %></td>
                     <td><%= product.price %></td>
                     <td><%= product.category %></td>
@@ -34,7 +34,8 @@
                     <td><%= product.rating %></td>
                     <td><%= product.createdAt %></td>
                     <td><%= product?.updatedAt %></td>
-                    <td><button onclick="updateprodcts('<%= product.name %>','<%= product.image0 %>','<%= product.image1 %>','<%= product.image2 %>')" class="btn btn-secondary btn-rounded">update</button></td>
+                    
+                    <td><button onclick="updateprodcts('<%= product.name %>','<%= product.images[0] %>','<%= product.images[1] %>','<%= product.images[2] %>', <%= JSON.stringify(product.variants) %>)" class="btn btn-secondary btn-rounded">update</button></td>
                     <td>
                       <% if (!product.list) { %>
                         <button onclick="Delete('product','<%=  product.name%>',true)" class="btn btn-success btn-rounded">List</button>

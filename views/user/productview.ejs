@@ -68,9 +68,351 @@
 					.wishlist-icon.animate i {
 							animation: heartPop 0.3s ease;
 					}
+
+					.reset-button {
+							background: #f8f9fa;
+							border: 1px solid #ddd;
+							padding: 5px 12px;
+							border-radius: 4px;
+							font-size: 12px;
+							cursor: pointer;
+							transition: all 0.3s ease;
+							margin-left: 10px;
+							color: #666;
+					}
+
+					.reset-button:hover {
+							background: #e9ecef;
+							color: #333;
+					}
+
+					.filter-header {
+							display: flex;
+							align-items: center;
+							margin-bottom: 10px;
+					}
+
+					/* Common styles for option sections */
+					.size-section, .color-section {
+							margin: 15px 0;
+					}
+
+					.size-section label, .color-section label {
+							display: block;
+							margin-bottom: 10px;
+							font-weight: 600;
+							color: #333;
+							font-size: 14px;
+							text-transform: uppercase;
+							letter-spacing: 0.5px;
+					}
+
+					/* Size buttons styling */
+					.size-options {
+							display: flex;
+							gap: 8px;
+							margin-bottom: 20px;
+					}
+
+					.size-btn {
+							width: 45px;
+							height: 45px;
+							border: 2px solid #e0e0e0;
+							background: white;
+							border-radius: 8px;
+							cursor: pointer;
+							transition: all 0.2s ease;
+							font-weight: 600;
+							color: #444;
+					}
+
+					.size-btn:hover {
+							border-color: #007bff;
+							color: #007bff;
+							transform: translateY(-2px);
+							box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+					}
+
+					.size-btn.selected {
+							background: #007bff;
+							color: white;
+							border-color: #007bff;
+					}
+
+					/* Color buttons styling */
+					.color-options {
+							display: flex;
+							gap: 8px;
+							margin-bottom: 20px;
+					}
+
+					.color-btn {
+							width: 35px;
+							height: 35px;
+							border: none;
+							border-radius: 50%;
+							cursor: pointer;
+							transition: all 0.2s ease;
+							position: relative;
+					}
+
+					.color-btn::after {
+							content: '';
+							position: absolute;
+							top: -4px;
+							left: -4px;
+							right: -4px;
+							bottom: -4px;
+							border-radius: 50%;
+							border: 2px solid transparent;
+							transition: all 0.2s ease;
+					}
+
+					.color-btn:hover::after {
+							border-color: #007bff;
+					}
+
+					.color-btn.selected::after {
+							border-color: #007bff;
+					}
+
+					/* Quantity selector styling */
+					.quantity-selector {
+							display: flex;
+							align-items: center;
+							border: 2px solid #e0e0e0;
+							border-radius: 8px;
+							overflow: hidden;
+							width: fit-content;
+					}
+
+					.quantity-selector button {
+							padding: 12px 16px;
+							border: none;
+							background: #f8f9fa;
+							cursor: pointer;
+							font-weight: bold;
+							color: #444;
+							transition: all 0.2s ease;
+					}
+
+					.quantity-selector button:hover {
+							background: #e9ecef;
+					}
+
+					.quantity-selector input {
+							width: 60px;
+							text-align: center;
+							border: none;
+							padding: 12px 8px;
+							font-weight: 600;
+							color: #333;
+							-moz-appearance: textfield;
+					}
+
+					.quantity-selector input::-webkit-outer-spin-button,
+					.quantity-selector input::-webkit-inner-spin-button {
+							-webkit-appearance: none;
+							margin: 0;
+					}
+
+					/* Cart section layout */
+					.cart-section {
+							display: flex;
+							align-items: center;
+							gap: 20px;
+							margin-top: 25px;
+					}
+
+					.add-to-cart-btn {
+							padding: 12px 24px;
+							background: #007bff;
+							color: white;
+							border: none;
+							border-radius: 8px;
+							cursor: pointer;
+							transition: all 0.3s ease;
+							font-weight: 600;
+							text-transform: uppercase;
+							letter-spacing: 0.5px;
+							box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+					}
+
+					.add-to-cart-btn:hover {
+							background: #0056b3;
+							transform: translateY(-2px);
+							box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+					}
+
+					/* Product options container */
+					.product-options {
+							background: #f8f9fa;
+							padding: 20px;
+							border-radius: 12px;
+							margin: 15px 0;
+					}
+
+					/* Section headers */
+					.option-label {
+							font-size: 16px;
+							color: #2c3e50;
+							font-weight: 700;
+							margin-bottom: 12px;
+							display: block;
+					}
+
+					/* Size section */
+					.size-options {
+							display: inline-flex;
+							background: white;
+							padding: 5px;
+							border-radius: 10px;
+							box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+							margin-bottom: 25px;
+					}
+
+					.size-btn {
+							min-width: 50px;
+							height: 50px;
+							margin: 0 5px;
+							border: 2px solid transparent;
+							background: white;
+							border-radius: 8px;
+							cursor: pointer;
+							transition: all 0.3s ease;
+							font-weight: 600;
+							font-size: 15px;
+							color: #555;
+					}
+
+					.size-btn:hover {
+							background: #f0f8ff;
+							border-color: #007bff;
+							transform: translateY(-2px);
+					}
+
+					.size-btn.selected {
+							background: #007bff;
+							color: white;
+							border-color: #007bff;
+							box-shadow: 0 2px 8px rgba(0,123,255,0.3);
+					}
+
+					/* Color section */
+					.color-options {
+							display: inline-flex;
+							background: white;
+							padding: 5px;
+							border-radius: 10px;
+							box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+							margin-bottom: 25px;
+					}
+
+					.color-btn {
+							width: 40px;
+							height: 40px;
+							margin: 0 5px;
+							border: 3px solid white;
+							border-radius: 50%;
+							cursor: pointer;
+							transition: all 0.3s ease;
+							position: relative;
+							box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+					}
+
+					.color-btn.selected {
+							transform: scale(1.15);
+							box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+					}
+
+					.color-btn:hover {
+							transform: scale(1.1);
+					}
+
+					/* Quantity section */
+					.quantity-selector {
+							background: white;
+							padding: 5px;
+							border-radius: 10px;
+							box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+							display: inline-flex;
+							align-items: center;
+					}
+
+					.quantity-selector button {
+							width: 40px;
+							height: 40px;
+							border: none;
+							background: #f8f9fa;
+							border-radius: 8px;
+							font-size: 18px;
+							color: #007bff;
+							cursor: pointer;
+							transition: all 0.2s ease;
+					}
+
+					.quantity-selector button:hover {
+							background: #e9ecef;
+					}
+
+					.quantity-selector input {
+							width: 60px;
+							text-align: center;
+							border: none;
+							font-size: 16px;
+							font-weight: 600;
+							color: #333;
+							padding: 8px;
+							margin: 0 8px;
+					}
+
+					/* Add to cart button */
+					.add-to-cart-btn {
+							background: linear-gradient(45deg, #007bff, #0056b3);
+							color: white;
+							border: none;
+							padding: 15px 30px;
+							border-radius: 10px;
+							font-size: 16px;
+							font-weight: 600;
+							cursor: pointer;
+							transition: all 0.3s ease;
+							box-shadow: 0 4px 15px rgba(0,123,255,0.2);
+							text-transform: uppercase;
+							letter-spacing: 1px;
+					}
+
+					.add-to-cart-btn:hover {
+							transform: translateY(-2px);
+							box-shadow: 0 6px 20px rgba(0,123,255,0.3);
+					}
+
+					/* Section spacing */
+					.size-section, .color-section {
+							margin-bottom: 25px;
+					}
+
+					/* Stock status */
+					.stock-status {
+							display: inline-block;
+							padding: 8px 15px;
+							border-radius: 8px;
+							font-weight: 600;
+							margin-bottom: 20px;
+					}
+
+					.in-stock {
+							background: #e8f5e9;
+							color: #2e7d32;
+					}
+
+					.out-of-stock {
+							background: #ffebee;
+							color: #c62828;
+					}
 		</style>
 
-		
+	 		
 		<!-- Google Font -->
 		<link href='https://fonts.googleapis.com/css?family=Lato:400,700,900' rel='stylesheet' type='text/css'>
 		<link href='https://fonts.googleapis.com/css?family=Bree+Serif' rel='stylesheet' type='text/css'>
@@ -280,7 +622,7 @@
 														<% if (product.offer > 0) { %>
 																<div class="offer-badge"><%= product.offer %>% OFF</div>
 														<% } %>
-														<img class="biggimg" src="<%= product[imageField] %>" alt="Product Image" />
+														<img class="biggimg" src="<%= product.images[i] %>" alt="Product Image" />
 												</div>
 										<% } %>
 										</div>
@@ -298,6 +640,19 @@
 														<i class="zmdi zmdi-favorite-outline"></i>
 													</a>
 												</div>
+												<!-- Moving price section here -->
+												<div class="price-section">
+													<% if (product.offer > 0) { %>
+															<span class="pro-price">
+																₹<%= Math.floor(Number(product.price) * (1 - product.offer/100)) %>
+																	<span style="text-decoration: line-through; color: #999; margin-left: 8px; font-size: 0.9em;">
+																		₹<%= Math.floor(Number(product.price)) %>
+																	</span>
+															</span>
+													<% } else { %>
+															<span class="pro-price">₹<%= Math.floor(Number(product.price)) %></span>
+													<% } %>
+												</div>
 												<span class="pro-rating floatright">
 													<a href="#"><i class="zmdi zmdi-star"></i></a>
 													<a href="#"><i class="zmdi zmdi-star"></i></a>
@@ -308,30 +663,26 @@
 												</span>
 											</div>
 								
-											<!-- Price -->
-											<!-- In the price section -->
-	<div class="fix mb-20">
-		<% if (product.offer > 0) { %>
-				<span class="pro-price">
-					₹<%= Math.floor(Number(product.price) * (1 - product.offer/100)) %>
-						<span style="text-decoration: line-through; color: #999; margin-left: 8px; font-size: 0.9em;">
-							₹<%= Math.floor(Number(product.price)) %>
-						</span>
-				</span>
-		<% } else { %>
-				<span class="pro-price">₹<%= Math.floor(Number(product.price)) %></span>
-		<% } %>
-	</div>
-								
-											
-								
 											<!-- Color Section -->
 											<div class="color-filter single-pro-color mb-20 clearfix">
+												<div class="filter-header">
+													<ul>
+														<li><span class="color-title text-capitalize">color</span></li>
+													</ul>
+													<button onclick="resetFilters()" class="reset-button">Reset Filters</button>
+												</div>
 												<ul>
-													<li><span class="color-title text-capitalize">color</span></li>
-													<li><a class="active" href="#"><span class="color color-1"></span></a></li>
-													<li><a href="#"><span class="color color-2"></span></a></li>
-													<li><a href="#"><span class="color color-3"></span></a></li>
+													<% 
+													// Get unique colors
+													const uniqueColors = [...new Set(product.variants.map(variant => variant.color))];
+													uniqueColors.forEach((color, index) => { 
+													%>
+														<li>
+															<a onclick="selectvarient(event)" data-color="<%= color %>" class="color-option <%= index === 0 ? 'active' : '' %>" >
+																<span data-color="<%= color %>" class="color" style="background-color: <%= color.toLowerCase() %>"></span>
+															</a>
+														</li>
+													<% }); %>
 												</ul>
 											</div>
 								
@@ -339,10 +690,16 @@
 											<div class="size-filter single-pro-size mb-35 clearfix">
 												<ul>
 													<li><span class="color-title text-capitalize">size</span></li>
-													<li><a href="#">M</a></li>
-													<li><a href="#">S</a></li>
-													<li><a href="#">L</a></li>
-													<li><a href="#">XL</a></li>
+													<% 
+													// Get unique sizes
+													const uniqueSizes = [...new Set(product.variants.map(variant => variant.size))];
+													uniqueSizes.forEach((size, index) => { 
+													%>
+														<li>
+															<a onclick="selectvarient(event,'size')" class="size-option <%= index === 0 ? 'active' : '' %>" 
+															   data-size="<%= size %>"><%= size %></a>
+														</li>
+													<% }); %>
 												</ul>
 											</div>
 								<!-- new start -->
@@ -512,7 +869,7 @@
 												<% for (let i = 0; i < 3; i++) { %>
 													<% const imageField = `image${i}`; %>
 													<div>
-														<img src="<%= product[imageField] %>" alt="Small Product Image" />
+														<img src="<%= product.images[i] %>" alt="Small Product Image" />
 													</div>
 												<% } %>
 											</div>
@@ -936,16 +1293,16 @@
 			.catch(error => console.error('Error:', error));
 	}
 	// Related products carousel navigation
-	const productsGrid = document.querySelector('.products-grid');
-			const scrollAmount = document.querySelector('.product-card').offsetWidth * 5 + 30 * 5;
+	// const productsGrid = document.querySelector('.products-grid');
+	// 		const scrollAmount = document.querySelector('.product-card').offsetWidth * 5 + 30 * 5;
 			
-			document.querySelector('.nav-button.next').addEventListener('click', () => {
-					productsGrid.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-			});
+	// 		document.querySelector('.nav-button.next').addEventListener('click', () => {
+	// 				productsGrid.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+	// 		});
 
-			document.querySelector('.nav-button.prev').addEventListener('click', () => {
-					productsGrid.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-			});
+	// 		document.querySelector('.nav-button.prev').addEventListener('click', () => {
+	// 				productsGrid.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+	// 		});
 
 	async function toggleWishlist(element, productId) {
 		try {
@@ -954,6 +1311,17 @@
 			const method = isActive ? 'DELETE' : 'POST';
 
 			const response = await fetch(url, { method });
+			const contentType = response.headers.get('content-type');
+
+			if (contentType && contentType.includes('text/html')) {
+				// If response is HTML, render it
+				const html = await response.text();
+				document.open();
+				document.write(html);
+				document.close();
+				return;
+			}
+
 			const data = await response.json();
 
 			if (response.ok) {
@@ -1027,6 +1395,111 @@
 			console.error('Error checking wishlist status:', error);
 		}
 	});
+
+	function resetFilters() {
+		// Reset color options
+		document.querySelectorAll('.color-option').forEach(option => {
+			option.classList.remove('active');
+			option.style.pointerEvents = 'auto';
+			option.style.opacity = '1';
+		});
+		
+		// Reset size options
+		document.querySelectorAll('.size-option').forEach(option => {
+			option.classList.remove('active');
+			option.style.pointerEvents = 'auto';
+			option.style.opacity = '1';
+		});
+		
+		// Set first color and size as active
+		const firstColor = document.querySelector('.color-option');
+		const firstSize = document.querySelector('.size-option');
+		if (firstColor) firstColor.classList.add('active');
+		if (firstSize) firstSize.classList.add('active');
+	}
+const varients=<%- JSON.stringify(product.variants)%>
+	function selectvarient(event,varient){
+		if(varient==='size'){
+			const selectedsize = event.target.dataset.size
+			
+			// Filter variants that match the selected size
+			const matchingVariants = varients.filter(variant => variant.size === selectedsize);
+	
+			// Extract colors from matching variants
+			const availableColors = matchingVariants.map(variant => variant.color);
+			
+			// Remove active class from all color options
+			document.querySelectorAll('.color-option').forEach(option => {
+				option.classList.remove('active');
+				option.style.pointerEvents = 'none'; // Make unclickable
+				option.style.opacity = '0.5'; // Visual indication of disabled state
+			});
+
+			// Show and enable only available colors
+			document.querySelectorAll('.color-option').forEach(option => {
+				const color = option.dataset.color;
+				
+				if (availableColors.includes(color)) {
+					option.style.pointerEvents = 'auto'; // Make clickable
+					option.style.opacity = '1'; // Full opacity for available options
+					// Make first available color active
+					if (!document.querySelector('.color-option.active')) {
+						option.classList.add('active');
+					}
+				}
+			});
+		} else{
+			const selectedColor = event.target.dataset.color;
+	
+			// Filter variants that match the selected color
+			const matchingVariants = varients.filter(variant => variant.color === selectedColor);
+	
+			// Extract sizes from matching variants
+			const availableSizes = matchingVariants.map(variant => variant.size);
+			
+			// Remove active class from all size options
+			document.querySelectorAll('.size-option').forEach(option => {
+				option.classList.remove('active');
+				option.style.pointerEvents = 'none'; // Make unclickable
+				option.style.opacity = '0.5'; // Visual indication of disabled state
+			});
+
+			// Show and enable only available sizes
+			document.querySelectorAll('.size-option').forEach(option => {
+				const size = option.dataset.size;
+				if (availableSizes.includes(size)) {
+					option.style.pointerEvents = 'auto'; // Make clickable
+					option.style.opacity = '1'; // Full opacity for available options
+					// Make first available size active
+					if (!document.querySelector('.size-option.active')) {
+						option.classList.add('active');
+					}
+				}
+			});
+		}
+	}
+
+	function resetFilters() {
+		// Reset color options
+		document.querySelectorAll('.color-option').forEach(option => {
+			option.classList.remove('active');
+			option.style.pointerEvents = 'auto';
+			option.style.opacity = '1';
+		});
+		
+		// Reset size options
+		document.querySelectorAll('.size-option').forEach(option => {
+			option.classList.remove('active');
+			option.style.pointerEvents = 'auto';
+			option.style.opacity = '1';
+		});
+		
+		// Set first color and size as active
+		const firstColor = document.querySelector('.color-option');
+		const firstSize = document.querySelector('.size-option');
+		if (firstColor) firstColor.classList.add('active');
+		if (firstSize) firstSize.classList.add('active');
+	}
 	</script>
 		</body>
 

@@ -37,9 +37,14 @@
       <div id="selectedVariants" class="mb-3">
         <!-- Selected variants will be displayed here -->
       </div>
-      <button type="button" class="btn btn-info mr-2" data-toggle="modal" data-target="#variantModal">
+      
+      <button type="button" onclick="document.getElementById('varient_err').style.display='none'" class="btn btn-info mr-2" data-toggle="modal" data-target="#variantModal">
         Add Variant
       </button>
+     
+
+
+
       <div class="form-group">
         <label>Images</label>
         <input class="form-control" onchange="cropper(1)" id="image1" type="file" accept="image/*">
@@ -62,6 +67,7 @@
 </div>
 
 <!-- Variant Modal -->
+
 <div class="modal fade" id="variantModal" tabindex="-1" role="dialog" aria-labelledby="variantModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -98,6 +104,7 @@
             <option value="XL">XL</option>
           </select>
         </div>
+        <p id="varient_err" style="color: red; display: none;"></p>
       </div>
       
       <div class="modal-footer">
@@ -108,6 +115,5 @@
     </div>
   </div>
 </div>
-
 
 

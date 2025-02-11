@@ -18,18 +18,21 @@
           <% }); %>
         </select>
       </div>
-      <div class="form-group">
-        <label>Count</label>
-        <input name="count" type="number" class="form-control" placeholder="Count" >
-      </div>
-      <div class="form-group">
-        <label>Colors</label>
-        <input name="colors" type="text" class="form-control" placeholder="Comma-separated colors (e.g., Red, Blue)">
-      </div>
+      <!-- here will be dynamically added varient fields -->
+     
+      
+      
+
       <div class="form-group">
         <label>Rating</label>
         <input name="rating" type="number" class="form-control" placeholder="Rating (0-5)" step="0.1" min="0" max="5">
       </div>
+      <div id="selectedVariants" class="mb-3">
+        <!-- Selected variants will be displayed here -->
+      </div>
+      <button type="button" onclick="document.getElementById('varient_err').style.display='none'" class="btn btn-info mr-2" data-toggle="modal" data-target="#variantModal">
+        Add Variant
+      </button>
       <div class="image-upload-container">
         <div class="form-group image-upload-group">
           <label>Image 1</label>
@@ -99,3 +102,51 @@
     width: 100%;
 }
 </style>
+
+<!-- Variant Modal -->
+<div class="modal fade" id="variantModal" tabindex="-1" role="dialog" aria-labelledby="variantModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="variantModalLabel">Add Variant</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Color</label>
+          <select class="form-control" id="modalColorSelect">
+            <option value="">Select a color</option>
+            <option value="Black">Black</option>
+            <option value="White">White</option>
+            <option value="Red">Red</option>
+            <option value="Blue">Blue</option>
+            <option value="Green">Green</option>
+            <option value="Gray">Gray</option>
+            <option value="Navy">Navy</option>
+            <option value="Brown">Brown</option>
+            <option value="Beige">Beige</option>
+            <option value="Pink">Pink</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Size</label>
+          <select class="form-control" id="modalSizeSelect">
+            <option value="">Select a size</option>
+            <option value="S">S</option>
+            <option value="M">M</option>
+            <option value="L">L</option>
+            <option value="XL">XL</option>
+          </select>
+        </div>
+        <p id="varient_err" style="color: red; display: none;"></p>
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" onclick="addVariant()">Add Variant</button>
+      </div>
+    </div>
+  </div>
+</div>

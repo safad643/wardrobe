@@ -153,7 +153,9 @@ function productload(){
   .catch(err=>console.log(err))
 }
 
-function updateprodcts(name,img1,img2,img3){
+function updateprodcts(name,img1,img2,img3,varientarray){
+ 
+  
   fetch('/admin/productUpdate',{method:'get'})
   .then(response => response.text())
   .then((html)=>{
@@ -162,6 +164,53 @@ function updateprodcts(name,img1,img2,img3){
     document.getElementById('img1').src = img1
     document.getElementById('img2').src = img2
     document.getElementById('img3').src = img3
+    // Parse variant array and create input fields
+    const variants = varientarray
+    
+    // Find the target div after Rating input
+    const ratingDiv = document.querySelector('input[name="rating"]').closest('.form-group');
+    
+    // Create variant fields container
+    const variantContainer = document.createElement('div');
+    variantContainer.className = 'form-group';
+    variantContainer.innerHTML = '<label>Variants</label>';
+    
+    // Add variant input fields
+    variants.forEach(variant => {
+      const inputDiv = document.createElement('div');
+      inputDiv.className = 'form-group';
+      inputDiv.style.display = 'flex';
+      inputDiv.style.alignItems = 'center';
+      inputDiv.style.gap = '10px';
+      
+      const variantId = `variant_${variant.color}_${variant.size}`;
+      inputDiv.id = variantId;
+      
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.className = 'form-control';
+      input.name = variantId;
+      input.value = variant.count;
+      input.min = 0;
+      input.style.width = '200px';
+      
+      const label = document.createElement('label');
+      label.textContent = `Count of ${variant.color} - ${variant.size}`;
+      
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'btn btn-danger';
+      removeBtn.textContent = 'Remove';
+      removeBtn.type = 'button';
+      removeBtn.onclick = () => removeVariant(variantId);
+      
+      inputDiv.appendChild(label);
+      inputDiv.appendChild(input);
+      inputDiv.appendChild(removeBtn);
+      variantContainer.appendChild(inputDiv);
+    });
+    
+    // Insert after rating div
+    ratingDiv.parentNode.insertBefore(variantContainer, ratingDiv.nextSibling);
   })
 }
 
@@ -224,48 +273,41 @@ function showproductimages(a,b,c){
 }
 
 
-function updateproduct(e){
-  e.preventDefault()
-  let images=[]
-  for(let i=1;i<=3;i++){
+function updateproduct(e) {
+  e.preventDefault();
+
+  // Get form data
+  const form = e.target;
+  const formData = new FormData(form);
+  const data = {};
+
+  // Convert form data to object and remove empty values
+  for (let [key, value] of formData.entries()) {
+    if (value.trim()) {
+      data[key] = value;
+    }
+  }
+
+  // Handle cropped images
+  for (let i = 1; i <= 3; i++) {
     const canvas = croppers[i]?.getCroppedCanvas();
-    if(canvas){
-      const base64Image = canvas.toDataURL('image/png'); 
-    images.push(base64Image)
-    }else{
-      images.push('noimage')
+    if (canvas) {
+      const base64Image = canvas.toDataURL('image/png');
+      data[`image${i-1}`] = base64Image;
     }
   }
-  const fromdata={}
-  const inputs=[
-    document.getElementById('ogname'),
-    document.getElementsByName('name')[0],
-    document.getElementsByName('price')[0],
-    document.getElementsByName('category')[0],
-    document.getElementsByName('count')[0],
-    document.getElementsByName('colors')[0],
-    document.getElementsByName('rating')[0],
-  ]
-  for(i in images){
-    if(images[i]==='noimage'){
-      continue
-    }else{
-      fromdata[`image${i}`]=images[i]
-    }
-    
-  }
-  inputs.forEach((input)=>{
-    if(input.value.trim()){
-      fromdata[input.name]=input.value
+
+  fetch('/admin/productUpdate', {
+    method: 'post',
+    body: JSON.stringify(data),
+    headers: {
+      'Content-Type': 'application/json'
     }
   })
-  console.log(fromdata);
-  
-  fetch('/admin/productUpdate',{method:'post',body:JSON.stringify(fromdata),headers:{'Content-Type': 'application/json'}})
-  .then((response)=>response.text())
-  .then((html)=>{
-    document.querySelector('.main-panel').innerHTML=html
-  })
+  .then(response => response.text())
+  .then(html => {
+    document.querySelector('.main-panel').innerHTML = html;
+  });
 }
 
 
@@ -381,12 +423,6 @@ function productAdder(e) {
     return;
   }
 
-  // Validate Count
-  const countInput = document.querySelector('input[name="count"]');
-  if (!countInput.value || parseInt(countInput.value) <= 0) {
-    showError(countInput, 'Count must be a positive integer.');
-    return;
-  }
 
   // Validate Colors
 
@@ -457,64 +493,79 @@ function productAdder(e) {
       document.querySelector('#error-message').innerHTML = "An error occurred while processing your request.";
     });
 }
-function addVariant(){
-const color = document.getElementById('modalColorSelect').value;
-const size = document.getElementById('modalSizeSelect').value;
+function addVariant() {
+  const color = document.getElementById('modalColorSelect').value;
+  const size = document.getElementById('modalSizeSelect').value;
 
-if (!color || !size) {
-  alert('Please select both color and size');
-  return;
-}
+  if (!color || !size) {
+    const error = document.getElementById('varient_err');
+    error.innerHTML = 'please select both color and size';
+    error.style.display = 'block';
+    return;
+  }
 
-// Check if variant already exists
-const existingVariant = document.querySelector(`input[name="variant_${color}_${size}"]`);
-if (existingVariant) {
-  alert('This variant combination already exists');
-  return;
-}
+  // Check if variant already exists
+  const existingVariant = document.querySelector(`input[name="variant_${color}_${size}"]`);
+  if (existingVariant) {
+    const error = document.getElementById('varient_err');
+    error.innerHTML = 'varient already exist';
+    error.style.display = 'block';
+    return;
+  }
 
-const selectedVariantsDiv = document.getElementById('selectedVariants');
+  const selectedVariantsDiv = document.getElementById('selectedVariants');
 
-// Generate unique ID for the variant container
-const variantId = `variant_${color}_${size}_${Date.now()}`;
+  // Generate unique ID for the variant container
+  const variantId = `variant_${color}_${size}`;
 
-// Create container for the variant
-const variantContainer = document.createElement('div');
-variantContainer.className = 'mb-3';
-variantContainer.id = variantId;
+  // Create container for the variant
+  const variantContainer = document.createElement('div');
+  variantContainer.className = 'form-group';
+  variantContainer.id = variantId;
 
-// Create label
-const label = document.createElement('label');
-label.textContent = `Count of ${color} - ${size}`;
-label.className = 'form-label';
+  // Create input div with flex layout
+  const inputDiv = document.createElement('div');
+  inputDiv.className = 'form-group';
+  inputDiv.style.display = 'flex';
+  inputDiv.style.alignItems = 'center';
+  inputDiv.style.gap = '10px';
 
-// Create input field
-const input = document.createElement('input');
-input.type = 'number';
-input.name = `variant_${color}_${size}`;
-input.className = 'form-control';
+  // Create label
+  const label = document.createElement('label');
+  label.textContent = `Count of ${color} - ${size}`;
 
-// Create remove button
-const removeBtn = document.createElement('button');
-removeBtn.type = 'button';
-removeBtn.className = 'btn btn-danger btn-sm mt-2';
-removeBtn.textContent = 'Remove';
-removeBtn.setAttribute('onclick', `removeVariant('${variantId}')`);
+  // Create input field
+  const input = document.createElement('input');
+  input.type = 'number';
+  input.name = `variant_${color}_${size}`;
+  input.className = 'form-control';
+  input.min = 0;
+  input.style.width = '200px';
 
-// Add elements to container
-variantContainer.appendChild(label);
-variantContainer.appendChild(input);
-variantContainer.appendChild(removeBtn);
+  // Create remove button
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.className = 'btn btn-danger';
+  removeBtn.textContent = 'Remove';
+  removeBtn.setAttribute('onclick', `removeVariant('${variantId}')`);
 
-// Add container to selectedVariants div
-selectedVariantsDiv.appendChild(variantContainer);
+  // Add elements to input div
+  inputDiv.appendChild(label);
+  inputDiv.appendChild(input);
+  inputDiv.appendChild(removeBtn);
 
-// Reset modal selections
-document.getElementById('modalColorSelect').value = '';
-document.getElementById('modalSizeSelect').value = '';
+  // Add input div to container
+  variantContainer.appendChild(inputDiv);
 
-// Close modal
-$('#variantModal').modal('hide');
+  // Add container to selectedVariants div
+  selectedVariantsDiv.appendChild(variantContainer);
+
+  // Reset modal selections
+  document.getElementById('modalColorSelect').value = '';
+  document.getElementById('modalSizeSelect').value = '';
+
+  // Close modal
+  $('#variantModal').modal('hide');
 }
 function removeVariant(id) {
   const variantElement = document.getElementById(id);
@@ -522,7 +573,7 @@ function removeVariant(id) {
     variantElement.remove();
   }
   else{
-    alert('sdnjskd')
+    alert('remove faield')
   }
   }
 function updateProductStatus(orderId, productId, status) {

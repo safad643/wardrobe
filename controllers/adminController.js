@@ -240,57 +240,68 @@ const productaddload = async (req, res) => {
 
 const productadd = async (req, res) => {
   try {
-    
-    
     const db = await mongo();
     const existingProduct = await db.collection("products").findOne({ name: req.body.name });
     if (existingProduct) {
       return res.status(400).json({ error: "Product name already exists" });
     }
-    const imgarray = [req.body.image0, req.body.image1, req.body.image2];
-    const dirPath = `./images/${req.body.name}`;
-    fs.mkdir(dirPath, { recursive: true }, (err) => {
-      if (err) {
-        console.log(err);
+
+    // Save images and variants from req.body
+    const imageData = [req.body.image0, req.body.image1, req.body.image2];
+    delete req.body.image0;
+    delete req.body.image1; 
+    delete req.body.image2;
+
+    // Extract variants
+    const variants = [];
+    for (const [key, value] of Object.entries(req.body)) {
+      if (key.startsWith('variant_')) {
+        const [_, color, size] = key.split('_');
+        variants.push({
+          color: color,
+          size: size,
+          count: parseInt(value)
+        });
+        delete req.body[key];
       }
-    });
-    for (let i of imgarray) {
-      const base64Data = i.replace(/^data:image\/\w+;base64,/, "");
-      const binary = Buffer.from(base64Data, "base64");
-      fs.writeFile(
-        dirPath + `/image${imgarray.indexOf(i)}.png`,
-        binary,
-        (err) => {
-          if (err) {
-            console.log(err);
-          } else {
-            console.log("images uploaded");
-          }
-        }
-      );
-      req.body[`image${imgarray.indexOf(i)}`] = `/images/${req.body.name}/image${imgarray.indexOf(i)}.png`;
     }
+
+    // Create initial document
     req.body.list = true;
-    req.body.count=parseInt(req.body.count)
-     // Extract variants from request body
-     const variants = [];
-     for (const [key, value] of Object.entries(req.body)) {
-       if (key.startsWith('variant_')) {
-         const [_, color, size] = key.split('_');
-         variants.push({
-           color: color,
-           size: size, 
-           count: parseInt(value)
-         });
-         delete req.body[key];
-       }
-     }
-     
-     // Add variants array to request body
-     req.body.variants = variants;
-    await db.collection("products").insertOne(req.body);
+    const result = await db.collection("products").insertOne(req.body);
+    const productId = result.insertedId;
+
+    // Create directory with product ID
+    const dirPath = `./images/${productId}`;
+    fs.mkdirSync(dirPath, { recursive: true });
+
+    // Upload images and save paths
+    const imagePaths = [];
+    for (let i = 0; i < imageData.length; i++) {
+      if (imageData[i]) {
+        const base64Data = imageData[i].replace(/^data:image\/\w+;base64,/, "");
+        const binary = Buffer.from(base64Data, "base64");
+        const imagePath = `/images/${productId}/image${i}.png`;
+        
+        fs.writeFileSync(dirPath + `/image${i}.png`, binary);
+        imagePaths.push(imagePath);
+      }
+    }
+
+    // Update document with variants and image paths
+    await db.collection("products").updateOne(
+      { _id: productId },
+      { 
+        $set: {
+          variants: variants,
+          images: imagePaths
+        }
+      }
+    );
+
     const products = await db.collection("products").find({}).toArray();
     res.render("admin/nav/products", { products });
+
   } catch (err) {
     console.error(err);
     res.status(500).send("Internal Server Error");
@@ -307,13 +318,46 @@ const productupdate = async (req, res) => {
     if (existingProduct) {
       return res.status(400).json({ error: "Product name already exists" });
     }
+
+    // Get product ID from original name
+    const product = await db.collection("products").findOne({ name: req.body.ogname });
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+    const productId = product._id;
+
+    // Handle variants
+    const variants = [];
+    for (const key in req.body) {
+      if (key.startsWith('variant_')) {
+        const [_, color, size] = key.split('_');
+        const count = parseInt(req.body[key]);
+        delete req.body[key];
+
+        const existingVariantIndex = variants.findIndex(v => 
+          v.color === color && v.size === size
+        );
+
+        if (existingVariantIndex >= 0) {
+          variants[existingVariantIndex].count = count;
+        } else {
+          variants.push({
+            color: color,
+            size: size,
+            count: count
+          });
+        }
+      }
+    }
+    req.body.variants = variants;
+
     const imgarray = [req.body.image0, req.body.image1, req.body.image2];
     for (let i of imgarray) {
       if (i) {
         delete req.body[`image${imgarray.indexOf(i)}`];
         const base64Data = i.replace(/^data:image\/\w+;base64,/, "");
         const binary = Buffer.from(base64Data, "base64");
-        fs.writeFile(`./images/${req.body.ogname}/image${imgarray.indexOf(i)}.png`,
+        fs.writeFile(`./images/${productId}/image${imgarray.indexOf(i)}.png`,
           binary,
           (err) => {
             if (err) {
@@ -324,10 +368,10 @@ const productupdate = async (req, res) => {
           }
         );
       }
-      req.body[`image${imgarray.indexOf(i)}`] = `/images/${req.body.ogname}/image${imgarray.indexOf(i)}.png`;
+      req.body[`image${imgarray.indexOf(i)}`] = `/images/${productId}/image${imgarray.indexOf(i)}.png`;
     }
    
-    await db.collection("products").updateOne({ name: req.body.ogname }, { $set: req.body });
+    await db.collection("products").updateOne({ _id: productId }, { $set: req.body });
     const products = await db.collection("products").find({}).toArray();
     res.render("admin/nav/products", { products });
   } catch (err) {
