@@ -712,50 +712,61 @@ const loadorderview = async(req,res) => {
   try {
     const orderid = req.params.orderid;
     const productid = req.params.productid;
+    const { size, color } = req.query;
+    
     const db = await mongo();
     
     // Get order details
     const order = await db.collection("orders").findOne({
       _id: new ObjectId(orderid)
     });
-    
-    // Get address details
+
+    // Get matching order item
+    const orderItem = order.items.find(item => 
+      item.productId === productid &&
+      item.varient.size === size &&
+      item.varient.color === color
+    );
+
+    if (!orderItem) {
+      return res.status(404).send("Order item not found");
+    }
+
+    // Get product details
+    const product = await db.collection("products").findOne({
+      _id: new ObjectId(productid)
+    });
+
+    // Get address details  
     const address = await db.collection("adress").findOne({
       _id: new ObjectId(order.addressId)
     });
-    
-    // Find the specific product from order items
-    let orderProduct = order.items.find(item => item.productId === productid);
-    
-    // Get product details
-    const productDetails = await db.collection("products").findOne({
-      _id: new ObjectId(productid)
-    });
-    
-    // Combine order item details with product details
-    const product = {
-      ...productDetails,
-      ...orderProduct,
-      quantity: orderProduct.quantity,
-      offer: productDetails.offer || 0
+
+
+
+    // Create order view object
+    const orderView = {
+      _id: order._id,
+      createdAt: order.createdAt,
+      paymentMethod: order.paymentMethod,
+      item: {
+        ...orderItem,
+        product
+      },
+      address: {
+        street: address.street,
+        city: address.city,
+        state: address.state,
+        country: address.country,
+        pincode: address.postalCode,
+        mobile: address.phone
+      }
     };
 
-    // Add address to order object
-    order.address = {
-      street: address.street,
-      city: address.city,
-      state: address.state,
-      country: address.country,
-      pincode: address.postalCode,
-      mobile: address.phone
-    };
+    res.render("user/orderviewpage", { order: orderView });
 
-    // Set the order status based on the specific item's status
-    order.status = orderProduct.status;
-    
-    res.render("user/orderviewpage", { order, product });
   } catch (error) {
-    console.error(error);
+    console.error(error); 
     res.status(500).send("Error loading order view");
   }
 }

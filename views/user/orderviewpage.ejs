@@ -91,9 +91,7 @@
             border-radius: var(--border-radius);
             padding: 1.2rem;
             box-shadow: var(--shadow);
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.2rem;
+            display: block;
             margin-bottom: 0.8rem;
         }
 
@@ -263,6 +261,10 @@
             .product-section {
                 grid-template-columns: 1fr;
             }
+
+            .order-status-tracker::after {
+                width: calc(var(--progress-width) * 0.8);
+            }
         }
 
         .order-status-tracker {
@@ -290,11 +292,11 @@
             position: absolute;
             top: 25px;
             left: 50px;
-            width: var(--progress-width);
+            width: 0%; /* Start at 0% */
             height: 2px;
             background: var(--success);
             z-index: 1;
-            transition: width 0.5s ease;
+            animation: progressLine 3s ease forwards; /* Increased from 1.5s to 3s */
         }
 
         .status-step {
@@ -303,6 +305,8 @@
             align-items: center;
             position: relative;
             z-index: 2;
+            opacity: 0.5; /* Start faded */
+            transition: opacity 0.3s ease;
         }
 
         .status-icon {
@@ -310,12 +314,12 @@
             height: 50px;
             border-radius: 50%;
             background: white;
-            border: 2px solid #e0e0e0;
+            border: 2px solid #e0e0e0; /* Start with gray border */
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.2rem;
-            color: #e0e0e0;
+            color: #e0e0e0; /* Start with gray icon */
             transition: all 0.3s ease;
         }
 
@@ -777,6 +781,7 @@
         }
 
         .order-item {
+            width: 100%;
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1.2rem;
@@ -809,6 +814,36 @@
 
         .mt-4 {
             margin-top: 1.5rem;
+        }
+
+        .status-step.faded .status-icon {
+            border-color: #e0e0e0;
+            background: #f5f5f5;
+            color: #999;
+        }
+
+        .status-step.faded .status-label {
+            color: #999;
+            font-weight: 500;
+        }
+
+        @media (max-width: 992px) {
+            .order-status-tracker[data-status="pending"] { --progress-width: 12% !important; }
+            .order-status-tracker[data-status="processing"] { --progress-width: 40% !important; }
+            .order-status-tracker[data-status="shipped"] { --progress-width: 65% !important; }
+            .order-status-tracker[data-status="delivered"] { --progress-width: 80% !important; }
+            .order-status-tracker[data-status="cancelled"] { --progress-width: 0% !important; }
+        }
+
+        /* Add these new animations */
+        @keyframes progressLine {
+            to {
+                width: var(--progress-width);
+            }
+        }
+
+        @keyframes activateNode {
+            0%, 100% { transform: scale(1.1); }
         }
     </style>
 </head>
@@ -865,6 +900,7 @@
             <div class="left-section">
                 <div class="order-header">
                     <h1 class="main-title">Order Details</h1>
+                    
                     <div class="order-meta">
                         <div class="order-id">
                             <span class="label">Order ID:</span>
@@ -877,83 +913,93 @@
                     </div>
                     
                     <!-- Add Order Status Tracker -->
-                    <div class="order-status-tracker">
-                        <div class="status-step <%= ['pending', 'processing', 'shipped', 'delivered', 'cancelled'].indexOf(order.status) >= 0 ? 'active' : '' %>">
+                    <div class="order-status-tracker" 
+                        data-status="<%= order.item.status %>"
+                        style="--progress-width: <%= 
+                            order.item.status === 'pending' ? '15%' :
+                            order.item.status === 'processing' ? '40%' :
+                            order.item.status === 'shipped' ? '70%' :
+                            order.item.status === 'delivered' ? '90%' :
+                            order.item.status === 'cancelled' ? '0%' : '0%'
+                        %>;">
+                        <div class="status-step <%= order.item.status === 'cancelled' ? 'faded' : ((['pending', 'processing', 'shipped', 'delivered'].includes(order.item.status)) ? 'active' : '') %>">
                             <div class="status-icon">
                                 <i class="fas fa-clipboard-check"></i>
                             </div>
                             <div class="status-label">Order Placed</div>
                         </div>
-                        <div class="status-step <%= ['processing', 'shipped', 'delivered'].indexOf(order.status) >= 0 ? 'active' : '' %>">
+                        <div class="status-step <%= order.item.status === 'cancelled' ? 'faded' : ((['processing', 'shipped', 'delivered'].includes(order.item.status)) ? 'active' : '') %>">
                             <div class="status-icon">
                                 <i class="fas fa-cog"></i>
                             </div>
                             <div class="status-label">Processing</div>
                         </div>
-                        <div class="status-step <%= ['shipped', 'delivered'].indexOf(order.status) >= 0 ? 'active' : '' %>">
+                        <div class="status-step <%= order.item.status === 'cancelled' ? 'faded' : ((['shipped', 'delivered'].includes(order.item.status)) ? 'active' : '') %>">
                             <div class="status-icon">
                                 <i class="fas fa-truck"></i>
                             </div>
                             <div class="status-label">Shipped</div>
                         </div>
-                        <div class="status-step <%= ['delivered'].indexOf(order.status) >= 0 ? 'active' : '' %>">
+                        <div class="status-step <%= order.item.status === 'cancelled' ? 'faded' : (order.item.status === 'delivered' ? 'active' : '') %>">
                             <div class="status-icon">
                                 <i class="fas fa-box-open"></i>
                             </div>
                             <div class="status-label">Delivered</div>
                         </div>
-                        <div class="status-step <%= ['cancelled'].indexOf(order.status) >= 0 ? 'active cancelled' : '' %>">
-                            <div class="status-icon">
-                                <i class="fas fa-times-circle"></i>
+                        <% if (order.item.status === 'cancelled') { %>
+                            <div class="status-step active cancelled">
+                                <div class="status-icon">
+                                    <i class="fas fa-times-circle"></i>
+                                </div>
+                                <div class="status-label">Cancelled</div>
                             </div>
-                            <div class="status-label">Cancelled</div>
-                        </div>
+                        <% } %>
                     </div>
                 </div>
 
                 <div class="product-section">
-                    <% order.items.forEach((item, index) => { %>
-                        <div class="order-item <%= index > 0 ? 'mt-4' : '' %>">
+                    <%console.log(order)%>
+                        <div class="order-item">
                             <div class="product-gallery">
                                 <div class="main-image-container">
                                     <div class="product-image-container">
-                                        <%console.log(product)%>
-                                        <%console.log('asiudkbjaskjdma')%>
-                                        <img src="<%= item.product.images[0] %>" alt="<%= item.product.name %>" class="product-image" id="mainImage<%= index %>">
+                                        <img src="<%= order.item.product?.images?.[0] || '/images/placeholder.png' %>" 
+                                             alt="Product Image" 
+                                             class="product-image" 
+                                             id="mainImage0">
                                     </div>
                                 </div>
                                 <div class="product-thumbnails">
-                                    <% [item.product.images[0], item.product.images[1], item.product.images[2]].forEach((img, imgIndex) => { %>
-                                        <% if (img) { %>
+                                    <% if (order.item.product?.images) { %>
+                                        <% order.item.product.images.slice(0, 3).forEach((img, imgIndex) => { %>
                                             <img src="<%= img %>" 
                                                  alt="Product view <%= imgIndex + 1 %>" 
                                                  class="thumbnail <%= imgIndex === 0 ? 'active' : '' %>"
-                                                 onclick="changeImage(this.src, <%= index %>)">
-                                        <% } %>
-                                    <% }) %>
+                                                 onclick="changeImage(this.src, 0)">
+                                        <% }) %>
+                                    <% } %>
                                 </div>
                             </div>
 
                             <div class="product-info">
-                                <h2 class="product-name"><%= item.product.name %></h2>
+                                <h2 class="product-name"><%= order.item.product?.name || 'Product Name Unavailable' %></h2>
                                 <div class="variant-info">
-                                    <span class="variant-label">Size: <%= item.varient.size %></span>
-                                    <span class="variant-label">Color: <%= item.varient.color %></span>
-                                    <span class="quantity-label">Quantity: <%= item.quantity %></span>
+                                    <span class="variant-label">Size: <%= order.item.varient.size %></span>
+                                    <span class="variant-label">Color: <%= order.item.varient.color %></span>
+                                    <span class="quantity-label">Quantity: <%= order.item.quantity %></span>
                                 </div>
                                 <div class="price-info">
-                                    <span class="current-price">₹<%= item.total %></span>
-                                    <span class="original-price">₹<%= item.subtotal %></span>
-                                    <% if (item.offer > 0) { %>
-                                        <span class="discount-badge"><%= item.offer %>% OFF</span>
+                                    <span class="current-price">₹<%= Math.floor(order.item.total) %></span>
+                                    <span class="original-price">₹<%= Math.floor(order.item.subtotal) %></span>
+                                    <% if (order.item.offer > 0) { %>
+                                        <span class="discount-badge"><%= order.item.offer %>% OFF</span>
                                     <% } %>
                                 </div>
                                 <div class="product-details">
-                                    <p class="description-text"><%= item.product.descr %></p>
+                                    <p class="description-text"><%= order.item.product?.descr || 'No description available' %></p>
                                 </div>
                             </div>
                         </div>
-                    <% }) %>
                 </div>
             </div>
 
@@ -967,33 +1013,30 @@
                         <p>Phone: <%= order.address.mobile %></p>
                     </div>
                 </div>
-
                 <div class="order-summary">
                     <h3 class="summary-title">Order Summary</h3>
                     <div class="summary-content">
-                        <% order.items.forEach(item => { %>
-                            <div class="summary-row">
-                                <span><%= item.product.name %> (<%= item.varient.size %>/<%= item.varient.color %>)</span>
-                                <span>₹<%= item.subtotal %></span>
-                            </div>
-                        <% }) %>
+                        <div class="summary-row">
+                            <span><%= order.item.product.name %> (<%= order.item.varient.size %>/<%= order.item.varient.color %>)</span>
+                            <span>₹<%= order.item.subtotal %></span>
+                        </div>
                         <div class="summary-row">
                             <span>Subtotal</span>
-                            <span>₹<%= order.subtotal %></span>
+                            <span>₹<%= order.item.subtotal %></span>
                         </div>
-                        <% if (order.discount > 0) { %>
+                        <% if (order.item.offer > 0) { %>
                             <div class="summary-row">
                                 <span>Discount</span>
-                                <span class="discount-amount">-₹<%= order.discount %></span>
+                                <span class="discount-amount">-₹<%= order.item.discount %></span>
                             </div>
                         <% } %>
                         <div class="summary-row">
                             <span>Delivery Charges</span>
-                            <span>₹<%= order.delivery %></span>
+                            <span>₹<%= order.item.delivery %></span>
                         </div>
                         <div class="summary-row total">
                             <span>Total Amount</span>
-                            <span>₹<%= order.total %></span>
+                            <span>₹<%= order.item.total %></span>
                         </div>
                     </div>
                 </div>
@@ -1112,6 +1155,39 @@
                     menuToggle.children[1].style.opacity = '1';
                     menuToggle.children[2].style.transform = 'none';
                     document.body.style.overflow = '';
+                }
+            });
+
+            // Add status tracker animation
+            const tracker = document.querySelector('.order-status-tracker');
+            const steps = tracker.querySelectorAll('.status-step');
+            const status = tracker.dataset.status;
+            
+            const statusOrder = ['pending', 'processing', 'shipped', 'delivered'];
+            const currentStatusIndex = statusOrder.indexOf(status);
+            
+            const totalNodes = steps.length - 1;
+            const animationDuration = 3000;
+            
+            steps.forEach((step, index) => {
+                step.classList.remove('active');
+                
+                if (status === 'cancelled') {
+                    if (index === steps.length - 1) {
+                        setTimeout(() => {
+                            step.classList.add('active');
+                            step.style.opacity = '1';
+                        }, 3000);
+                    }
+                } else if (index <= currentStatusIndex) {
+                    // Calculate when the line reaches the left edge of the node
+                    const nodePosition = (index - 0.32) / totalNodes; // Subtract 0.1 to trigger slightly earlier
+                    const nodeActivationTime = Math.max(0, animationDuration * nodePosition);
+                    
+                    setTimeout(() => {
+                        step.classList.add('active');
+                        step.style.opacity = '1';
+                    }, nodeActivationTime);
                 }
             });
         });

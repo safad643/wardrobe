@@ -687,7 +687,7 @@
                                     year: 'numeric'
                                 }) %></div>
                             </div>
-                            <span class="order-status <%= order.status %>"><%= order.status %></span>
+                            <span class="order-status <%= item.status %>"><%= item.status %></span>
                         </div>
                         
                         <div class="order-details">
@@ -700,9 +700,15 @@
                                 <span class="detail-label">Price:</span>
                                 <span class="detail-value">₹<%= item.total.toLocaleString('en-IN') %></span>
                             </div>
+                            
+                            <div class="detail-item">
+                                <span class="detail-label">Variant:</span>
+                                
+                                <span class="detail-value"><%= item?.varient?.size %> / <%= item?.varient?.color %></span>
+                            </div>
                         </div>
 
-                        <button class="btn-edit" onclick="viewProductOrder('<%= order._id %>', '<%= item.productId %>')">
+                        <button class="btn-edit" onclick="viewProductOrder('<%= order._id %>', '<%= item.productId %>', '<%= JSON.stringify(item.varient) %>')">
                             View Details
                         </button>
                     </div>
@@ -1028,7 +1034,6 @@ function addNewAddressToDOM(address) {
             <p>${address.city}, ${address.state}</p>
             <p>${address.postalCode}</p>
             <p>${address.country}</p>
-            <p>📞 ${address.phone}</p>
             <button class="edit-btn" onclick="editAddress('${address._id}')" >
                 <i class="fas fa-edit"></i>
             </button>
@@ -1078,8 +1083,14 @@ function deleteAddress(addressId){
   }
 });
 }
-function viewProductOrder(orderId, productId) {
-  window.location.href = `/user/orderdetails/${orderId}/${productId}`;
+function viewProductOrder(orderId, productId, variantJson) {
+    const variant = JSON.parse(variantJson);
+    const queryParams = new URLSearchParams({
+        size: variant.size,
+        color: variant.color
+    }).toString();
+    
+    window.location.href = `/user/orderdetails/${orderId}/${productId}?${queryParams}`;
 }
 
 function changepassowrd(event) {
