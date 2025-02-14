@@ -562,12 +562,13 @@ const addadress = async (req, res) => {
   } 
 }
 
-  const placeOrder = async (req, res) => {
+const placeOrder = async (req, res) => {  
     try {
-      console.log(req.body.products);
+    
       
         const db = await mongo();
         const { addressId, paymentMethod, products, totals } = req.body;
+        
     
         // Check stock availability for all products
         for (const pair of products) {
@@ -580,8 +581,8 @@ const addadress = async (req, res) => {
         // Update product counts
         products.forEach(async (pair) => {
             await db.collection('products').updateOne(
-                {_id: new ObjectId(pair['productId'])},
-                {$inc: {count: -pair['quantity']}}
+                {_id: new ObjectId(pair['productId']),'variants.size':pair.size,'variants.color':pair.color},
+                {$inc: {"variants.$.count": -pair.quantity}}
             );
         });
 
@@ -617,9 +618,9 @@ const addadress = async (req, res) => {
 
         // Insert the order
         const result = await db.collection('orders').insertOne(order);
-        
+       
         // If more than one product, clear cart (checkout from cart)
-        if (products.length > 1) {
+        if (req.body.from=="cart") {
             await db.collection('cart').deleteOne({ userid: req.session.uid });
         }
         
@@ -632,12 +633,12 @@ const addadress = async (req, res) => {
         });
     }
 };
+
+
 const loadcheckout = async (req, res) => {
-  console.log(req.body);
-  
   try {
     const db = await mongo();
-    const productQuantities = req.body || {};
+    const productQuantities = req.body.cartItems || {};
     
     // Extract product IDs and details from numbered entries
     const products = [];
@@ -699,7 +700,8 @@ const loadcheckout = async (req, res) => {
       subtotal: Math.round(subtotal),
       deliveryFee: Math.round(deliveryCharges),
       discount: Math.round(discount), 
-      total: Math.round(totalAmount)
+      total: Math.round(totalAmount),
+      from: req.body.from
     });
 
   } catch (error) {

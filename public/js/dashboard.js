@@ -652,3 +652,13 @@ const styles = `
     }
   }
 `;
+
+
+function coupnload(){
+  fetch('coupon-managment',{method:'get'})
+  .then((r)=>r.text())
+  .then((html)=>{
+    document.querySelector('.main-panel').innerHTML=html
+  })
+  .catch(err=>console.log(err))
+}

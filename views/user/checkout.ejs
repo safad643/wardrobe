@@ -745,7 +745,7 @@
                         </div>
                     </div>
 
-                    <button class="btn full-width" onclick="placeOrder()">
+                    <button class="btn full-width" onclick="placeOrder('<%= from %>')">
                         <i class="fas fa-shopping-bag"></i>
                         Place Order
                     </button>
@@ -794,7 +794,7 @@
     <script>
         let selectedAddressId = '<%= addresses[0]?.id %>'; // Initialize with first address ID
 
-function selectAddress(element,adresss) {
+function selectAddress(element, addressId) {
     // Remove selection from all addresses
     document.querySelectorAll('.address-card').forEach(card => {
         card.classList.remove('selected-address');
@@ -804,8 +804,8 @@ function selectAddress(element,adresss) {
     element.classList.add('selected-address');
     
     // Update selected address ID
-    selectedAddressId = adresss;
-    console.log('Selected Address ID:', selectedAddressId); // For testing
+    selectedAddressId = addressId;
+    console.log('Selected Address ID:', selectedAddressId);
 }
 
 // Modify edit function to handle correct address
@@ -927,7 +927,7 @@ function togglePayment(option) {
 }
 
 // Update the placeOrder function to collect product data including offers
-async function placeOrder() {
+async function placeOrder(from) {
     if (!selectedAddressId) {
         alert('Please select a delivery address!');
         return;
@@ -945,6 +945,7 @@ async function placeOrder() {
 
     // Collect product data with offers, color, and size
     const products = Array.from(document.querySelectorAll('.order-item')).map(item => {
+
         const qtyDisplay = item.querySelector('.qty-display');
         const productSpecs = item.querySelector('.product-specs');
         
@@ -962,6 +963,7 @@ async function placeOrder() {
         };
     });
 
+    
     // Get totals
     const totalAmount = parseFloat(document.querySelector('.total-value').textContent);
     const subtotal = parseFloat(document.querySelector('.subtotal-value').textContent);
@@ -975,6 +977,7 @@ async function placeOrder() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
+                from: from,
                 addressId: selectedAddressId,
                 paymentMethod: selectedPaymentMethod,
                 products: products,
@@ -1039,16 +1042,16 @@ document.getElementById('addressForm').addEventListener('submit', async (e) => {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(data),
-            credentials: 'include' // Include cookies for session
+            credentials: 'include'
         });
 
         const result = await response.json();
-        
-        if (result.success) {
-            // Add the new address to the DOM
-            const addressContainer = document.querySelector('#addressSection');
+        console.log(result);
+        if (result.status=="success") {
+            // Update to add the new address to the address-grid container
+            const addressGrid = document.querySelector('.address-grid');
             const newAddress = createAddressElement(result.address);
-            addressContainer.insertBefore(newAddress, addressContainer.querySelector('.btn'));
+            addressGrid.appendChild(newAddress);
             closeAddressModal();
         } else {
             alert('Error adding address: ' + (result.error || 'Unknown error'));
@@ -1061,15 +1064,20 @@ document.getElementById('addressForm').addEventListener('submit', async (e) => {
 function createAddressElement(address) {
     const div = document.createElement('div');
     div.className = 'address-card';
-    div.dataset.addressId = address.id;
+    div.setAttribute('data-address-id', address._id);
+    
     div.innerHTML = `
-        <i class="fas fa-edit edit-icon" onclick="showEditModal(event, '${address.id}')"></i>
+        <i class="fas fa-edit edit-icon" onclick="showEditModal(event, '${address._id}')"></i>
         <h3>${address.street}</h3>
         <p>${address.city}, ${address.state}</p>
         <p>${address.country}, ${address.postalCode}</p>
         <p>Phone: ${address.phone}</p>
     `;
-    div.onclick = () => selectAddress(div);
+    
+    div.addEventListener('click', function() {
+        selectAddress(this, address._id);
+    });
+    
     return div;
 }
 function adjustQuantity(button, change,max) {

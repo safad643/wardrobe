@@ -958,7 +958,7 @@
                 </div>
 
                 <div class="product-section">
-                    <%console.log(order)%>
+            
                         <div class="order-item">
                             <div class="product-gallery">
                                 <div class="main-image-container">
@@ -1104,7 +1104,7 @@
     <script>
         function changeImage(src, index) {
             document.getElementById(`mainImage${index}`).src = src;
-            const thumbnails = document.querySelectorAll(`.product-thumbnails:eq(${index}) .thumbnail`);
+            const thumbnails = document.querySelectorAll(`.product-gallery:nth-child(${index + 1}) .thumbnail`);
             thumbnails.forEach(thumb => {
                 thumb.classList.remove('active');
                 if (thumb.src === src) {

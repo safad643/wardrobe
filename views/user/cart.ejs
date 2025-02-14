@@ -262,7 +262,15 @@
     <img src="<%= product.images[0] %>" alt="<%= product.name %>" class="item-image">
     <div class="item-details">
         <h2 class="item-title"><%= product.name %></h2>
-        <p class="item-price">₹<%= product.price %></p>
+        <p class="item-price">
+            <% if (product.offer && product.offer > 0) { %>
+                <span style="color: #1a1a1a;">₹<%= Math.round(product.price * (1 - product.offer/100)) %></span>
+                <span class="strikethrough" style="color: #1a1a1a;">₹<%= product.price %></span>
+                <span class="discount" style="color: #2ecc71;">(<%= product.offer %>% off)</span>
+            <% } else { %>
+                ₹<%= product.price %>
+            <% } %>
+        </p>
         <div class="product-variants">
             <span class="variant-info">Size: <%= product.varient.size %></span>
             <span class="variant-info">Color: <%= product.varient.color %></span>
@@ -460,7 +468,7 @@
             const response = await fetch('/user/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(cartItems)
+                body: JSON.stringify({cartItems,from:"cart"})
             });
 
             const html = await response.text();
@@ -473,5 +481,6 @@
             alert('Checkout failed. Please try again.');
         }
     });
+
 </script>
 </html>

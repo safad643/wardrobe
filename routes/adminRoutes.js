@@ -36,4 +36,7 @@ router.get('/ordermanagment',admincontroller.loadordermanagment)
 router.put('/orders/:orderId',admincontroller.updateProductStatus)
 router.put('/orders/update-status', admincontroller.updateProductStatus)
 
+
+router.get('/coupon-managment',midddlewares.adminsession,admincontroller.loadcoupons)
+
 module.exports=router

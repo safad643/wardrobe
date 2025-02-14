@@ -468,7 +468,18 @@ const updateProductStatus = async (req, res) => {
     }
 };
 
+const loadcoupons = async (req, res) => {
+  try {
+    const db = await mongo();
+    const coupons = await db.collection("coupons").find({}).toArray();
+    res.render("admin/nav/coupons", { coupons });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
 module.exports = {
+  loadcoupons,
   updateProductStatus,
   loadordermanagment,
   productupdate,

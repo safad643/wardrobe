@@ -800,9 +800,7 @@
 													<ul>
 														<li><span class="color-title text-capitalize">color</span></li>
 													</ul>
-													<button onclick="resetFilters()" class="reset-button">
-														<i class="zmdi zmdi-refresh"></i>
-													</button>
+													
 												</div>
 												<ul>
 													<% 
@@ -848,10 +846,7 @@
 								<!-- new start -->
 											<!-- Quantity and Actions -->
 										
-											<% if (product.count == 0) { %>
-												
-												<div class="out-of-stock">out of stock</div>
-										<% } else { %>
+											
 												<div class="clearfix">
 													<div class="product-actions">
 														<a class="luxury-button cart-btn" 
@@ -871,7 +866,7 @@
 													
 												</div>
 												</div>
-										<% } %>
+										
 										<style>
 											
 
@@ -1409,6 +1404,35 @@
 		});
 	}
 
+	function buy(id) {
+		if(!(Object.keys(varienttosend).length === 2)){
+			alert('select color and size')
+			return;
+		}
+		const cartItems = {};
+		cartItems['1'] = {
+                productId: id,
+                quantity: 1,
+                size: varienttosend.size,
+                color: varienttosend.color
+            };
+			fetch('/user/checkout', {
+					method: 'POST',
+					headers: {
+							'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({cartItems,from:"cart"})
+			})
+			.then(response => response.text()) // Get HTML response as text
+			.then(html => {
+					document.open();  // Open the document for writing
+					document.write(html); // Replace entire page with new HTML
+					document.close(); // Close the document
+			})
+			.catch(error => console.error('Error:', error));
+	}
+
+
 	function showCustomAlert(message) {
 							const notification = document.getElementById('customNotification');
 							const messageElement = notification.querySelector('.notification-message');
@@ -1422,22 +1446,7 @@
 							}, 2000);
 					}
 
-					function buy(id) {
-			fetch('/user/checkout', {
-					method: 'POST',
-					headers: {
-							'Content-Type': 'application/json'
-					},
-					body: JSON.stringify({ [id]: 1 })
-			})
-			.then(response => response.text()) // Get HTML response as text
-			.then(html => {
-					document.open();  // Open the document for writing
-					document.write(html); // Replace entire page with new HTML
-					document.close(); // Close the document
-			})
-			.catch(error => console.error('Error:', error));
-	}
+	
 	// Related products carousel navigation
 	// const productsGrid = document.querySelector('.products-grid');
 	// 		const scrollAmount = document.querySelector('.product-card').offsetWidth * 5 + 30 * 5;
@@ -1542,106 +1551,59 @@
 		}
 	});
 
-	function resetFilters() {
-		// Reset color options
-		document.querySelectorAll('.color-option').forEach(option => {
-			option.classList.remove('active');
-			option.style.pointerEvents = 'auto';
-			option.style.opacity = '1';
-		});
-		
-		// Reset size options
-		document.querySelectorAll('.size-option').forEach(option => {
-			option.classList.remove('active', 'disabled');
-			option.style.pointerEvents = 'auto';
-			option.style.opacity = '1';
-		});
-		
-		// Reset radio buttons
-		document.querySelectorAll('input[type="radio"][name="size"]').forEach(radio => {
-			radio.checked = false;
-		});
-
-		// Clear the varienttosend object
-		varienttosend = {};
-	}
 	let varienttosend={};
 const varients=<%- JSON.stringify(product.variants)%>
-	function selectvarient(event, varient){
-		if(varient==='size'){
+	function selectvarient(event, varient) {
+		if(varient === 'size') {
+			// Handle size selection
 			const selectedsize = event.target.value
 			varienttosend.size = selectedsize;
 			
-			// Remove active class and decrease opacity for all size options
+			// Update size options UI
 			document.querySelectorAll('.size-option').forEach(option => {
 				option.classList.remove('active');
-				if(option.dataset.size !== selectedsize) {
-					option.classList.add('disabled');
-				}
 			});
 
-			// Add active class to clicked size
+			// Add active class to selected size
 			const selectedLabel = document.querySelector(`label[data-size="${selectedsize}"]`);
 			selectedLabel.classList.add('active');
-			selectedLabel.classList.remove('disabled');
-
-			// Filter variants that match the selected size
-			const matchingVariants = varients.filter(variant => variant.size === selectedsize);
-			const availableColors = matchingVariants.map(variant => variant.color);
 			
-			// Update color options
-			document.querySelectorAll('.color-option').forEach(option => {
-				const color = option.dataset.color;
-				if (availableColors.includes(color)) {
-					option.style.pointerEvents = 'auto';
-					option.style.opacity = '1';
-					if (!document.querySelector('.color-option.active')) {
-						option.classList.add('active');
-					}
-				} else {
-					option.classList.remove('active');
-					option.style.pointerEvents = 'none';
-					option.style.opacity = '0.5';
-				}
-			});
-
 		} else {
+			// Handle color selection
 			const selectedColor = event.target.dataset.color;
 			varienttosend.color = selectedColor;
 			
-			// Remove active class and decrease opacity for all color options
+			// Remove active class from all color options
 			document.querySelectorAll('.color-option').forEach(option => {
 				option.classList.remove('active');
-				if(option.dataset.color !== selectedColor) {
-					option.style.pointerEvents = 'none';
-					option.style.opacity = '0.5';
-				}
 			});
 
 			// Add active class to clicked color
 			event.target.closest('.color-option').classList.add('active');
-			event.target.closest('.color-option').style.pointerEvents = 'auto';
-			event.target.closest('.color-option').style.opacity = '1';
 
 			// Filter variants that match the selected color
 			const matchingVariants = varients.filter(variant => variant.color === selectedColor);
 			const availableSizes = matchingVariants.map(variant => variant.size);
 			
-			// Update size options
+			// Update size options - disable unavailable sizes
 			document.querySelectorAll('.size-option').forEach(option => {
 				const size = option.dataset.size;
 				if (availableSizes.includes(size)) {
+					option.classList.remove('disabled');
 					option.style.pointerEvents = 'auto';
 					option.style.opacity = '1';
-					if (!document.querySelector('.size-option.active')) {
-						option.classList.add('active');
-					}
 				} else {
-					option.classList.remove('active');
+					option.classList.add('disabled');
 					option.style.pointerEvents = 'none';
 					option.style.opacity = '0.5';
 				}
 			});
+
+			// Reset size selection when color changes
+			document.querySelectorAll('input[type="radio"][name="size"]').forEach(radio => {
+				radio.checked = false;
+			});
+			delete varienttosend.size;
 		}
 	}
 
