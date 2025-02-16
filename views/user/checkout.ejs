@@ -606,6 +606,192 @@
     border-radius: 4px;
     text-align: center;
 }
+
+/* Coupon Section Styles */
+.coupon-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.coupon-input {
+    display: flex;
+    gap: 1rem;
+}
+
+.coupon-input .form-input {
+    flex: 1;
+}
+
+.coupon-input .btn {
+    white-space: nowrap;
+}
+
+.available-coupons h3 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: #2c3e50;
+}
+
+.coupon-list {
+    display: flex;
+    gap: 0.8rem;
+    overflow-x: auto;
+    padding: 0.3rem 0;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.coupon-list::-webkit-scrollbar {
+    height: 4px;
+}
+
+.coupon-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.coupon-list::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+/* Make coupon cards more compact */
+.coupon-card {
+    flex: 0 0 160px; /* Reduced from 200px */
+    height: 100px; /* Reduced from 200px */
+    border: 1px dashed #2874f0;
+    border-radius: 6px;
+    padding: 0.6rem;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(0); /* GPU acceleration */
+    will-change: transform, box-shadow, background-color, border-color;
+    background: #f8f9fa;
+    display: grid;
+    grid-template-rows: auto auto;
+    gap: 0.3rem;
+}
+
+.coupon-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.coupon-code {
+    font-weight: 600;
+    color: #2874f0;
+    font-size: 0.9rem;
+    transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                text-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    text-shadow: 0 0 0 transparent;
+    backface-visibility: hidden; /* GPU acceleration */
+}
+
+.coupon-discount {
+    background: #2874f0;
+    color: white;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                text-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    text-shadow: 0 0 0 transparent;
+    backface-visibility: hidden; /* GPU acceleration */
+}
+
+.coupon-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.coupon-details p {
+    margin: 0;
+    color: #666;
+    font-size: 0.7rem;
+    line-height: 1.2;
+}
+
+.coupon-terms {
+    color: #2c3e50 !important;
+    font-weight: 500;
+}
+
+.coupon-expiry {
+    color: #dc3545 !important;
+}
+
+.coupon-card.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border: 1px dashed #ccc;
+    background: #f1f1f1;
+}
+
+.coupon-card.disabled .coupon-code,
+.coupon-card.disabled .coupon-discount {
+    color: #666;
+}
+
+.coupon-card.disabled .coupon-discount {
+    background: #999;
+}
+
+.coupon-card.active {
+    cursor: pointer;
+}
+
+.coupon-card.active:hover {
+
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+
+
+
+
+
+.coupon-card {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateZ(0);
+    will-change: background-color, border-color;
+    border: 2px solid transparent; /* Add transparent border by default */
+    padding: 0.6rem;
+}
+
+.coupon-card.selected {
+    border: 2px solid #2874f0;
+    background: #f0f8ff;
+}
+
+/* Remove all other transition effects */
+.coupon-code, 
+.coupon-discount {
+    transition: none;
+}
+
+/* Add these new styles */
+.wallet-error {
+    color: #dc3545;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background-color: rgba(220, 53, 69, 0.1);
+    border-radius: 4px;
+}
+
+.payment-option[data-disabled="true"] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.payment-option[data-disabled="true"] input {
+    pointer-events: none;
+}
 </style>
     </head>
 <body>
@@ -619,7 +805,7 @@
                     <div class="address-grid">
                         <% addresses.forEach((address, index) => { %>
                             <div class="address-card <%= index === 0 ? 'selected-address' : '' %>" 
-                                 data-address-id="<%= address.id %>" 
+                                 data-address-id="<%= address._id %>" 
                                  onclick="selectAddress(this, '<%= address._id %>')">
                                 <i class="fas fa-edit edit-icon" onclick="showEditModal(event, '<%= address._id %>')"></i>
                                 <h3><%= address.street %></h3>
@@ -635,10 +821,50 @@
                     </button>
                 </div>
 
+                <!-- Coupon Section -->
+                <div class="checkout-section" id="couponSection">
+                    <h2>Available Coupons</h2>
+                    <div class="coupon-list">
+                        <% coupons.forEach(coupon => { %>
+                            <% if (coupon.list) { %>
+                                <div class="coupon-card <%= total >= coupon.minPurchase ? 'active' : 'disabled' %>" 
+                                     data-coupon-id="<%= coupon._id %>"
+                                     onclick="<%= total >= coupon.minPurchase ? `selectCoupon('${coupon._id}')` : '' %>"
+                                     data-min-purchase="<%= coupon.minPurchase %>">
+                                    <div class="coupon-header">
+                                        <span class="coupon-code"><%= coupon.code %></span>
+                                        <span class="coupon-discount"><%= coupon.discountValue %> OFF</span>
+                                    </div>
+                                    <div class="coupon-details">
+                                        <p>Special discount for all</p>
+                                        <p class="coupon-terms">Min: ₹<%= coupon.minPurchase %></p>
+                                        <p class="coupon-expiry">Exp: <%= new Date(coupon.endDate).toLocaleDateString() %></p>
+                                    </div>
+                                </div>
+                            <% } %>
+                        <% }); %>
+                    </div>
+                </div>
+
                 <!-- Payment Section -->
                 <div class="checkout-section" id="paymentSection">
                     <h2>Payment Method</h2>
                     <div class="payment-options">
+                        <!-- Add Wallet Option -->
+                        <div class="payment-option" onclick="togglePayment(this)">
+                            <label>
+                                <input type="radio" name="payment" value="wallet">
+                                <i class="fas fa-wallet"></i>
+                                Wallet Balance (₹<%= walletbalance %>)
+                            </label>
+                            <div class="payment-fields">
+                                <% if (walletbalance < total) { %>
+                                    <p class="wallet-error">Insufficient wallet balance</p>
+                                <% } %>
+                            </div>
+                        </div>
+
+                        <!-- Existing payment options -->
                         <div class="payment-option" onclick="togglePayment(this)">
                             <label>
                                 <input type="radio" name="payment" value="cod">
@@ -671,6 +897,15 @@
                             <div class="payment-fields">
                                 <input type="text" placeholder="UPI ID" class="form-input full-width">
                             </div>
+                        </div>
+
+                        <!-- Add Razorpay option -->
+                        <div class="payment-option" onclick="togglePayment(this)">
+                            <label>
+                                <input type="radio" name="payment" value="razorpay">
+                                <i class="fas fa-credit-card"></i>
+                                Razorpay
+                            </label>
                         </div>
                     </div>
 
@@ -735,9 +970,13 @@
                             <span>Delivery Fee</span>
                             <span class="amount">₹<span class="delivery-fee"><%= deliveryFee %></span></span>
                         </div>
-                        <div class="summary-item discount">
+                        <div class="summary-item">
                             <span>Discount Applied</span>
                             <span class="amount">-₹<span class="discount-value"><%= discount %></span></span>
+                        </div>
+                        <div class="summary-item coupon-line" style="display: none;">
+                            <span>Coupon Discount</span>
+                            <span class="amount">-₹<span class="coupon-discount-value">0</span></span>
                         </div>
                         <div class="summary-item total">
                             <span>Total Amount</span>
@@ -791,6 +1030,9 @@
         </div>
     </div>
 
+    <!-- Add Razorpay SDK before closing body tag -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
     <script>
         let selectedAddressId = '<%= addresses[0]?.id %>'; // Initialize with first address ID
 
@@ -824,22 +1066,26 @@ function showEditModal(event, addressId) {
 
         // Modified togglePayment function
         function togglePayment(option) {
+    // Check if option is disabled
+    if (option.getAttribute('data-disabled') === 'true') {
+        return;
+    }
+
     const allOptions = document.querySelectorAll('.payment-option');
     allOptions.forEach(opt => {
         opt.classList.remove('active');
         const fields = opt.querySelector('.payment-fields');
-        if (fields) { // Add null check here
+        if (fields) {
             fields.style.maxHeight = '0';
         }
     });
     
     option.classList.add('active');
     const fields = option.querySelector('.payment-fields');
-    if (fields) { // Add null check here
+    if (fields) {
         fields.style.maxHeight = fields.scrollHeight + 'px';
     }
     
-    // Capture payment method
     selectedPaymentMethod = option.querySelector('input').value;
     document.getElementById('paymentError').style.display = 'none';
 }
@@ -873,20 +1119,6 @@ function showEditModal(event, addressId) {
     }
 }
 
-function togglePayment(option) {
-    const allOptions = document.querySelectorAll('.payment-option');
-    allOptions.forEach(opt => {
-        opt.classList.remove('active');
-        opt.querySelector('.payment-fields').style.maxHeight = '0';
-    });
-    
-    option.classList.add('active');
-    const fields = option.querySelector('.payment-fields');
-    fields.style.maxHeight = fields.scrollHeight + 'px';
-    
-    // Clear error when payment method is selected
-    document.getElementById('paymentError').style.display = 'none';
-}
 function prevSection(prevId) {
     document.getElementById(currentSection).classList.remove('active-section');
     document.getElementById(prevId).classList.add('active-section');
@@ -915,13 +1147,26 @@ function closeAddressModal() {
 }
 let selectedPaymentMethod = null;
 function togglePayment(option) {
+    // Check if option is disabled
+    if (option.getAttribute('data-disabled') === 'true') {
+        return;
+    }
+
     const allOptions = document.querySelectorAll('.payment-option');
-    allOptions.forEach(opt => opt.classList.remove('active'));
+    allOptions.forEach(opt => {
+        opt.classList.remove('active');
+        const fields = opt.querySelector('.payment-fields');
+        if (fields) {
+            fields.style.maxHeight = '0';
+        }
+    });
+    
     option.classList.add('active');
+    const fields = option.querySelector('.payment-fields');
+    if (fields) {
+        fields.style.maxHeight = fields.scrollHeight + 'px';
+    }
     
-    
-    
-    // Capture payment method
     selectedPaymentMethod = option.querySelector('input').value;
     document.getElementById('paymentError').style.display = 'none';
 }
@@ -936,6 +1181,24 @@ async function placeOrder(from) {
     if (!selectedPaymentMethod) {
         document.getElementById('paymentError').style.display = 'block';
         return;
+    }
+
+    // Handle different payment methods
+    if (selectedPaymentMethod === "razorpay") {
+        const totalAmount = parseFloat(document.querySelector('.total-value').textContent) * 100;
+        let status = await razorpay(totalAmount);
+        if (!status) {
+            alert("Payment failed");
+            return;
+        }
+    } else if (selectedPaymentMethod === "wallet") {
+        const walletBalance = parseFloat('<%= walletbalance %>');
+        const totalAmount = parseFloat(document.querySelector('.total-value').textContent);
+       
+        if (walletBalance < totalAmount) {
+            alert("Insufficient wallet balance");
+            return;
+        }
     }
 
     // Hide all out-of-stock messages first
@@ -977,6 +1240,7 @@ async function placeOrder(from) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
+                coupon: coupon,
                 from: from,
                 addressId: selectedAddressId,
                 paymentMethod: selectedPaymentMethod,
@@ -993,6 +1257,16 @@ async function placeOrder(from) {
         
 
         if (response.ok) {
+            fetch('/user/updatewallet',{
+                method:'POST',
+                headers:{
+                    'Content-Type':'application/json'
+                },
+                body:JSON.stringify({
+                    amount:totalAmount,
+                    type:'debit'
+                })
+            })
             const html = await response.text();
             document.documentElement.innerHTML = html; // Assuming your success response includes a redirect URL
         } else {
@@ -1080,16 +1354,13 @@ function createAddressElement(address) {
     
     return div;
 }
-function adjustQuantity(button, change,max) {
-    console.log(typeof max);
-    
-    
+function adjustQuantity(button, change, max) {
     const qtyDisplay = button.parentElement.querySelector('.qty-display');
     const currentQty = parseInt(qtyDisplay.textContent);
     if(max){
         if(parseInt(max)<=currentQty || currentQty>=5){
-        return
-    }
+            return
+        }
     }
     const newQty = Math.max(1, currentQty + change); // Ensure minimum is 1
     qtyDisplay.textContent = newQty;
@@ -1109,8 +1380,11 @@ function updateQuantity(element) {
 
 function updateOrderSummary() {
     let subtotal = 0;
-    let totalDiscount = 0;
+    let productDiscount = 0;
+    let couponDiscount = 0;
+    let deliveryFee = 0;
     
+    // Calculate product subtotal, offers discount, and delivery fee
     document.querySelectorAll('.qty-display').forEach(display => {
         const price = parseFloat(display.dataset.price);
         const quantity = parseInt(display.textContent);
@@ -1119,52 +1393,189 @@ function updateOrderSummary() {
         const itemSubtotal = price * quantity;
         subtotal += itemSubtotal;
         
-        // Calculate discount for this item
+        // Calculate product discount
         if (offer > 0) {
-            totalDiscount += (itemSubtotal * (offer / 100));
+            productDiscount += (itemSubtotal * (offer / 100));
+        }
+        
+        // Calculate delivery fee per product
+        const discountedPrice = itemSubtotal * (1 - (offer / 100));
+        if (discountedPrice < 500) {
+            deliveryFee += 40 * quantity;
         }
     });
 
-    // Update displayed values
+    // Update subtotal display
     const subtotalElement = document.querySelector('.subtotal-value');
     subtotalElement.textContent = Math.round(subtotal);
     
-    // Update discount
+    // Update delivery fee display
+    const deliveryFeeElement = document.querySelector('.delivery-fee');
+    deliveryFeeElement.textContent = Math.round(deliveryFee);
+    
+    // Calculate subtotal after delivery
+    const subtotalAfterDelivery = subtotal + deliveryFee;
+    
+    // Check if current total meets coupon minimum requirement
+    if (coupon) {
+        const selectedCouponCard = document.querySelector('.coupon-card.selected');
+        if (selectedCouponCard) {
+            const minPurchase = parseFloat(selectedCouponCard.dataset.minPurchase);
+            if (subtotalAfterDelivery < minPurchase) {
+                // Deselect coupon if total falls below minimum
+                selectedCouponCard.classList.remove('selected');
+                coupon = null;
+                document.querySelector('.coupon-line').style.display = 'none';
+            } else {
+                // Apply coupon discount if minimum is met
+                const discountText = selectedCouponCard.querySelector('.coupon-discount').textContent;
+                const discountAmount = parseFloat(discountText.replace(' OFF', ''));
+                couponDiscount = discountAmount;
+                
+                // Show and update coupon line
+                document.querySelector('.coupon-line').style.display = 'flex';
+                document.querySelector('.coupon-discount-value').textContent = Math.round(couponDiscount);
+            }
+        }
+    }
+    
+    // Update product discount display
     const discountElement = document.querySelector('.discount-value');
-    discountElement.textContent = Math.round(totalDiscount);
+    discountElement.textContent = Math.round(productDiscount);
     
-    // Get delivery fee
-    const deliveryFee = parseFloat(document.querySelector('.delivery-fee').textContent);
-    
-    // Calculate total
-    const total = subtotal + deliveryFee - totalDiscount;
+    // Calculate final total
+    const total = subtotalAfterDelivery - productDiscount - couponDiscount;
     const totalElement = document.querySelector('.total-value');
     totalElement.textContent = Math.round(total);
+
+    // Update coupon card states based on new total
+    updateCouponCardStates(subtotalAfterDelivery);
 }
+
+function updateCouponCardStates(total) {
+    document.querySelectorAll('.coupon-card').forEach(card => {
+        const minPurchase = parseFloat(card.dataset.minPurchase);
+        
+        if (total >= minPurchase) {
+            card.classList.remove('disabled');
+            card.classList.add('active');
+            card.setAttribute('onclick', `selectCoupon('${card.getAttribute('data-coupon-id')}')`);
+        } else {
+            card.classList.remove('active');
+            card.classList.add('disabled');
+            card.removeAttribute('onclick');
+        }
+    });
+}
+
+function selectCoupon(id) {
+    console.log(id);
+    // Find the coupon card with the matching id directly
+    const couponCard = document.querySelector(`.coupon-card[data-coupon-id="${id}"]`);
+    console.log(couponCard);
+    // If this coupon is already selected, deselect it
+    if (couponCard && couponCard.classList.contains('selected')) {
+        couponCard.classList.remove('selected');
+        coupon = null;
+        // Update order summary to remove coupon discount
+        updateOrderSummary();
+        return;
+    }
+    
+    // Remove selection from all coupons
+    document.querySelectorAll('.coupon-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Select the new coupon if it exists and is not disabled
+    if (couponCard && !couponCard.classList.contains('disabled')) {
+        couponCard.classList.add('selected');
+        coupon = id;
+        // Update order summary to reflect the applied coupon
+        updateOrderSummary();
+    }
+}
+
+let coupon=null;
 
 function removeProduct(button, productId) {
     const orderItem = button.closest('.order-item');
+    
+    // Add removing animation
     orderItem.classList.add('removing');
-
-    // Wait for animation
+    
+    // Wait for animation to complete before removing the element
     setTimeout(() => {
-        // Remove the item from DOM
         orderItem.remove();
+        
+        // Update item count
+        const itemCount = document.querySelector('.item-count');
+        itemCount.textContent = document.querySelectorAll('.order-item').length;
         
         // Update order summary
         updateOrderSummary();
-
-        // Update item count
-        const itemCountElement = document.querySelector('.item-count');
-        const currentCount = parseInt(itemCountElement.textContent);
-        itemCountElement.textContent = currentCount - 1;
-
-        // If this was the last item, redirect to cart
-        if (currentCount - 1 === 0) {
-            window.location.href = '/cart';
+        
+        // If no items left, redirect to cart or show empty state
+        if (document.querySelectorAll('.order-item').length === 0) {
+            window.location.href = '/user/cart';
         }
-    }, 300);
+    }, 300); // Match this with your CSS animation duration
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Get initial total amount
+    const initialTotal = parseFloat(document.querySelector('.total-value').textContent);
+    
+    // Initialize coupon card states with initial total
+    updateCouponCardStates(initialTotal);
+
+    // Select the first address by default
+    const firstAddress = document.querySelector('.address-card');
+    if (firstAddress) {
+        const addressId = firstAddress.getAttribute('data-address-id');
+        console.log('Initial address ID:', addressId); // For debugging
+        selectAddress(firstAddress, addressId);
+    }
+
+    // Disable wallet option if balance is insufficient
+    const walletOption = document.querySelector('.payment-option input[value="wallet"]').closest('.payment-option');
+    const walletBalance = parseFloat('<%= walletbalance %>');
+    const totalAmount = parseFloat(document.querySelector('.total-value').textContent);
+    
+    if (walletBalance < totalAmount) {
+        walletOption.setAttribute('data-disabled', 'true');
+    }
+});
+
+async function razorpay(total){
+      return new Promise((resolve, reject) => {
+        var options = {
+            key: "rzp_test_PdAFPaTa6RKOxW", 
+            amount: total, 
+            currency: "INR",
+            name: "Your Company Name",
+            description: "Test Transaction",
+            handler: function (response) {
+                if (response.razorpay_payment_id) {
+                    resolve(true);
+                } else {
+                    resolve(false);
+                }
+            },
+            "prefill": {
+                "name": "Your Name",
+                "email": "you@example.com",
+                "contact": "9999999999"
+            },
+            "theme": {
+                "color": "#3399cc"
+            }
+        };
+        var rzp = new Razorpay(options);
+        rzp.open();
+    });
+}
+
     </script>
 </body>
 </html>

@@ -32,9 +32,11 @@ router.delete('/delete-address/:id',midddlewares.usersession,usercontroller.dele
 router.put('/update-address',midddlewares.usersession,usercontroller.updateAddress)
 router.post('/change-password',midddlewares.usersession,usercontroller.changepassword)
 router.post('/orders/:orderId/cancel',midddlewares.usersession,usercontroller.cancelOrder)
+router.post('/orders/:orderId/return',midddlewares.usersession,usercontroller.returnOrder)
 router.get('/wishlist',midddlewares.checkBan,midddlewares.usersession,usercontroller.loadWishlist)
 router.post('/wishlist/add/:productId',midddlewares.checkBan,midddlewares.usersession,usercontroller.addToWishlist)
 router.delete('/wishlist/remove/:productId',midddlewares.checkBan,midddlewares.usersession,usercontroller.removeFromWishlist)
 router.get('/wishlist/check',midddlewares.checkBan,midddlewares.usersession,usercontroller.checkWishlist)
+router.post('/updatewallet',midddlewares.usersession,usercontroller.updatewallet)
 
 module.exports = router;

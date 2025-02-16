@@ -1,18 +1,30 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Button Alert</title>
+    <title>Document</title>
 </head>
 <body>
-    <label><input type="radio" name="option" value="Option 1" onclick="showAlert(this.value)"> Option 1</label>
-    <label><input type="radio" name="option" value="Option 2" onclick="showAlert(this.value)"> Option 2</label>
-    <label><input type="radio" name="option" value="Option 3" onclick="showAlert(this.value)"> Option 3</label>
-
+    <form>
+        <input id="in" type="text" name="name" id="name">
+        <button type="submit" onmouseover="a(event)">Submit</button>
+    </form>
     <script>
-        function showAlert(value) {
-            alert("Selected: " + value);
+        function a(event){
+            if(document.getElementById('in').value=='safad'){
+              return
+            }
+           else{
+            let randomNumberX = Math.floor(Math.random() * (400 - 100 + 1)) + 100;
+            let randomNumberY = Math.floor(Math.random() * (400 - 100 + 1)) + 100;
+// Generates a number between 0 (inclusive) and 1 (exclusive)
+
+
+event.target.style.transform = `translate(${randomNumberX}px, ${randomNumberY}px)`;
+
+           }
         }
     </script>
 </body>

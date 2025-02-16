@@ -201,6 +201,9 @@
         }
 
         .cancel-btn {
+            margin: 0 auto;
+            display: block;
+            width: fit-content;
             background: white;
             color: var(--danger);
             border: 2px solid var(--danger);
@@ -230,7 +233,7 @@
 
         .cancel-btn:hover {
             color: white;
-            transform: translateY(-2px);
+           
             box-shadow: 0 5px 15px rgba(234, 67, 53, 0.3);
         }
 
@@ -388,10 +391,6 @@
             transition: all 0.3s ease;
         }
 
-        .cancel-btn:hover {
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 5px 15px rgba(234, 67, 53, 0.2);
-        }
 
         /* Make header sticky */
         header.header {
@@ -845,6 +844,39 @@
         @keyframes activateNode {
             0%, 100% { transform: scale(1.1); }
         }
+        .return-status-message {
+    background: #fff3cd;
+    border: 1px solid #ffeeba;
+    border-radius: var(--border-radius);
+    padding: 1.2rem;
+    text-align: center;
+    color: #856404;
+}
+
+.return-status-message i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.return-status-message p {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+/* Add new styles for return button */
+.cancel-btn[data-bs-target="#returnModal"] {
+    color: #ffc107;  /* Bootstrap yellow */
+    border: 2px solid #ffc107;
+}
+
+.cancel-btn[data-bs-target="#returnModal"]::before {
+    background: #ffc107;  /* Yellow background for hover effect */
+}
+
+.cancel-btn[data-bs-target="#returnModal"]:hover {
+    color: white;  /* Change text and icon color to white on hover */
+}
     </style>
 </head>
 <body>
@@ -1041,18 +1073,21 @@
                     </div>
                 </div>
 
-                <% if (order.status !== 'cancelled') { %>
-                    <div class="action-section">
-                        <% if (order.status === 'delivered') { %>
-                            <button class="cancel-btn" data-bs-toggle="modal" data-bs-target="#returnModal">
-                                <i class="fas fa-undo"></i> Return  
-                            </button>
-                        <% } else { %>
-                            <button class="cancel-btn" data-bs-toggle="modal" data-bs-target="#cancelModal">
-                                <i class="fas fa-times-circle"></i> Cancel Order
-                            </button>
-                        <% } %>
-                    </div>
+                <% if (order.item.status === 'delivered') { %>
+                    <% if (returnStatus === 'pending') { %>
+                        <div class="return-status-message">
+                            <i class="fas fa-clock text-warning"></i>
+                            <p>Your request for returning this order is being processed. We'll let you know once it gets approved.</p>
+                        </div>
+                    <% } else { %>
+                        <button class="cancel-btn" data-bs-toggle="modal" data-bs-target="#returnModal">
+                            <i class="fas fa-undo"></i> Return Order
+                        </button>
+                    <% } %>
+                <% } else { %>
+                    <button class="cancel-btn" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                        <i class="fas fa-times-circle"></i> Cancel Order
+                    </button>
                 <% } %>
             </div>
         </div>
@@ -1071,7 +1106,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <form action="/user/orders/<%= order._id %>/cancel" method="POST">
+                    <form id="cancelOrderForm" action="/user/orders/<%= order._id %>/cancel?varient=<%= encodeURIComponent(JSON.stringify(order.item.varient)) %>&productid=<%= order.item.productId %>" method="POST">
                         <button type="submit" class="btn btn-danger">Confirm Cancellation</button>
                     </form>
                 </div>
@@ -1089,12 +1124,13 @@
                 </div>
                 <div class="modal-body">
                     <p>Are you sure you want to return this order? Our team will review your return request.</p>
+                    <p class="text-danger"><small>Note: Delivery charges will not be refunded.</small></p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <form action="/orders/<%= order._id %>/return" method="POST">
-                        <button type="submit" class="btn btn-warning">Request Return</button>
-                    </form>
+                   
+                        <button onclick="returnOrder()" type="submit" class="btn btn-warning">Request Return</button>
+                   
                 </div>
             </div>
         </div>
@@ -1190,7 +1226,106 @@
                     }, nodeActivationTime);
                 }
             });
+
+            // Add form submission handler for cancel order
+            const cancelOrderForm = document.getElementById('cancelOrderForm');
+            cancelOrderForm.addEventListener('submit', async function(e) {
+                
+                e.preventDefault();
+                
+                try {
+                    const response = await fetch(this.action, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                       
+                        // Close the modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('cancelModal'));
+                        modal.hide();
+
+                        // Update the order status tracker
+                        const tracker = document.querySelector('.order-status-tracker');
+                        tracker.dataset.status = 'cancelled';
+                        tracker.style.setProperty('--progress-width', '0%');
+
+                        // Reset all steps to faded state
+                        const steps = tracker.querySelectorAll('.status-step');
+                        steps.forEach(step => {
+                            step.classList.remove('active');
+                            step.classList.add('faded');
+                        });
+
+                        // Add cancelled step if it doesn't exist
+                        if (!tracker.querySelector('.status-step.cancelled')) {
+                            const cancelledStep = document.createElement('div');
+                            cancelledStep.className = 'status-step active cancelled';
+                            cancelledStep.innerHTML = `
+                                <div class="status-icon">
+                                    <i class="fas fa-times-circle"></i>
+                                </div>
+                                <div class="status-label">Cancelled</div>
+                            `;
+                            tracker.appendChild(cancelledStep);
+                        } else {
+                            // Activate the cancelled step
+                            const cancelledStep = tracker.querySelector('.status-step.cancelled');
+                            cancelledStep.classList.add('active');
+                            cancelledStep.classList.remove('faded');
+                        }
+
+                        // Remove the cancel button section
+                        const actionSection = document.querySelector('.action-section');
+                        if (actionSection) {
+                            actionSection.remove();
+                        }
+                    } else {
+                        console.error('Failed to cancel order');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            });
         });
+        function returnOrder() {
+            const order = <%- JSON.stringify(order) %>;
+            
+            const orderid = order._id;
+            const productid = order.item.productId;
+            const varient = order.item.varient;
+            fetch('/user/orders/<%= order._id %>/return', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ orderid, productid, varient })
+            }).then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Close the modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('returnModal'));
+                    modal.hide();
+                    
+                    // Replace the return button with the pending message
+                    const returnButton = document.querySelector('.cancel-btn[data-bs-target="#returnModal"]');
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'return-status-message';
+                    messageDiv.innerHTML = `
+                        <i class="fas fa-clock text-warning"></i>
+                        <p>Your request for returning this order is being processed. We'll let you know once it gets approved.</p>
+                    `;
+                    returnButton.replaceWith(messageDiv);
+                } else {
+                    alert('Failed to request return order');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
     </script>
 </body>
 </html>

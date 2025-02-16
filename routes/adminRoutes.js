@@ -38,5 +38,11 @@ router.put('/orders/update-status', admincontroller.updateProductStatus)
 
 
 router.get('/coupon-managment',midddlewares.adminsession,admincontroller.loadcoupons)
+router.get('/addcoupon',midddlewares.adminsession,admincontroller.loadaddcoupon)
+router.post('/add-coupon',midddlewares.adminsession,admincontroller.addCoupon)
+router.post('/delete-coupon',midddlewares.adminsession,admincontroller.deleteCoupon)
+router.post('/updatecouponloader',midddlewares.adminsession,admincontroller.loadupdatecoupon)
+router.post('/updatecoupon',midddlewares.adminsession,admincontroller.updatecoupon)
+
 
 module.exports=router

@@ -297,11 +297,16 @@ const profileload = async (req, res) => {
       .find({ userId: req.session.uid })
       .sort({ createdAt: -1 }) // Sort by newest first
       .toArray();
-
+    const wallet = await db.collection('wallet').findOne({ userId: req.session.uid });
+    if (wallet?.transactions) {
+      wallet.transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
     res.render('user/profile', { 
+      wallet: wallet,
       user: user,
       addresses: addresses,
-      orders: orders // Pass orders to the view
+      orders: orders,
+      wallet: wallet
     });
   } catch (error) {
     console.error(error);
@@ -325,7 +330,7 @@ const changename=async(req,res)=>{
 
 const addtocart = async (req, res) => {
   try {
-    const { productid, qty, varient } = req.body;
+    const { productid, varient } = req.body;
     const userid = req.session.uid;
     const db = await mongo();
 
@@ -564,11 +569,50 @@ const addadress = async (req, res) => {
 
 const placeOrder = async (req, res) => {  
     try {
-    
-      
         const db = await mongo();
-        const { addressId, paymentMethod, products, totals } = req.body;
-        
+        const { addressId, paymentMethod, products, totals, coupon } = req.body;
+      
+
+        // If coupon exists, check if user has used it before
+        if (coupon) {
+            const user = await db.collection('users').findOne({ _id: new ObjectId(req.session.uid) });
+            
+            // Check if user has used this coupon before
+            if (user.couponsUsed && user.couponsUsed.includes(coupon)) {
+                return res.status(400).json({
+                    success: false,
+                    error: "You have already used this coupon"
+                });
+            }
+
+            // Update user document with used coupon
+            await db.collection('users').updateOne(
+                { _id: new ObjectId(req.session.uid) },
+                { 
+                    $push: { 
+                        couponsUsed: coupon
+                    }
+                },
+                { upsert: true }
+            );
+            const updatedCoupon = await db.collection('coupons').findOneAndUpdate(
+               {_id: new ObjectId(coupon)},
+               {$inc: {usedCount: 1}},
+               {returnDocument: 'after'}
+            );
+            if(updatedCoupon.usedCount >= updatedCoupon.usageLimit){
+                await db.collection('coupons').updateOne(
+                    {_id:new ObjectId(coupon)},
+                    {$set:{status:'expired'}}
+                );
+                await db.collection('notifications').insertOne({
+                    heading: `Coupon ${updatedCoupon.code} Fully Utilized`,
+                    message: `Maximum user limit reached for this coupon`,
+                    icon: 'mdi-check-circle',
+                    createdAt: new Date()
+                });
+            }
+        }
     
         // Check stock availability for all products
         for (const pair of products) {
@@ -613,6 +657,7 @@ const placeOrder = async (req, res) => {
             delivery: totals.delivery,
             discount: totals.discount,
             total: totals.total,
+            coupon: coupon,
             createdAt: new Date()
         };
 
@@ -633,7 +678,6 @@ const placeOrder = async (req, res) => {
         });
     }
 };
-
 
 const loadcheckout = async (req, res) => {
   try {
@@ -685,8 +729,15 @@ const loadcheckout = async (req, res) => {
 
     const subtotal = totalWithoutOffers - discount;
     const totalAmount = subtotal + deliveryCharges;
-
+    const user = await db.collection('users').findOne({ _id: new ObjectId(req.session.uid) });
+    const coupons = await db.collection('coupons').find({
+      _id: { $nin: (user.couponsUsed || []).map(id => new ObjectId(id)) },
+      startDate: { $lte: new Date() }
+    }).toArray();
+    const wallet = await db.collection('wallet').findOne({ userId: req.session.uid });
     res.render('user/checkout', {
+      walletbalance: wallet ? wallet.balance : 0,
+      coupons,
       addresses,
       products: dbProducts.map(dbProduct => {
         const matchingProducts = products.filter(p => p.productId === dbProduct._id.toString());
@@ -748,6 +799,7 @@ const loadorderview = async(req,res) => {
 
     // Create order view object
     const orderView = {
+      
       _id: order._id,
       createdAt: order.createdAt,
       paymentMethod: order.paymentMethod,
@@ -764,8 +816,19 @@ const loadorderview = async(req,res) => {
         mobile: address.phone
       }
     };
-
-    res.render("user/orderviewpage", { order: orderView });
+    const returndoc = await db.collection('returns').findOne({orderid:orderid,productid:productid,varient:{size:size,color:color}});
+    if(returndoc?.status=='pending'){
+      returnStatus = 'pending';
+    }
+    else if(returndoc?.status=='approved'){
+      returnStatus = 'approved';
+    }
+    else if(returndoc?.status=='rejected'){
+      returnStatus = 'rejected';
+    }else{
+      returnStatus = 'not-requested';
+    }
+    res.render("user/orderviewpage", { order: orderView ,returnStatus});
 
   } catch (error) {
     console.error(error); 
@@ -846,35 +909,57 @@ const changepassword=async (req,res)=>{
 
 const cancelOrder = async (req, res) => {
   try {
-      const orderId = req.params.orderId;
-      const db = await mongo();
-      
-      // First get the order details to know the product and quantity
-      const order = await db.collection('orders').findOne({ _id: new ObjectId(orderId) });
-      
-      if (!order) {
-          return res.status(404).json({ success: false, message: 'Order not found' });
-      }
+    const varient = JSON.parse(decodeURIComponent(req.query.varient)); //{ size: 'M', color: 'Red' }
+    const productid = req.query.productid;
+    const orderid = req.params.orderId;
+    const db = await mongo();
 
-      // Update order status to cancelled
-      await db.collection('orders').updateOne(
-          { _id: new ObjectId(orderId) },
-          { $set: { "items.$[].status": 'cancelled' } }
-      );
-
-      // For each item in the order, increase the product count
-      for (const item of order.items) {
-          await db.collection('products').updateOne(
-              { _id: new ObjectId(item.productId) },
-              { $inc: { count: Number(item.quantity) || 1 } }
-          );
+    const orderResult = await db.collection('orders').findOneAndUpdate(
+      {
+        _id: new ObjectId(orderid),
+        'items.varient': varient
+      },
+      {
+        $set: {
+          'items.$.status': 'cancelled'
+        }
+      },
+      {
+        returnDocument: 'after'
       }
-         
-      res.redirect(`/user/orderdetails/${orderId}/${order.items[0].productId}`);
+    );
+    
+    const productResult = await db.collection('products').updateOne(
+      {
+        _id: new ObjectId(productid),
+        'variants.size': varient.size,
+        'variants.color': varient.color
+      },
+      {
+        $inc: {
+          'variants.$.count': orderResult.items.find(item => item.productId === productid && item.varient.size === varient.size && item.varient.color === varient.color).quantity
+        }
+      }
+    );
+
+    if (orderResult.modifiedCount === 0 || productResult.modifiedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Order or product not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Order cancelled successfully"
+    });
 
   } catch (error) {
-      console.error('Error cancelling order:', error);
-      res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error("Error cancelling order:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to cancel order"
+    });
   }
 };
 const loadWishlist = async (req, res) => {
@@ -1013,7 +1098,62 @@ const checkWishlist = async (req, res) => {
     }
 };
 
+const updatewallet = async (req, res) => {
+  
+  
+  const { amount, type } = req.body;
+  const db = await mongo();
+  const userId = req.session.uid;
+  
+  // Determine whether to add or subtract based on transaction type
+  const balanceChange = type === 'credit' ? parseInt(amount) : -parseInt(amount);
+  
+ await db.collection('wallet').updateOne(
+    { userId: userId },
+    { 
+      $inc: { balance: balanceChange },
+      $push: {
+        transactions: {
+          type,
+          amount: amount,
+          date: new Date()
+        }
+      }
+    },
+    { upsert: true }
+  );
+  const wallet = await db.collection('wallet').findOne({ userId: userId });
+  res.json({ status: 'success' ,balance:wallet.balance,date:wallet.transactions[wallet.transactions.length-1].date,type:wallet.transactions[wallet.transactions.length-1].type,amount:wallet.transactions[wallet.transactions.length-1].amount});
+} 
+
+const returnOrder = async (req, res) => {
+  try {
+    const {orderid,productid,varient} = req.body;
+    const db = await mongo();
+    await db.collection('returns').insertOne({
+      orderid:orderid,
+      productid:productid,
+      varient:varient,
+      date:new Date(),
+      status:'pending'
+    });
+    res.json({status:'success'});
+  } catch (error) {
+    console.error('Error returning order:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to process return request'
+    });
+  }
+}
+
+
+
+
+
 module.exports = {
+  returnOrder,
+  updatewallet,
   loadWishlist,
   addToWishlist,
   removeFromWishlist,

@@ -662,3 +662,201 @@ function coupnload(){
   })
   .catch(err=>console.log(err))
 }
+
+
+function addcouponloader(){
+  fetch('addcoupon',{method:'get'})
+  .then((r)=>r.text())
+  .then((html)=>{
+    document.querySelector('.main-panel').innerHTML=html
+  })
+}
+
+
+ // Set min date for start date to today
+ const today = new Date().toISOString().split('T')[0];
+ document.getElementById('startDate').setAttribute('min', today);
+
+ // Update end date min when start date changes
+ document.getElementById('startDate').addEventListener('change', function() {
+   const startDate = this.value;
+   document.getElementById('endDate').setAttribute('min', startDate);
+   
+   // Clear end date if it's before start date
+   const endDate = document.getElementById('endDate').value;
+   if (endDate && endDate < startDate) {
+     document.getElementById('endDate').value = '';
+   }
+ });
+
+
+
+
+ function validateForm() {
+   const form = document.querySelector('.forms-sample');
+   const inputs = form.querySelectorAll('input, select');
+   let isValid = true;
+
+   inputs.forEach(input => {
+     const validationMessage = input.nextElementSibling;
+     validationMessage.textContent = '';
+
+     if (!input.value.trim()) {
+       validationMessage.textContent = `${input.name} is required`;
+       isValid = false;
+     }
+
+     if (input.name === 'startDate') {
+       const selectedDate = new Date(input.value);
+       const today = new Date();
+       today.setHours(0, 0, 0, 0);
+
+       if (selectedDate < today) {
+         validationMessage.textContent = 'Start date cannot be in the past';
+         isValid = false;
+       }
+     }
+
+     if (input.name === 'endDate') {
+       const startDate = new Date(document.getElementById('startDate').value);
+       const endDate = new Date(input.value);
+
+       if (endDate <= startDate) {
+         validationMessage.textContent = 'End date must be after start date';
+         isValid = false;
+       }
+     }
+
+     if (input.name === 'discountValue') {
+       const discountValue = parseFloat(input.value);
+       const minPurchase = parseFloat(document.querySelector('input[name="minPurchase"]').value);
+
+       if (discountValue > minPurchase) {
+         validationMessage.textContent = 'Discount value cannot be greater than minimum purchase amount';
+         isValid = false;
+       }
+     }
+   });
+
+   return isValid;
+ }
+
+ // Modify your existing couponAdder function to include validation and error handling
+ async function couponAdder(event) {
+  
+   event.preventDefault();
+   try {
+     if (!validateForm()) {
+       return;
+     }
+
+     const form = event.target;
+     const formData = new FormData(form);
+     const data = Object.fromEntries(formData);
+
+     const response = await fetch('/admin/add-coupon', {
+       method: 'POST',
+       headers: {
+         'Content-Type': 'application/json'
+       },
+       body: JSON.stringify(data)
+     });
+
+     if (!response.ok) {
+       throw new Error('Failed to add coupon');
+     }
+
+     const result = await response.json();
+     if (result.success) {
+       coupnload(); // Load coupons page instead of redirect
+     } else {
+       // Handle coupon code already exists error
+       if (result.message === "Coupon code already exists") {
+         document.getElementById('errp').textContent = 'This coupon code is already in use';
+       } else {
+         document.getElementById('errp').textContent = result.message || 'Failed to add coupon';
+       }
+     }
+   } catch (error) {
+     console.error('Error adding coupon:', error);
+     document.getElementById('errp').textContent = 'An error occurred while adding the coupon';
+   }
+ }
+
+ async function deleteCoupon(id) {
+   try {
+     const result = await Swal.fire({
+       title: 'Are you sure?',
+       text: "You won't be able to revert this!",
+       background: '#191c24',
+       color: '#fff',
+       showCancelButton: true,
+       confirmButtonColor: '#3085d6',
+       cancelButtonColor: '#d33',
+       confirmButtonText: 'Yes, delete it!'
+     });
+
+     if (result.isConfirmed) {
+       const response = await fetch('/admin/delete-coupon', {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json'
+         },
+         body: JSON.stringify({
+           id: id
+         })
+       });
+
+       if (!response.ok) {
+         throw new Error('Failed to delete coupon');
+       }
+
+       const data = await response.json();
+       
+       if (data.success) {
+         Swal.fire({
+           title: 'Deleted!',
+           text: 'Coupon has been deleted.',
+           icon: 'success',
+           background: '#191c24',
+           color: '#fff'
+         });
+         coupnload(); // Refresh the coupons list
+       } else {
+         throw new Error(data.message || 'Failed to delete coupon');
+       }
+     }
+   } catch (error) {
+     console.error('Error deleting coupon:', error);
+     Swal.fire(
+       'Error!',
+       'Failed to delete coupon',
+       'error'
+     );
+   }
+ }
+
+function updateCouponloader(id){
+  fetch('updatecouponloader',{method:'post',body:JSON.stringify({id}),headers:{'Content-Type':'application/json'}})
+  .then((r)=>r.text())
+  .then((html)=>{
+    document.querySelector('.main-panel').innerHTML=html
+    document.getElementById('id').value=id
+  }).catch(err=>console.log(err))
+}
+
+function couponupdate(e){
+  e.preventDefault()
+  if(!validateForm()){
+    return
+  }
+  const id = document.getElementById('id').value
+  const form = e.target
+  const formData = new FormData(form)
+  const data = Object.fromEntries(formData)
+  fetch('/admin/updatecoupon',{method:'post',body:JSON.stringify({id,data}),headers:{'Content-Type':'application/json'}})
+  .then((r)=>r.text())
+  .then((html)=>{
+    document.querySelector('.main-panel').innerHTML=html
+  }).catch(err=>console.log(err))
+}

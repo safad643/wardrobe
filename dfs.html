@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <button onclick="f()">ds</button>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script>
+    async function f(){
+      let status=await razorpay();
+      if(status){
+        alert("success");
+      }else{
+        alert("failed");
+      } 
+    }
+
+</script>
+</body>
+  </html>

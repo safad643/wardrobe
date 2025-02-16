@@ -5,15 +5,16 @@
   <table class="table">
     <thead>
       <tr>
-        <th>Code</th>
-        <th>Discount Value</th>
-        <th>Min Purchase</th>
-        <th>Start Date</th>
-        <th>End Date</th>
-        <th>Usage Limit</th>
-        <th>Used Count</th>
-        <th>Categories</th>
-        <th>Action</th>
+        <th class="text-center">Code</th>
+        <th class="text-center">Discount Value</th>
+        <th class="text-center">Min Purchase</th>
+        <th class="text-center">Start Date</th>
+        <th class="text-center">End Date</th>
+        <th class="text-center">Usage Limit</th>
+        <th class="text-center">Used Count</th>
+        <th class="text-center">Categories</th>
+        <th class="text-center">Update</th>
+        <th class="text-center">Delete</th>
       </tr>
     </thead>
     <tbody>
@@ -24,22 +25,21 @@
           style="display: none;"
         <% } %> 
         id="row<%= index %>">
-          <td><%= coupon.code %></td>
-          <td><%= coupon.discountValue %></td>
-          <td><%= coupon.minPurchase %></td>
-          <td><%= coupon.startDate %></td>
-          <td><%= coupon.endDate %></td>
-          <td><%= coupon.usageLimit %></td>
-          <td><%= coupon.usedCount %></td>
-          <td><%= coupon.applicableCategories %></td>
-          <td>
-            <% if (coupon.list) { %>
-              <button onclick="Delete('coupon','<%= coupon.code %>',false)" class="btn btn-success btn-rounded">List</button>
-            <% } else { %>
-              <button onclick="Delete('coupon','<%= coupon.code %>',true)" class="btn btn-danger btn-rounded">
-                <span class="mdi mdi-delete"></span> 
-              </button>
-            <% } %>
+          <td class="text-center"><%= coupon.code %></td>
+          <td class="text-center"><%= coupon.discountValue %></td>
+          <td class="text-center"><%= coupon.minPurchase %></td>
+          <td class="text-center"><%= new Date(coupon.startDate).toLocaleDateString() %></td>
+          <td class="text-center"><%= new Date(coupon.endDate).toLocaleDateString() %></td>
+          <td class="text-center"><%= coupon.usageLimit %></td>
+          <td class="text-center"><%= coupon.usedCount %></td>
+          <td class="text-center"><%= coupon.catogory %></td>
+          <td class="text-center">
+            <button onclick="updateCouponloader('<%= coupon._id %>')" class="btn btn-secondary btn-rounded">Update</button>
+          </td>
+          <td class="text-center">
+            <button onclick="deleteCoupon('<%= coupon._id %>')" class="btn btn-danger btn-rounded">
+              <i class="mdi mdi-delete"></i>
+            </button>
           </td>
         </tr>
       <% }); %>
@@ -197,4 +197,4 @@
 <button 
 class="btn btn-danger position-fixed rounded-circle" 
 style="bottom: 10px; right: 10px; width: 40px; height: 40px;" 
-onclick=""> <i class="mdi mdi-plus"></i></button>
+onclick="addcouponloader()"> <i class="mdi mdi-plus"></i></button>

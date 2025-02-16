@@ -1,0 +1,48 @@
+<div class="card">
+  <div class="card-body">
+    <form class="forms-sample" onsubmit="couponupdate(event)">
+      <div class="form-group">
+        <input id="id" type="hidden" name="id" />
+        <label>Coupon Code</label>
+        <input name="code" type="text" class="form-control" id="updatename" placeholder="Enter coupon code" value="<%= coupon.code %>">
+        <small class="text-danger validation-message"></small>
+      </div>
+      <div class="form-group">
+        <label>Discount Value</label>
+        <input name="discountValue" type="number" class="form-control" placeholder="Enter discount percentage" step="0.01" value="<%= coupon.discountValue %>">
+        <small class="text-danger validation-message"></small>
+      </div>
+      <div class="form-group">
+        <label>Minimum Purchase Amount</label>
+        <input name="minPurchase" type="number" class="form-control" placeholder="Enter minimum purchase amount" step="0.01" value="<%= coupon.minPurchase %>">
+        <small class="text-danger validation-message"></small>
+      </div>
+      <div class="form-group">
+        <label>Start Date</label>
+        <input name="startDate" type="date" class="form-control" id="startDate" value="<%= new Date(coupon.startDate).toISOString().split('T')[0] %>">
+        <small class="text-danger validation-message"></small>
+      </div>
+      <div class="form-group">
+        <label>End Date</label>
+        <input name="endDate" type="date" class="form-control" id="endDate" value="<%= new Date(coupon.endDate).toISOString().split('T')[0] %>">
+        <small class="text-danger validation-message"></small>
+      </div>
+      <div class="form-group">
+        <label>Usage Limit</label>
+        <input name="usageLimit" type="number" class="form-control" placeholder="Enter usage limit" value="<%= coupon.usageLimit %>">
+        <small class="text-danger validation-message"></small>
+      </div>
+      <div class="form-group">
+        <label>Applicable Categories</label>
+        <select class="form-control" name="applicableCategories">
+          <% categories.forEach(category => { %>
+            <option value="<%= category._id %>" <%= category._id.toString() === coupon.applicableCategories ? 'selected' : '' %>><%= category.name %></option>
+          <% }); %>
+        </select>
+        <small class="text-danger validation-message"></small>
+      </div>
+      <button type="submit" class="btn btn-primary mr-2">Submit</button>
+      <p id="errp" style="color: red;"></p>
+    </form>
+  </div>
+</div>

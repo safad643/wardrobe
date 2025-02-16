@@ -320,8 +320,8 @@
      data-name="<%= product.name %>"
      data-colors="<%= product.colors %>">
                             <div class="product-img">
-                                
-                                <a href="/user/product/<%= product.name %>"><img src="<%= product.image0 %>" alt="<%= product.name %>" /></a>
+                          
+                                <a href="/user/product/<%= product.name %>"><img src="<%= product.images[0] %>" alt="<%= product.name %>" /></a>
                                 <div class="product-action clearfix">
                                     <a href="javascript:void(0)" 
                                        onclick="toggleWishlist(this, '<%= product._id %>')" 
