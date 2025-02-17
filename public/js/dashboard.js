@@ -576,7 +576,7 @@ function removeVariant(id) {
     alert('remove faield')
   }
   }
-function updateProductStatus(orderId, productId, status) {
+function updateProductStatus(orderId, productId, status,varient) {
   fetch(`/admin/orders/update-status`, {
       method: 'PUT',
       headers: {
@@ -585,7 +585,8 @@ function updateProductStatus(orderId, productId, status) {
       body: JSON.stringify({
           orderId,
           productId,
-          status
+          status,
+          varient
       })
   })
   .then(async response => {

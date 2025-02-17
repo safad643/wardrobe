@@ -979,7 +979,7 @@
                                             </div>
                                             <div class="transaction-details">
                                                 <span class="transaction-type">
-                                                    <%= transaction.type === 'credit' ? 'Money Added' : 'Purchase' %>
+                                                    <%= transaction.description ? transaction.description : (transaction.type === 'credit' ? 'Money Added' : 'Purchase') %>
                                                 </span>
                                                 <span class="transaction-date">
                                                     <%= new Date(transaction.date).toLocaleDateString('en-IN', {

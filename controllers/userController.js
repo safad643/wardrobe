@@ -1128,14 +1128,25 @@ const updatewallet = async (req, res) => {
 
 const returnOrder = async (req, res) => {
   try {
-    const {orderid,productid,varient} = req.body;
+    const {orderid,productid,varient,reason} = req.body;
     const db = await mongo();
-    await db.collection('returns').insertOne({
+    const insertedReturn = await db.collection('returns').insertOne({
       orderid:orderid,
       productid:productid,
       varient:varient,
       date:new Date(),
-      status:'pending'
+      status:'pending',
+      reason:reason
+    });
+    await db.collection('notifications').insertOne({
+      type: 'return_request',
+      title: 'New Return Request',
+      message: 'You have a new order return request to review',
+      icon: 'mdi mdi-undo',
+      iconClass: 'text-warning',
+      date: new Date(),
+      isRead: false,
+      returnId: insertedReturn.insertedId
     });
     res.json({status:'success'});
   } catch (error) {

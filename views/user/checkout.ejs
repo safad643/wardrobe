@@ -1257,7 +1257,8 @@ async function placeOrder(from) {
         
 
         if (response.ok) {
-            fetch('/user/updatewallet',{
+            if(selectedPaymentMethod=="wallet"){
+                fetch('/user/updatewallet',{
                 method:'POST',
                 headers:{
                     'Content-Type':'application/json'
@@ -1267,6 +1268,7 @@ async function placeOrder(from) {
                     type:'debit'
                 })
             })
+            }
             const html = await response.text();
             document.documentElement.innerHTML = html; // Assuming your success response includes a redirect URL
         } else {

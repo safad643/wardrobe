@@ -188,9 +188,11 @@ const deletecatogory = async (req, res) => {
   }
 };
 
-const loaddashboard = (req, res) => {
+const loaddashboard = async (req, res) => {
   try {
-    res.render("admin/dashboard", { adminName: req.session.name });
+    const db = await mongo();
+    const notifications = await db.collection("notifications").find({}).toArray();
+    res.render("admin/dashboard", { adminName: req.session.name, notifications });
   } catch (err) {
     console.error(err);
     res.status(500).send("Internal Server Error");
@@ -396,31 +398,34 @@ const loadordermanagment = async (req, res) => {
     const db = await mongo();
     const orders = await db.collection("orders").find({}).sort({ createdAt: -1 }).toArray();
     
-    // Create separate documents for each item in orders
-    const flattenedOrders = await Promise.all(orders.flatMap(async (order) => {
-      return Promise.all(order.items.map(async (item) => {
-        const product = await db.collection("products").findOne({ _id: new ObjectId(item.productId) });
-        
-        return {
+    // Create array to hold all order items
+    let allOrderItems = [];
+
+    // Iterate through each order
+    for (const order of orders) {
+      // Iterate through items in each order
+      for (const item of order.items) {
+        // Create new object for each item with common order properties
+        const orderItem = {
           orderId: order._id,
-          userId: order.userId,
           createdAt: order.createdAt,
           paymentMethod: order.paymentMethod,
-          paymentStatus: order.paymentStatus || 'pending',
-          deliveryStatus: order.deliveryStatus || 'pending',
+          paymentStatus: order.paymentStatus || 'pending', // Default to pending if not set
+          // Item specific properties
           productId: item.productId,
-          productName: product?.name || 'Product Not Found',
-          productImage: product?.image0 || '',
+          status: item.status,
           quantity: item.quantity,
           price: item.price,
           total: item.total,
-          status: item.status
+          varient: item.varient // Include size and color
         };
-      }));
-    }));
+        
+        allOrderItems.push(orderItem);
+      }
+    }
 
-    // Flatten the array of arrays into a single array
-    const allOrderItems = flattenedOrders.flat();
+    // Sort all items by creation date descending
+    allOrderItems.sort((a, b) => b.createdAt - a.createdAt);
 
     res.render("admin/nav/ordermanagment", { orders: allOrderItems });
   } catch (err) {
@@ -433,7 +438,7 @@ const loadordermanagment = async (req, res) => {
 
 const updateProductStatus = async (req, res) => {
     try {
-        const { orderId, productId, status } = req.body;
+        const { orderId, productId, status,varient } = req.body;
         
         const db = await mongo();
         
@@ -441,7 +446,9 @@ const updateProductStatus = async (req, res) => {
         const result = await db.collection("orders").updateOne(
             { 
                 _id: new ObjectId(orderId),
-                "items.productId": productId 
+                "items.productId": productId ,
+                "items.varient.color": varient.color,
+                "items.varient.size": varient.size
             },
             { 
                 $set: { 
@@ -617,9 +624,94 @@ console.log(req.body);
   }
 };
 
+const getReturnData = async (req, res) => {
+  try {
+    const db = await mongo();
+    const returnId = req.params.returnId;
+    const returnData = await db.collection("returns").findOne({ _id: new ObjectId(returnId) });
+    const product = await db.collection("products").findOne({ _id: new ObjectId(returnData.productid) });
+    
 
+    res.json({
+      returnId: returnData._id,
+      productName: product.name,
+      size: returnData.varient.size, 
+      color: returnData.varient.color,
+      price: product.price,
+      orderId: returnData.orderid,
+      returnDate: returnData.date,
+      reason: returnData.reason,
+      status: returnData.status,
+      customerNotes: returnData.reason,
+      images: product.images
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
 
+const removeReturnNotification = async (req, res) => {
+  
+  try {
+    const db = await mongo();
+    const returnId = req.body.returnid;
+    await db.collection("notifications").deleteOne({ returnId: new ObjectId(returnId) });
+    res.json({ success: true, message: "Return notification removed successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Error removing return notification" });
+  }
+};
+
+const updateReturnStatus = async (req, res) => {
+  const {returnid,status} = req.body;
+  const db = await mongo();
+  if(status === 'approved'){
+    console.log('approved');
+    
+    const returnData = await db.collection("returns").findOne({ _id: new ObjectId(returnid) });
+    const order = await db.collection("orders").findOne({ _id: new ObjectId(returnData.orderid) });
+    const item = order.items.find(item => item.productId === returnData.productid && item.varient.color === returnData.varient.color && item.varient.size === returnData.varient.size);
+    const price = item.price;
+   
+    console.log(order.userId);
+    const walletUpdate = await db.collection("wallet").updateOne(
+      { userId:order.userId },
+      { 
+        $inc: { balance: price },
+        $push: {
+          transactions: {
+            type: "credit",
+            amount: price,
+            date: new Date(),
+            description: "Return refund"
+          }
+        }
+      }
+    );
+    console.log('Wallet update successful:', walletUpdate.modifiedCount > 0);
+  }
+  
+  await db.collection("returns").updateOne({ _id: new ObjectId(returnid) }, { $set: { status: status } });
+  res.json({ success: true, message: "Return status updated successfully" });
+}
+
+const loadreturnmanagment = async (req, res) => {
+  try {
+    const db = await mongo();
+    const returns = await db.collection("returns").find({}).toArray();
+    res.render("admin/nav/returnmanagment", { returns });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+}
 module.exports = {
+  loadreturnmanagment,
+  updateReturnStatus,
+  removeReturnNotification,
+  getReturnData,
   updatecoupon,
   loadupdatecoupon,
   deleteCoupon,

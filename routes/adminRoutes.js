@@ -44,5 +44,8 @@ router.post('/delete-coupon',midddlewares.adminsession,admincontroller.deleteCou
 router.post('/updatecouponloader',midddlewares.adminsession,admincontroller.loadupdatecoupon)
 router.post('/updatecoupon',midddlewares.adminsession,admincontroller.updatecoupon)
 
-
+router.get('/returns/:returnId',admincontroller.getReturnData)
+router.post('/removereturnnotification',midddlewares.adminsession,admincontroller.removeReturnNotification)
+router.post('/updatereturnstatus',midddlewares.adminsession,admincontroller.updateReturnStatus)
+router.get('/returnmanagment',midddlewares.adminsession,admincontroller.loadreturnmanagment)
 module.exports=router

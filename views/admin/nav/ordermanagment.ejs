@@ -18,6 +18,7 @@
       <tbody>
           <% let index = 0; %>
           <% orders.forEach(order => { %>
+            <%console.log(order)%>
               <tr <% if (++index >= 4) { %> style="display: none;" <% } %> id="row<%= index %>">
                   <td><%= order.orderId.toString() %></td>
                  
@@ -26,7 +27,7 @@
                   <td>
                       <select class="form-select delivery-status" 
                               id="delivery<%= order.orderId.toString() %>_<%= order.productId %>"
-                              onchange="updateProductStatus('<%= order.orderId.toString() %>', '<%= order.productId %>', this.value)">
+                              onchange="updateProductStatus('<%= order.orderId.toString() %>', '<%= order.productId %>', this.value,<%=JSON.stringify(order.varient)%>)">
                           <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>Pending</option>
                           <option value="processing" <%= order.status === 'conformed' ? 'selected' : '' %>>conformed</option>
                           <option value="shipped" <%= order.status === 'shipped' ? 'selected' : '' %>>Shipped</option>
