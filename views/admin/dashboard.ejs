@@ -645,6 +645,53 @@ function loadReturnManagement() {
     console.error('Error loading return management:', error);
   });
 }
+
+function generateReport(period) {
+  let startDate = new Date('2025-02-13');
+  let endDate = new Date();
+  
+  if(period === 'daily'){
+  
+    startDate.setHours(0,0,0,0);
+    endDate.setHours(23,59,59,999);
+  }
+
+  fetch(`/admin/generatesalesdata`,{
+    method: 'POST', 
+    body: JSON.stringify({startDate: startDate, endDate: endDate}),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log(data);
+    const salesData = data.salesData;
+    const tabledata = data.tabledata;
+    
+    
+    document.getElementById('totalOrders').textContent = salesData.totalorders;
+    document.getElementById('totalRevenue').textContent = salesData.totalrevenue;
+    document.getElementById('returnedOrders').textContent = salesData.returnorders; 
+    document.getElementById('cancelledOrders').textContent = salesData.cancelledorders;
+    const tableBody = document.getElementById('salesTableBody');
+    tableBody.innerHTML = '';
+    tabledata.forEach(row => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${row.date}</td>
+        <td>${row.orders}</td>
+        <td>${row.totalSales}</td>
+        <td>${row.revenue}</td>
+        <td>${row.growth}</td>
+      `;
+      tableBody.appendChild(tr);
+    });
+  })
+  .catch(error => {
+    console.error('Error generating sales data:', error);
+  });
+}
 </script>
   </body>
 </html>

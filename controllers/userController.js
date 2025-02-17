@@ -643,8 +643,8 @@ const placeOrder = async (req, res) => {
             },
             subtotal: product.price * product.quantity,
             total: product.offer ? 
-                (product.price * product.quantity) * (1 - product.offer/100) : 
-                (product.price * product.quantity)
+                Math.floor((product.price * product.quantity) * (1 - product.offer/100)) : 
+                Math.floor(product.price * product.quantity)
         }));
 
         // Create the order document

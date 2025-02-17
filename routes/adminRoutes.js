@@ -48,4 +48,5 @@ router.get('/returns/:returnId',admincontroller.getReturnData)
 router.post('/removereturnnotification',midddlewares.adminsession,admincontroller.removeReturnNotification)
 router.post('/updatereturnstatus',midddlewares.adminsession,admincontroller.updateReturnStatus)
 router.get('/returnmanagment',midddlewares.adminsession,admincontroller.loadreturnmanagment)
+router.post('/generatesalesdata',midddlewares.adminsession,admincontroller.generatesalesdata)
 module.exports=router

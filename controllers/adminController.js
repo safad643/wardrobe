@@ -668,14 +668,12 @@ const updateReturnStatus = async (req, res) => {
   const {returnid,status} = req.body;
   const db = await mongo();
   if(status === 'approved'){
-    console.log('approved');
-    
     const returnData = await db.collection("returns").findOne({ _id: new ObjectId(returnid) });
     const order = await db.collection("orders").findOne({ _id: new ObjectId(returnData.orderid) });
     const item = order.items.find(item => item.productId === returnData.productid && item.varient.color === returnData.varient.color && item.varient.size === returnData.varient.size);
-    const price = item.price;
+    const price = item.total;
    
-    console.log(order.userId);
+   
     const walletUpdate = await db.collection("wallet").updateOne(
       { userId:order.userId },
       { 
@@ -707,7 +705,65 @@ const loadreturnmanagment = async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 }
+
+const generatesalesdata = async (req, res) => {
+  
+  try {
+    const {startDate,endDate} = req.body;
+    
+    const db = await mongo();
+      const orders = await db.collection("orders").find({createdAt:{$gte:new Date(startDate),$lte:new Date(endDate)}}).toArray();
+      const returns = await db.collection("returns").find({date:{$gte:new Date(startDate),$lte:new Date(endDate)}}).toArray();
+      const salesData = {
+        totalorders: orders.length,
+        totalrevenue: orders.reduce((total, order) => total + order.total, 0),
+        returnorders: returns.filter(order => order.status === 'approved').length,
+        cancelledorders: orders.reduce((count, order) => count + order.items.filter(item => item.status === 'cancelled').length, 0),
+      }
+      
+      // Group orders by date
+      const ordersByDate = {};
+      for (const order of orders) {
+        const date = new Date(order.createdAt).toLocaleDateString();
+        if (!ordersByDate[date]) {
+          ordersByDate[date] = {
+            orders: 0,
+            sales: 0,
+            revenue: 0
+          };
+        }
+       
+        ordersByDate[date].orders += order.items.length;
+        ordersByDate[date].sales += order.items.reduce((sum, item) => sum + item.quantity, 0);
+        ordersByDate[date].revenue += order.total;
+      }
+
+      let prevRevenue = null;
+      const tabledata = Object.entries(ordersByDate).map(([date, data]) => {
+        let growth = "0%";
+        if (prevRevenue !== null) {
+          const growthRate = ((data.revenue - prevRevenue) / prevRevenue) * 100;
+          growth = `${growthRate.toFixed(1)}%`;
+        }
+        prevRevenue = data.revenue;
+        
+        return {
+          date: date,
+          orders: data.orders,
+          totalSales: data.sales,
+          revenue: data.revenue,
+          growth: growth
+        };
+      });
+      res.json({salesData,tabledata});
+      
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+} 
 module.exports = {
+  generatesalesdata,
   loadreturnmanagment,
   updateReturnStatus,
   removeReturnNotification,
