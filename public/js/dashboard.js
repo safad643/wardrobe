@@ -861,3 +861,43 @@ function couponupdate(e){
     document.querySelector('.main-panel').innerHTML=html
   }).catch(err=>console.log(err))
 }
+
+
+async function getreturndata(returnid,notification) {
+  
+  try {
+    const response = await fetch(`/admin/returns/${returnid}`);
+    const data = await response.json();
+
+    
+    if(notification){
+      const notificationResponse = await fetch('/admin/removereturnnotification', {
+      method: 'POST',
+      body: JSON.stringify({returnid: returnid}),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    const notificationData = await notificationResponse.json();
+    
+    
+    if(notificationData.success) {
+    // Find and remove the notification element
+    const notificationElement = document.querySelector(`[onclick="getreturndata('${returnid}',true)"]`)
+    if (notificationElement) {
+      // Remove the divider after the notification if it exists
+      const nextDivider = notificationElement.nextElementSibling;
+      if (nextDivider && nextDivider.classList.contains('dropdown-divider')) {
+        nextDivider.remove();
+      }
+      // Remove the notification
+      notificationElement.remove();
+    }
+    }
+    }
+    
+    showReturnModal(data);
+  } catch (error) {
+    console.error('Error fetching return data:', error);
+  }
+}

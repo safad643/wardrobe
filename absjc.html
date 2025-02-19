@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,25 +6,26 @@
     <title>Document</title>
 </head>
 <body>
-    <form>
-        <input id="in" type="text" name="name" id="name">
-        <button type="submit" onmouseover="a(event)">Submit</button>
-    </form>
+   <select onchange="handleChange(event)" name="" id="select">
+    <option value="1">shirt</option>
+    <option value="2">pant</option>
+    <option value="3">shoe</option>
+   </select>
+   <input type="search" onchange="handleChange(event)" id="search" placeholder="Search...">
     <script>
-        function a(event){
-            if(document.getElementById('in').value=='safad'){
-              return
-            }
-           else{
-            let randomNumberX = Math.floor(Math.random() * (400 - 100 + 1)) + 100;
-            let randomNumberY = Math.floor(Math.random() * (400 - 100 + 1)) + 100;
-// Generates a number between 0 (inclusive) and 1 (exclusive)
-
-
-event.target.style.transform = `translate(${randomNumberX}px, ${randomNumberY}px)`;
-
-           }
-        }
+function handleChange(event){
+    alert(window.location.pathname)
+    let params = new URLSearchParams(window.location.search);
+    if(event.target.id === 'select') {
+        params.set('catogory', event.target.value);
+    } else if(event.target.id === 'search') {
+        params.set('search', event.target.value);
+    }
+    window.history.pushState({}, '', `${window.location.pathname}?${params}`);
+    fetch(`${window.location.pathname}?${params}`)
+    .then(response => response.json())
+    .then(json => console.log(json))
+}
     </script>
 </body>
 </html>

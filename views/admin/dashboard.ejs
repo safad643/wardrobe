@@ -327,7 +327,7 @@
             <div class="row">
               <div class="col-12 grid-margin">
                 <div class="card">
-                  <div class="card-body">
+                  <div id="download" class="card-body">
                     <h4 class="card-title mb-4">
                       <i class="mdi mdi-chart-line text-primary"></i> 
                       Sales Analytics
@@ -533,6 +533,8 @@
      <script src="/js/dashboard.js"></script>
 <!-- Load only when needed -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 <script>
 function updatereturnstatus(status) {
   const returnid = document.getElementById('returnRequestId').textContent;
@@ -568,42 +570,6 @@ function updatereturnstatus(status) {
   });
 }
 
-  async function getreturndata(returnid,notification) {
-  
-    try {
-      const response = await fetch(`/admin/returns/${returnid}`);
-      const data = await response.json();
-
-      
-      if(notification){
-        const notificationResponse = await fetch('/admin/removereturnnotification', {
-        method: 'POST',
-        body: JSON.stringify({returnid: returnid}),
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      const notificationData = await notificationResponse.json();
-      if(notificationData.success) {
-      // Find and remove the notification element
-      const notificationElement = document.querySelector(`[onclick="getreturndata('${returnid}')"]`);
-      if (notificationElement) {
-        // Remove the divider after the notification if it exists
-        const nextDivider = notificationElement.nextElementSibling;
-        if (nextDivider && nextDivider.classList.contains('dropdown-divider')) {
-          nextDivider.remove();
-        }
-        // Remove the notification
-        notificationElement.remove();
-      }
-      }
-      }
-      
-      showReturnModal(data);
-    } catch (error) {
-      console.error('Error fetching return data:', error);
-    }
-  }
   function showReturnModal(returnData) {
     // Populate modal with return data
     document.getElementById('returnRequestId').textContent = returnData.returnId;
@@ -647,25 +613,45 @@ function loadReturnManagement() {
 }
 
 function generateReport(period) {
+  // Add this at the start of generateReport function
+  // Remove active class from all buttons
+  document.querySelectorAll('.btn-group .btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  // Add active class to clicked button
+  const clickedButton = document.querySelector(`.btn-group .btn[onclick="generateReport('${period}')"]`);
+  if (clickedButton) {
+    clickedButton.classList.add('active');
+  }
+
   let startDate = new Date('2025-02-13');
   let endDate = new Date();
   
   if(period === 'daily'){
-  
     startDate.setHours(0,0,0,0);
     endDate.setHours(23,59,59,999);
+  } else if(period === 'weekly') {
+    startDate = new Date(endDate); 
+    startDate.setDate(endDate.getDate() - 7);
+  } else if(period === 'monthly') {
+    startDate = new Date(endDate);
+    startDate.setMonth(endDate.getMonth() - 1);
+  } else if(period === 'yearly') {
+    startDate = new Date(endDate);
+    startDate.setFullYear(endDate.getFullYear() - 1);
   }
 
   fetch(`/admin/generatesalesdata`,{
     method: 'POST', 
-    body: JSON.stringify({startDate: startDate, endDate: endDate}),
+    body: JSON.stringify({startDate: startDate, endDate: endDate,period: period}),
     headers: {
       'Content-Type': 'application/json'
     }
   })
   .then(response => response.json())
   .then(data => {
-    console.log(data);
+   
     const salesData = data.salesData;
     const tabledata = data.tabledata;
     
@@ -692,6 +678,86 @@ function generateReport(period) {
     console.error('Error generating sales data:', error);
   });
 }
+
+function exportToPDF() {
+  // Get the element to download
+  const element = document.getElementById('download');
+  
+  // Clone the element to modify it without affecting the original
+  const elementToConvert = element.cloneNode(true);
+  
+  // Remove the export buttons from the clone
+  const exportButtons = elementToConvert.querySelector('.mt-4.d-flex.justify-content-end');
+  if (exportButtons) {
+    exportButtons.remove();
+  }
+
+  // Remove the report controls div
+  const reportControls = elementToConvert.querySelector('.report-controls');
+  if (reportControls) {
+    reportControls.remove();
+  }
+
+  // Configure the PDF options
+  const opt = {
+    margin: 0,
+    filename: 'sales-report.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { 
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#000000' // Pure black background
+    },
+    jsPDF: { 
+      unit: 'mm', 
+      format: 'a4', 
+      orientation: 'portrait'
+    },
+    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+  };
+
+  // Add background color preservation and full page height
+  elementToConvert.style.backgroundColor = '#191c24';
+  elementToConvert.style.padding = '20px';
+  elementToConvert.style.height = '296mm'; // A4 height
+  elementToConvert.style.width = '210mm'; // A4 width
+  elementToConvert.style.display = 'flex';
+  elementToConvert.style.flexDirection = 'column';
+
+  // Ensure all parent elements also have dark background
+  const allElements = elementToConvert.getElementsByTagName('*');
+  for (let el of allElements) {
+    const bg = window.getComputedStyle(el).backgroundColor;
+    if (bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent') {
+      el.style.backgroundColor = '#191c24';
+    }
+  }
+
+  // Generate PDF
+  html2pdf().set(opt).from(elementToConvert).save()
+    .then(() => {
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: 'PDF downloaded successfully!',
+        background: '#191c24',
+        color: '#fff'
+      });
+    })
+    .catch(error => {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to generate PDF',
+        background: '#191c24',
+        color: '#fff'
+      });
+      console.error('PDF generation error:', error);
+    });
+}
+
+
 </script>
   </body>
 </html>

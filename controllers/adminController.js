@@ -706,62 +706,25 @@ const loadreturnmanagment = async (req, res) => {
   }
 }
 
-const generatesalesdata = async (req, res) => {
-  
-  try {
-    const {startDate,endDate} = req.body;
-    
-    const db = await mongo();
-      const orders = await db.collection("orders").find({createdAt:{$gte:new Date(startDate),$lte:new Date(endDate)}}).toArray();
-      const returns = await db.collection("returns").find({date:{$gte:new Date(startDate),$lte:new Date(endDate)}}).toArray();
-      const salesData = {
-        totalorders: orders.length,
-        totalrevenue: orders.reduce((total, order) => total + order.total, 0),
-        returnorders: returns.filter(order => order.status === 'approved').length,
-        cancelledorders: orders.reduce((count, order) => count + order.items.filter(item => item.status === 'cancelled').length, 0),
-      }
-      
-      // Group orders by date
-      const ordersByDate = {};
-      for (const order of orders) {
-        const date = new Date(order.createdAt).toLocaleDateString();
-        if (!ordersByDate[date]) {
-          ordersByDate[date] = {
-            orders: 0,
-            sales: 0,
-            revenue: 0
-          };
-        }
-       
-        ordersByDate[date].orders += order.items.length;
-        ordersByDate[date].sales += order.items.reduce((sum, item) => sum + item.quantity, 0);
-        ordersByDate[date].revenue += order.total;
-      }
 
-      let prevRevenue = null;
-      const tabledata = Object.entries(ordersByDate).map(([date, data]) => {
-        let growth = "0%";
-        if (prevRevenue !== null) {
-          const growthRate = ((data.revenue - prevRevenue) / prevRevenue) * 100;
-          growth = `${growthRate.toFixed(1)}%`;
-        }
-        prevRevenue = data.revenue;
-        
-        return {
-          date: date,
-          orders: data.orders,
-          totalSales: data.sales,
-          revenue: data.revenue,
-          growth: growth
-        };
-      });
-      res.json({salesData,tabledata});
-      
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Internal Server Error");
+const generatesalesdata = async (req, res) => {
+  try {
+    const { period } = req.body;
+    let start, end,result;
+    
+    if (period === 'custom') {
+      start = new Date(req.body.startDate);
+      end = new Date(req.body.endDate);
+    }
+
+    result = await generateSalesData(period);
+    res.json(result);
+  } catch (error) {
+    console.error('Error generating sales data:', error);
+    res.status(500).json({ error: 'Failed to generate sales data' });
   }
-} 
+}
+
 module.exports = {
   generatesalesdata,
   loadreturnmanagment,
@@ -796,3 +759,162 @@ module.exports = {
   deletecatogory,
   updateProductStatus,
 };
+
+
+
+
+
+
+
+const generateSalesData = async (period) => {
+  const db = await mongo();
+
+  // Common aggregation for total sales data
+  const salesData = await db.collection('orders').aggregate([
+    { $unwind: "$items" },
+    {
+      $group: {
+        _id: null,
+        totalorders: { $sum: 1 },
+        totalrevenue: {
+          $sum: {
+            $cond: [
+              { $ne: ["$items.status", "cancelled"] },
+              "$items.total",
+              0
+            ]
+          }
+        },
+        cancelledorders: {
+          $sum: {
+            $cond: [
+              { $eq: ["$items.status", "cancelled"] },
+              1,
+              0
+            ]
+          }
+        }
+      }
+    }
+  ]).toArray();
+
+  // Period-specific grouping
+  const groupByPeriod = {
+    daily: {
+      $dateToString: { format: "%Y-%m-%d", date: "$createdAt" }
+    },
+    weekly: {
+      week: { $week: "$createdAt" },
+      year: { $year: "$createdAt" }
+    },
+    monthly: {
+      month: { $month: "$createdAt" },
+      year: { $year: "$createdAt" }
+    },
+    yearly: {
+      year: { $year: "$createdAt" }
+    }
+  };
+
+  const periodData = await db.collection('orders').aggregate([
+    { $unwind: "$items" },
+    {
+      $group: {
+        _id: groupByPeriod[period],
+        orders: { $sum: 1 },
+        totalSales: { $sum: "$items.subtotal" },
+        revenue: {
+          $sum: {
+            $cond: [
+              { $ne: ["$items.status", "cancelled"] },
+              "$items.total",
+              0
+            ]
+          }
+        },
+        startDate: { $min: "$createdAt" },
+        endDate: { $max: "$createdAt" }
+      }
+    },
+    {
+      $sort: period === 'daily' ? { "_id": -1 } :
+             period === 'weekly' ? { "_id.year": -1, "_id.week": -1 } :
+             period === 'monthly' ? { "_id.year": -1, "_id.month": -1 } :
+             { "_id.year": -1 }
+    }
+  ]).toArray();
+
+  const returnCount = await db.collection('returns').countDocuments({ status: 'approved' });
+
+  // Format the aggregated data
+  const formattedSalesData = {
+    totalorders: salesData[0]?.totalorders || 0,
+    totalrevenue: `₹${Math.round(salesData[0]?.totalrevenue || 0).toLocaleString('en-IN')}`,
+    returnorders: returnCount,
+    cancelledorders: salesData[0]?.cancelledorders || 0
+  };
+
+  // Format period-specific data
+  const formatDate = (data, index) => {
+    const prevRevenue = index < periodData.length - 1 ? periodData[index + 1].revenue : 0;
+    const growth = prevRevenue > 0
+      ? Math.round(((data.revenue - prevRevenue) / prevRevenue) * 100 * 100) / 100
+      : 100;
+
+    const baseFormat = {
+      orders: data.orders,
+      totalSales: `₹${Math.round(data.totalSales).toLocaleString('en-IN')}`,
+      revenue: `₹${Math.round(data.revenue).toLocaleString('en-IN')}`,
+      growth: `${growth}%`
+    };
+
+    switch(period) {
+      case 'daily':
+        return {
+          date: new Date(data._id).toLocaleDateString('en-IN', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+          }),
+          ...baseFormat
+        };
+      case 'weekly': {
+        const startDateFormatted = new Date(data.startDate).toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
+        const endDateFormatted = new Date(data.endDate).toLocaleDateString('en-IN', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        });
+        return {
+          date: `Week ${index + 1} (${startDateFormatted} - ${endDateFormatted})`,
+          ...baseFormat
+        };
+      }
+      case 'monthly': {
+        const monthName = new Date(data.startDate).toLocaleString('en-IN', { month: 'long' });
+        const year = new Date(data.startDate).getFullYear();
+        return {
+          date: `${monthName} ${year}`,
+          ...baseFormat
+        };
+      }
+      case 'yearly':
+        return {
+          date: `${data._id.year}`,
+          ...baseFormat
+        };
+    }
+  };
+
+  const tabledata = periodData.map((data, index) => formatDate(data, index));
+
+  return { salesData: formattedSalesData, tabledata };
+};
+
+
+
+
