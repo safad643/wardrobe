@@ -4,9 +4,9 @@ const mongo=require('../mongodb/mongo')
 passport.use(
   new googleStratigy(
     {
-      callbackURL: '/auth/google/redirect',
-      clientID: '708285499433-vu93oj0nvrc4rlsn42enki92vaprmgbf.apps.googleusercontent.com',
-      clientSecret: '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',
+      callbackURL: process.env.GOOGLE_CALLBACK_URL,
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     },
     async (accessToken, refreshToken, profile, done) => {
       const db = await mongo();

@@ -1552,10 +1552,10 @@ document.addEventListener('DOMContentLoaded', function() {
 async function razorpay(total){
       return new Promise((resolve, reject) => {
         var options = {
-            key: "rzp_test_PdAFPaTa6RKOxW", 
+            key: 'rzp_test_PdAFPaTa6RKOxW', 
             amount: total, 
             currency: "INR",
-            name: "Your Company Name",
+            name: "Wardrobe",
             description: "Test Transaction",
             handler: function (response) {
                 if (response.razorpay_payment_id) {

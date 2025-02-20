@@ -432,7 +432,7 @@
                       <button class="btn btn-outline-light" onclick="exportToPDF()">
                         <i class="mdi mdi-file-pdf text-danger"></i> Export PDF
                       </button>
-                      <button class="btn btn-outline-light" onclick="exportToExcel()">
+                      <button class="btn btn-outline-light" onclick="downloadExcel()">
                         <i class="mdi mdi-file-excel text-success"></i> Export Excel
                       </button>
                     </div>
@@ -534,6 +534,7 @@
 <!-- Load only when needed -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <script>
 function updatereturnstatus(status) {
@@ -570,7 +571,7 @@ function updatereturnstatus(status) {
   });
 }
 
-  function showReturnModal(returnData) {
+function showReturnModal(returnData) {
     // Populate modal with return data
     document.getElementById('returnRequestId').textContent = returnData.returnId;
     document.getElementById('productName').textContent = returnData.productName;
@@ -600,7 +601,6 @@ function updatereturnstatus(status) {
     // Show the modal
     $('#returnModal').modal('show');
 }
-
 
 function loadReturnManagement() {
   fetch('/admin/returnmanagment',{method:'get'})
@@ -757,7 +757,40 @@ function exportToPDF() {
     });
 }
 
+function downloadExcel() {
+  const table = document.getElementById('salesTable');
+  const rows = Array.from(table.querySelectorAll('tr'));
+  
+  const data = rows.map(row => {
+    return Array.from(row.querySelectorAll('th, td')).map(cell => cell.textContent.trim());
+  });
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+  try {
+    XLSX.writeFile(wb, "table-data.xlsx");
+    Swal.fire({
+      icon: 'success',
+      title: 'Success',
+      text: 'Excel file downloaded successfully!',
+      background: '#191c24',
+      color: '#fff'
+    });
+  } catch (error) {
+    Swal.fire({
+      icon: 'error', 
+      title: 'Error',
+      text: 'Failed to generate Excel file',
+      background: '#191c24',
+      color: '#fff'
+    });
+    console.error('Excel generation error:', error);
+  }
+}
 
 </script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   </body>
 </html>

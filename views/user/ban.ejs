@@ -170,20 +170,18 @@
         const countdownElement = document.getElementById('countdown');
         
         const updateCountdown = () => {
-            seconds--;
             countdownElement.textContent = seconds;
             if (seconds <= 0) {
-                clearInterval(countdownInterval);
-                window.location.href = '/login';
+                window.location.href = '/user/login';
+            } else {
+                seconds--;
+                setTimeout(updateCountdown, 1000);
             }
         };
 
         // Initialize
         createParticles();
-        const countdownInterval = setInterval(updateCountdown, 1000);
-        setTimeout(() => {
-            window.location.href = '/login';
-        }, 5000);
+        updateCountdown();
 
         // Add particle movement animation
         const style = document.createElement('style');

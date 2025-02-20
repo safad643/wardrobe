@@ -1208,8 +1208,8 @@ async function sendotp(otp, email) {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 'safadcp14@gmail.com',
-        pass: 'svhn wupg zccn dzkw',
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
       },
     });
     const mail = {

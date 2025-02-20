@@ -4,7 +4,7 @@ const midddlewares=require('../midddlewares/session')
 const router = express.Router()
 
 router.get('/login',midddlewares.islogin,usercontroller.loadlogin)
-router.post('/login',midddlewares.checkBan,usercontroller.login)
+router.post('/login',usercontroller.login)
 router.get('/forgot/:email',usercontroller.forgot)
 router.post('/verifyotpforg',usercontroller.otpverify)
 router.post('/resetpassword',usercontroller.resetpassword)
