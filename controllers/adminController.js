@@ -155,7 +155,7 @@ console.log(name.trim());
         { name: { $ne: ogname.trim() } } 
       ]
     });
-console.log(existingCategory);
+
 
     if (existingCategory) {
       return res.status(400).json({ error: "Category name must be unique." });
@@ -698,7 +698,7 @@ const updateReturnStatus = async (req, res) => {
 const loadreturnmanagment = async (req, res) => {
   try {
     const db = await mongo();
-    const returns = await db.collection("returns").find({}).toArray();
+    const returns = await db.collection("returns").find({}).sort({_id: -1}).toArray();
     res.render("admin/nav/returnmanagment", { returns });
   } catch (err) {
     console.error(err);
@@ -709,19 +709,60 @@ const loadreturnmanagment = async (req, res) => {
 
 const generatesalesdata = async (req, res) => {
   try {
-    const { period } = req.body;
+    const { period,identifier } = req.body;
     let start, end,result;
+   
     
-    if (period === 'custom') {
+    if (identifier === 'custom') {
       start = new Date(req.body.startDate);
       end = new Date(req.body.endDate);
     }
 
-    result = await generateSalesData(period);
+    result = await generateSalesData(period,start,end);
     res.json(result);
   } catch (error) {
     console.error('Error generating sales data:', error);
     res.status(500).json({ error: 'Failed to generate sales data' });
+  }
+}
+
+const loadorderdetails = async (req,res)=>{
+  try {
+    const {orderId,productid,varient} = req.params;
+    const db = await mongo();
+    
+    
+    const order = await db.collection('orders').findOne(
+      {
+        _id: new ObjectId(orderId),
+        'items.productId': productid,
+        'items.varient': JSON.parse(varient)
+      },
+      {
+        projection: {
+         _id:0
+        }
+      }
+    )
+    const product = await db.collection('products').findOne(
+      {_id: new ObjectId(order.items[0].productId)},
+      {projection: {_id:0,name: 1, images: {$slice: 1}}}
+    )
+   const user = await db.collection('users').findOne({_id: new ObjectId(order.userId)},{projection: {_id:0,name:1,email:1}})
+    res.json({
+      order: {
+        ...order,
+        name: product.name,
+        image: product.images[0],
+        user: user
+      }
+    });
+  } catch (error) {
+    console.error('Error loading order details:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to load order details'
+    });
   }
 }
 
@@ -758,6 +799,7 @@ module.exports = {
   catogoryupdate,
   deletecatogory,
   updateProductStatus,
+  loadorderdetails,
 };
 
 
@@ -766,11 +808,23 @@ module.exports = {
 
 
 
-const generateSalesData = async (period) => {
+const generateSalesData = async (period, startDate, endDate) => {
   const db = await mongo();
+
+  // Build date filter if start and end dates exist
+  let dateFilter = {};
+  if (startDate && endDate) {
+    dateFilter = {
+      createdAt: {
+        $gte: startDate,
+        $lte: endDate
+      }
+    };
+  }
 
   // Common aggregation for total sales data
   const salesData = await db.collection('orders').aggregate([
+    { $match: dateFilter },
     { $unwind: "$items" },
     {
       $group: {
@@ -817,6 +871,7 @@ const generateSalesData = async (period) => {
   };
 
   const periodData = await db.collection('orders').aggregate([
+    { $match: dateFilter },
     { $unwind: "$items" },
     {
       $group: {
@@ -844,7 +899,16 @@ const generateSalesData = async (period) => {
     }
   ]).toArray();
 
-  const returnCount = await db.collection('returns').countDocuments({ status: 'approved' });
+  // Add date filter to returns query if dates exist
+  const returnFilter = startDate && endDate ? {
+    status: 'approved',
+    date: {
+      $gte: startDate,
+      $lte: endDate
+    }
+  } : { status: 'approved' };
+
+  const returnCount = await db.collection('returns').countDocuments(returnFilter);
 
   // Format the aggregated data
   const formattedSalesData = {

@@ -266,10 +266,67 @@
 .wishlist-icon.animate i {
     animation: heartPop 0.3s ease;
 }
+
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 40px 0;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.pagination {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 5px;
+}
+
+.pagination li {
+    margin: 0 2px;
+}
+
+.pagination li a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 10px;
+    border-radius: 8px;
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    color: #333;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.pagination li.active a {
+    background-color: #000;
+    color: #fff;
+    border-color: #000;
+}
+
+.pagination li a:hover:not(.active) {
+    background-color: #f5f5f5;
+    border-color: #ddd;
+}
+
+.pagination .prev a,
+.pagination .next a {
+    font-size: 20px;
+    line-height: 1;
+}
+
+.pagination .disabled a {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
 	</style>
 	
 				
-<div class="container-fluid">
+<div class="container-fluid search">
     <div class="row">
       <div class="col-lg-12 text-center">
         <div class="section-title">
@@ -287,10 +344,21 @@
 								<button class="clear-all" onclick="clearAllFilters()">Clear All</button>
 						</div>
 		
+						<!-- Category Dropdown -->
+						<div class="filter-group">
+								<div class="filter-group-title">Category</div>
+								<select id="categorySelect" class="sort-select" onchange="filterByCategory(this.value)">
+										<option value="">All Categories</option>
+										<% categories.forEach(category => { %>
+											<option value="<%= category.name %>"><%= category.name %></option>
+										<% }) %>
+								</select>
+						</div>
+		
 						<!-- Sorting Dropdown -->
 						<div class="filter-group">
 								<div class="filter-group-title">Sort By</div>
-								<select class="sort-select" id="sortSelect" onchange="sortProducts()">
+								<select id="sortSelect" class="sort-select" >
 										<option value="">Default</option>
 										<option value="price_asc">Price: Low to High</option>
 										<option value="price_desc">Price: High to Low</option>
@@ -316,17 +384,17 @@
                       <% products.forEach(product => { %>
                         
                         <div class="singprod tab-pane active single-product col-xl-3 col-lg-4 col-md-6"
-     data-price="<%= product.price %>"
-     data-name="<%= product.name %>"
-     data-colors="<%= product.colors %>">
+        data-price="<%= product.price %>"
+        data-name="<%= product.name %>"
+        data-colors="<%= product.colors %>">
                             <div class="product-img">
-                          
+                            
                                 <a href="/user/product/<%= product.name %>"><img src="<%= product.images[0] %>" alt="<%= product.name %>" /></a>
                                 <div class="product-action clearfix">
                                     <a href="javascript:void(0)" 
-                                       onclick="toggleWishlist(this, '<%= product._id %>')" 
-                                       class="wishlist-icon" 
-                                       data-product-id="<%= product._id %>">
+                                        onclick="toggleWishlist(this, '<%= product._id %>')" 
+                                        class="wishlist-icon" 
+                                        data-product-id="<%= product._id %>">
                                         <i class="zmdi zmdi-favorite-outline"></i>
                                     </a>
                                     <a href="#" data-bs-toggle="modal" data-bs-target="#productModal" title="Quick View"><i class="zmdi zmdi-zoom-in"></i></a>
@@ -365,6 +433,22 @@
             </div>
          
       </div>
+      // ... existing code ...
+
+<!-- Add this right after your product grid, before the footer -->
+<div class="pagination-container">
+    <ul class="pagination">
+        <li class="prev"><a href="#" aria-label="Previous">‹</a></li>
+        <li class="active"><a href="#">1</a></li>
+        <li><a href="#">2</a></li>
+        <li><a href="#">3</a></li>
+        <li><a href="#">4</a></li>
+        <li><a href="#">5</a></li>
+        <li class="next"><a href="#" aria-label="Next">›</a></li>
+    </ul>
+</div>
+
+
     </div>
   </div>
   
@@ -383,7 +467,7 @@
 				<div class="footer-area">
 					<div class="container">
 						<div class="row">
-							<div class="col-lg-4 col-md-6">af
+							<div class="col-lg-4 col-md-6">
 								<div class="single-footer">
 									<h3 class="footer-title  title-border">Contact Us</h3>
 									<ul class="footer-contact">
@@ -537,44 +621,9 @@
     });
 }
 
-function sortProducts() {
-    const sortValue = document.getElementById('sortSelect').value;
-    const container = document.querySelector('.showcat');
-    const products = Array.from(container.children);
-
-    products.sort((a, b) => {
-        const priceA = parseFloat(a.dataset.price);
-        const priceB = parseFloat(b.dataset.price);
-        const nameA = a.dataset.name.toLowerCase();
-        const nameB = b.dataset.name.toLowerCase();
-
-        switch(sortValue) {
-            case 'price_asc': return priceA - priceB;
-            case 'price_desc': return priceB - priceA;
-            case 'name_asc': return nameA.localeCompare(nameB);
-            case 'name_desc': return nameB.localeCompare(nameA);
-            default: return 0;
-        }
-    });
-
-    container.innerHTML = '';
-    products.forEach(product => container.appendChild(product));
-}
 
 
-function clearAllFilters() {
-    // Remove color selections
-    document.querySelectorAll('.color-option.selected').forEach(co => co.classList.remove('selected'));
-    
-    // Reset sort
-    document.getElementById('sortSelect').value = '';
-    
-    // Show all products
-    document.querySelectorAll('.single-product').forEach(p => p.style.display = 'block');
-    
-    // Reset sorting order
-    sortProducts();
-}
+
 
 async function toggleWishlist(element, productId) {
     try {

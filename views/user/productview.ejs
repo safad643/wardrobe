@@ -1394,6 +1394,8 @@
 		.then(data => {
 			// Check the server message and show appropriate alert
 			if (data.message === 'product added to cart') {
+				// Increment cart count in header
+				document.querySelectorAll('.action-badge')[1].textContent = parseInt(document.querySelectorAll('.action-badge')[1].textContent) + 1;
 				showCustomAlert('Added To Cart');
 			} else if (data.message === 'product already exist') {
 				showCustomAlert('Product already in cart');
@@ -1461,6 +1463,7 @@
 
 	async function toggleWishlist(element, productId) {
 		try {
+			
 			const isActive = element.classList.contains('active');
 			const url = isActive ? `/user/wishlist/remove/${productId}` : `/user/wishlist/add/${productId}`;
 			const method = isActive ? 'DELETE' : 'POST';

@@ -52,8 +52,16 @@ router.get(
   midddlewares.adminsession,
   admincontroller.loadproducts
 );
-router.get("/productUpdate", admincontroller.productupdateload);
-router.post("/productUpdate", admincontroller.productupdate);
+router.get(
+  "/productUpdate",
+  midddlewares.adminsession,
+  admincontroller.productupdateload
+);
+router.post(
+  "/productUpdate",
+  midddlewares.adminsession,
+  admincontroller.productupdate
+);
 
 router.get(
   "/productadd",
@@ -69,9 +77,21 @@ router.post(
 //general for deleting
 router.post("/delete", midddlewares.adminsession, admincontroller.Delete);
 
-router.get("/ordermanagment", admincontroller.loadordermanagment);
-router.put("/orders/:orderId", admincontroller.updateProductStatus);
-router.put("/orders/update-status", admincontroller.updateProductStatus);
+router.get(
+  "/ordermanagment",
+  midddlewares.adminsession,
+  admincontroller.loadordermanagment
+);
+router.put(
+  "/orders/:orderId",
+  midddlewares.adminsession,
+  admincontroller.updateProductStatus
+);
+router.put(
+  "/orders/update-status",
+  midddlewares.adminsession,
+  admincontroller.updateProductStatus
+);
 
 router.get(
   "/coupon-managment",
@@ -104,7 +124,11 @@ router.post(
   admincontroller.updatecoupon
 );
 
-router.get("/returns/:returnId", admincontroller.getReturnData);
+router.get(
+  "/returns/:returnId",
+  midddlewares.adminsession,
+  admincontroller.getReturnData
+);
 router.post(
   "/removereturnnotification",
   midddlewares.adminsession,
@@ -124,5 +148,10 @@ router.post(
   "/generatesalesdata",
   midddlewares.adminsession,
   admincontroller.generatesalesdata
+);
+router.get(
+  "/orderdetails/:orderId/:productid/:varient",
+  midddlewares.adminsession,
+  admincontroller.loadorderdetails
 );
 module.exports = router;

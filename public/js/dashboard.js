@@ -4,6 +4,7 @@ function loadcatogory(){
     .then(response => response.text())
     .then((html)=>{
       document.querySelector('.main-panel').innerHTML=html
+      setActiveNavItem('Category Management')
     })
 }
 
@@ -132,6 +133,7 @@ function loadusermanagment(){
   .then((r)=>r.text())
   .then((html)=>{
     document.querySelector('.main-panel').innerHTML=html
+    setActiveNavItem('User Management')
   })
   .catch(err=>console.log(err))
 }
@@ -140,6 +142,7 @@ function dashboard(){
   .then((r)=>r.text())
   .then((html)=>{ 
     document.querySelector('.main-panel').innerHTML=html
+    setActiveNavItem('dashboard')
   })
   .catch(err=>console.log(err))
 }
@@ -149,6 +152,7 @@ function productload(){
   .then((r)=>r.text())
   .then((html)=>{
     document.querySelector('.main-panel').innerHTML=html
+    setActiveNavItem('Product Management')
   })
   .catch(err=>console.log(err))
 }
@@ -374,12 +378,13 @@ function filterRows() {
 }
 
 function laodordermanagment(){
- 
+  setActiveNavItem('Order Management')
     fetch('/admin/ordermanagment',{
       method:'get'})
       .then(response => response.text())
       .then((html)=>{
         document.querySelector('.main-panel').innerHTML=html
+        
       })
   
   
@@ -660,6 +665,7 @@ function coupnload(){
   .then((r)=>r.text())
   .then((html)=>{
     document.querySelector('.main-panel').innerHTML=html
+    setActiveNavItem('Coupon Management')
   })
   .catch(err=>console.log(err))
 }
@@ -901,3 +907,77 @@ async function getreturndata(returnid,notification) {
     console.error('Error fetching return data:', error);
   }
 }
+function setActiveNavItem(menuTitle) {
+  // Remove active class from all nav items
+  document.querySelectorAll('.nav-item.menu-items').forEach(item => {
+    item.classList.remove('active');
+  });
+  
+  // Find and add active class to the matching nav item
+  const navItems = document.querySelectorAll('.nav-item.menu-items');
+  navItems.forEach(item => {
+    const titleElement = item.querySelector('.menu-title');
+    if (titleElement && titleElement.textContent === menuTitle) {
+      item.classList.add('active');
+    }
+  });
+}
+
+
+function showOrderDetails(orderId,productid,varient) {
+  fetch(`/admin/orderdetails/${orderId}/${productid}/${varient}`,{method:'get'})  
+  .then((r)=>r.json())
+  .then((data)=>{
+    const order = data.order;
+    const item = order.items[0];
+
+    // Order Summary
+    
+    document.getElementById('modalOrderDate').textContent = new Date(order.createdAt).toLocaleString();
+    document.getElementById('modalPaymentMethod').textContent = order.paymentMethod;
+    document.getElementById('modalSubtotal').textContent = item.subtotal;
+    document.getElementById('modalDelivery').textContent = '40';
+    document.getElementById('modalDiscount').textContent = item.subtotal - item.total;
+    document.getElementById('modalTotal').textContent = item.total;
+
+    // Handle coupon details
+    if (order.coupon) {
+      document.getElementById('couponDetails').style.display = 'block';
+      document.getElementById('modalCouponCode').textContent = order.coupon.code;
+      document.getElementById('modalCouponDiscount').textContent = order.coupon.discount;
+    } else {
+      document.getElementById('couponDetails').style.display = 'none';
+    }
+
+    // Product Details
+    document.getElementById('modalProductName').textContent = order.name;
+    document.getElementById('modalVariantSize').textContent = item.varient.size;
+    document.getElementById('modalVariantColor').textContent = item.varient.color;
+    document.getElementById('modalQuantity').textContent = item.quantity;
+    document.getElementById('modalStatus').textContent = item.status;
+
+    // Shipping Address
+    document.getElementById('modalAddressStreet').textContent = order.address.street;
+    document.getElementById('modalAddressCity').textContent = order.address.city;
+    document.getElementById('modalAddressState').textContent = order.address.state;
+    document.getElementById('modalAddressCountry').textContent = order.address.country;
+    document.getElementById('modalAddressPostal').textContent = order.address.postalCode;
+    document.getElementById('modalAddressPhone').textContent = order.address.phone;
+
+    // Customer Details
+    document.getElementById('modalCustomerName').textContent = order.user.name;
+    document.getElementById('modalCustomerEmail').textContent = order.user.email;
+    // Set product image
+    document.getElementById('modalProductImage').src = order.image;
+    $('#orderDetailsModal').modal('show');
+  })
+}
+
+function hideOrderDetails() {
+  $('#orderDetailsModal').modal('hide');
+  $('.modal-backdrop').remove(); 
+  $('body').removeClass('modal-open'); 
+}
+
+
+

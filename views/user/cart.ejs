@@ -239,6 +239,32 @@
                 background-color: #f5f5f5;
                 border-radius: 4px;
             }
+    
+            /* Add these animation styles */
+            @keyframes slideAndFade {
+                0% {
+                    transform: translateX(0);
+                    opacity: 1;
+                    max-height: 500px;
+                    margin-bottom: 1.5rem;
+                }
+                50% {
+                    transform: translateX(-20px);
+                    opacity: 0;
+                }
+                100% {
+                    transform: translateX(-20px);
+                    opacity: 0;
+                    max-height: 0;
+                    margin-bottom: 0;
+                    padding: 0;
+                }
+            }
+    
+            .removing {
+                animation: slideAndFade 0.5s ease-out forwards;
+                overflow: hidden;
+            }
         </style>
     </head>
 <body>
@@ -280,7 +306,9 @@
             <span class="quantity"><%= product.quantity > product.varient.count ? product.varient.count : product.quantity %></span>
             <button class="quantity-btn plus">+</button>
         </div>
-        <a href="cartremove/<%= product._id %>?size=<%= product.varient.size %>&color=<%= product.varient.color %>" class="remove-item">× Remove</a>
+        <a onclick="removeCartItem(event, '<%= product._id %>', '<%= product.varient.size %>', '<%= product.varient.color %>')" 
+           href="javascript:void(0)" 
+           class="remove-item">× Remove</a>
     </div>
 </div>
             <% }) %>
@@ -481,6 +509,32 @@
             alert('Checkout failed. Please try again.');
         }
     });
+
+    async function removeCartItem(event, productId, size, color) {
+        try {
+            const cartItem = event.target.closest('.cart-item');
+            cartItem.classList.add('removing');
+
+            const response = await fetch(`/user/cartremove/${productId}?size=${size}&color=${color}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) throw new Error('Failed to remove item');
+
+            // Wait for animation to complete before removing from DOM
+            setTimeout(() => {
+                cartItem.remove();
+                document.querySelectorAll('.action-badge')[1].textContent = parseInt(document.querySelectorAll('.action-badge')[1].textContent) - 1;
+                calculateTotals();
+            }, 500); // Match this with animation duration
+
+        } catch (error) {
+            console.error('Error removing item:', error);
+            // Remove the animation class if there's an error
+            event.target.closest('.cart-item').classList.remove('removing');
+            alert('Failed to remove item. Please try again.');
+        }
+    }
 
 </script>
 </html>
