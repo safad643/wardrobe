@@ -4,7 +4,8 @@ const nodemailer = require("nodemailer");
 const passport = require("passport");
 const bcrypt = require("bcrypt");
 const { ObjectId } = require("mongodb");
-
+const Razorpay = require("razorpay");
+const { log } = require("console");
 const loadlogin = (req, res) => {
   try {
     res.render("user/login", { error: "" });
@@ -317,6 +318,19 @@ const profileload = async (req, res) => {
       .find({ userId: req.session.uid })
       .sort({ createdAt: -1 }) // Sort by newest first
       .toArray();
+
+    // Fetch product details for each order item
+    for (let order of orders) {
+      for (let item of order.items) {
+        const product = await db.collection("products").findOne(
+          { _id: new ObjectId(item.productId) },
+          { projection: { images: 1 } }
+        );
+        if (product && product.images && product.images.length > 0) {
+          item.image = product.images[0]; // Add first image to the item
+        }
+      }
+    }
     const wallet = await db
       .collection("wallet")
       .findOne({ userId: req.session.uid });
@@ -603,8 +617,22 @@ const placeOrder = async (req, res) => {
   try {
     const db = await mongo();
     const { addressId, paymentMethod, products, totals, coupon } = req.body;
+    
+    // Get flash message and ensure we wait for it to be available
+    const paymentVerification = req.flash('paymentverification');
+   
+    const paymentorderid=paymentVerification[0];
+    
+    let paymentStatus = paymentVerification[0] === 'true' ? 'paid' : 'pending';
+    
     let couponData = null;
-
+    if(paymentMethod=='cod'){
+      if(totals.total>1000){
+        return res.status(400).json({
+          paymentError: "cod is not available for orders above 1000",
+        });
+      }
+    }
     // If coupon exists, check if user has used it before
     if (coupon) {
       const user = await db
@@ -694,11 +722,11 @@ const placeOrder = async (req, res) => {
         color: product.color,
       },
       subtotal: product.price * product.quantity,
-      total: product.offer
-        ? Math.floor(
-            product.price * product.quantity * (1 - product.offer / 100)
-          )
-        : Math.floor(product.price * product.quantity),
+      total: Math.floor(
+        (product.offer 
+          ? product.price * (1 - product.offer / 100) 
+          : product.price) * product.quantity
+      ),
     }));
     const addressdetials = await db.collection("adress").findOne(
       { _id: new ObjectId(addressId) },
@@ -710,6 +738,7 @@ const placeOrder = async (req, res) => {
     );
     // Create the order document
     const order = {
+      paymentStatus: paymentStatus, 
       userId: req.session.uid,
       address: addressdetials,
       paymentMethod: paymentMethod,
@@ -721,7 +750,9 @@ const placeOrder = async (req, res) => {
       ...(couponData && { coupon: couponData }),
       createdAt: new Date(),
     };
-
+    if(paymentMethod=='razorpay' && paymentStatus=='pending'){
+      order.paymentorderid=paymentorderid
+    }
     // Insert the order
     const result = await db.collection("orders").insertOne(order);
 
@@ -730,7 +761,11 @@ const placeOrder = async (req, res) => {
       await db.collection("cart").deleteOne({ userid: req.session.uid });
     }
 
-    res.render("user/checkoutsuccess", { id: result.insertedId });
+    if (paymentMethod === 'razorpay' && paymentStatus === 'pending') {
+      res.render("user/checkoutfailed");
+    } else {
+      res.render("user/checkoutsuccess", { id: result.insertedId });
+    }
   } catch (error) {
     console.error("Order placement error:", error);
     res.status(500).json({
@@ -788,7 +823,7 @@ const loadcheckout = async (req, res) => {
 
         const discountedPricePerItem = price * (1 - offer / 100);
         if (discountedPricePerItem * quantity < 500) {
-          deliveryCharges += 40 * quantity;
+          deliveryCharges += 40 ;
         }
       });
     });
@@ -869,6 +904,8 @@ const loadorderview = async (req, res) => {
 
     // Create order view object
     const orderView = {
+      paymentorderid:order.paymentorderid,
+      paymentStatus:order.paymentStatus,
       _id: order._id,
       createdAt: order.createdAt,
       paymentMethod: order.paymentMethod,
@@ -886,15 +923,8 @@ const loadorderview = async (req, res) => {
         productid: productid,
         varient: { size: size, color: color },
       });
-    if (returndoc?.status == "pending") {
-      returnStatus = "pending";
-    } else if (returndoc?.status == "approved") {
-      returnStatus = "approved";
-    } else if (returndoc?.status == "rejected") {
-      returnStatus = "rejected";
-    } else {
-      returnStatus = "not-requested";
-    }
+    const returnStatus = returndoc?.status || "not-requested";
+
     res.render("user/orderviewpage", { order: orderView, returnStatus });
   } catch (error) {
     console.error(error);
@@ -1288,10 +1318,10 @@ const search = async (req, res) => {
     let sortStage = {};
     switch(sort) {
       case 'price_asc':
-        sortStage = { $sort: { price: 1 } };
+        sortStage = { $sort: { offerPrice: 1 } };
         break;
       case 'price_desc': 
-        sortStage = { $sort: { price: -1 } };
+        sortStage = { $sort: { offerPrice: -1 } };
         break;
       case 'name_asc':
         sortStage = { $sort: { name: 1 } };
@@ -1305,6 +1335,23 @@ const search = async (req, res) => {
 
     const pipeline = [
       { $match: matchStage },
+      {
+        $addFields: {
+          numericPrice: { $toDouble: "$price" },
+          numericOffer: { $toDouble: "$offer" },
+          offerPrice: {
+            $subtract: [
+              { $toDouble: "$price" },
+              {
+                $multiply: [
+                  { $toDouble: "$price" },
+                  { $divide: [{ $toDouble: "$offer" }, 100] }
+                ]
+              }
+            ]
+          }
+        }
+      },
       {
         $facet: {
           metadata: [
@@ -1320,6 +1367,7 @@ const search = async (req, res) => {
                 name: 1, 
                 price: 1,
                 offer: 1,
+                offerPrice: 1,
                 image: { $arrayElemAt: ["$images", 0] }
               }
             }
@@ -1351,8 +1399,76 @@ const search = async (req, res) => {
   }
 };
 
+const payment = async (req, res) => {
+  const {total} = req.body;
+  const razorpay = new Razorpay({
+    key_id: 'rzp_test_e3wiAeWDzGn9sG',
+    key_secret: 'ytrkbWg7Ve1ZO4bkmMAfNxn8',
+  }); 
+  const options = {
+    
+    amount: total,
+    currency: "INR",
+    receipt: `order_${Date.now()}`
+  };  
+  const order = await razorpay.orders.create(options);
+  res.json({
+    orderid: order.id,
+    key: 'rzp_test_e3wiAeWDzGn9sG',
+  })
+}
+
+const paymentcheck = async (req, res) => {
+  const {response} = req.body;
+ 
+  
+  const secret = 'ytrkbWg7Ve1ZO4bkmMAfNxn8';
+  const generatedSignature = crypto.createHmac('sha256', secret)
+    .update(`${response.razorpay_order_id}|${response.razorpay_payment_id}`)
+    .digest('hex');
+    
+  if(generatedSignature !== response.razorpay_signature) {
+    
+    
+    req.flash('paymentverification', response);
+  } else {
+    
+    
+    req.flash('paymentverification', 'true');
+  }
+  
+  // Save the session to ensure flash message is persisted
+  req.session.save((err) => {
+    if (err) console.error('Session save error:', err);
+    res.send('success');
+  });
+};
+
+const retryPayment = async (req, res) => {
+  const verification = req.flash('paymentverification');
+  if(verification[0] === 'true'){
+    const db = await mongo();
+    const orderid = req.query.orderid;
+    await db.collection('orders').updateOne({paymentorderid:orderid},{$set:{paymentStatus:'paid'}});
+
+    res.json({status:'success'});
+  }
+  else{
+    res.json({status:'error'});
+  }
+}
+
+const getCategories = async (req, res) => {
+  const db = await mongo();
+  const categories = await db.collection('catogories').find({}).toArray();
+
+  res.json(categories)
+}
 
 module.exports = {
+  retryPayment,
+  paymentcheck,
+  payment,
   search,
   getwishlist_cartcount,
   returnOrder,
@@ -1389,6 +1505,7 @@ module.exports = {
   googleauth,
   loadhome,
   changepassword,
+  getCategories,
 };
 
 function generateOTP(length = 6) {

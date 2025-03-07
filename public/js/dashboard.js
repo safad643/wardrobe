@@ -96,9 +96,20 @@ function catogoryupdate(event){
   
   
   fetch('/admin/catogoryupdate',{method:'post',body:JSON.stringify({ogname,name}),headers:{'Content-Type':'application/json'}})
-  .then(response => response.text())
-  .then((html)=>{
-    document.querySelector('.main-panel').innerHTML=html
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(data => {
+        const errorElement = document.getElementById('errorcatognameupdate');
+        errorElement.innerText = data.error;
+        errorElement.style.display = 'block';
+      });
+    }
+    return response.text();
+  })
+  .then((html) => {
+    if (html) {
+      document.querySelector('.main-panel').innerHTML = html;
+    }
   })
 
   
@@ -176,6 +187,7 @@ function updateprodcts(name,img1,img2,img3,varientarray){
     
     // Create variant fields container
     const variantContainer = document.createElement('div');
+    variantContainer.id='existingvariants'
     variantContainer.className = 'form-group';
     variantContainer.innerHTML = '<label>Variants</label>';
     
@@ -192,7 +204,7 @@ function updateprodcts(name,img1,img2,img3,varientarray){
       
       const input = document.createElement('input');
       input.type = 'number';
-      input.className = 'form-control';
+      input.className = 'form-control varientinput';
       input.name = variantId;
       input.value = variant.count;
       input.min = 0;
@@ -280,6 +292,49 @@ function showproductimages(a,b,c){
 function updateproduct(e) {
   e.preventDefault();
 
+  // Check if any variants exist (either existing or newly added)
+  const selectedVariants = document.getElementById('selectedVariants');
+  const existingVariants = document.getElementById('existingvariants');
+
+
+  if (!(selectedVariants.children.length || existingVariants.children.length>1)) {
+    
+    
+    document.getElementById('prducter').textContent = 'At least one variant is required';
+    return;
+  }
+
+  // Check all variant inputs for values
+  const variantInputs = document.querySelectorAll('.varientinput');
+ 
+  let hasEmptyInputs = false;
+
+  variantInputs.forEach(input => {
+    
+    
+    // Remove any existing error messages
+    const existingError = input.parentElement.querySelector('.variant-error');
+    if (existingError) {
+      existingError.remove();
+    }
+
+    if (!input.value || parseInt(input.value) <= 0) {
+      // Create and add error message below the specific input
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'text-danger variant-error';
+      errorDiv.style.fontSize = '0.875rem';
+      errorDiv.textContent = 'Please enter a valid quantity';
+      input.parentElement.appendChild(errorDiv);
+      hasEmptyInputs = true;
+    }
+  });
+
+  if (hasEmptyInputs) {
+    
+    return;
+  }
+
+
   // Get form data
   const form = e.target;
   const formData = new FormData(form);
@@ -313,6 +368,7 @@ function updateproduct(e) {
     document.querySelector('.main-panel').innerHTML = html;
   });
 }
+
 
 
 function pageback(){
@@ -407,6 +463,14 @@ function productAdder(e) {
     input.parentNode.insertBefore(error, input.nextSibling);
   }
 
+  // Validate variants
+  const variantInputs = document.querySelectorAll('input[name^="variant_"]');
+  if (variantInputs.length === 0) {
+    const variantButton = document.querySelector('[data-target="#variantModal"]');
+    showError(variantButton, 'Please add at least one variant.');
+    return;
+  }
+
   // Validate Name
   const nameInput = document.querySelector('input[name="name"]');
   if (!nameInput.value || nameInput.value.length < 3) {
@@ -498,6 +562,7 @@ function productAdder(e) {
       document.querySelector('#error-message').innerHTML = "An error occurred while processing your request.";
     });
 }
+
 function addVariant() {
   const color = document.getElementById('modalColorSelect').value;
   const size = document.getElementById('modalSizeSelect').value;
@@ -543,7 +608,7 @@ function addVariant() {
   const input = document.createElement('input');
   input.type = 'number';
   input.name = `variant_${color}_${size}`;
-  input.className = 'form-control';
+  input.className = 'form-control varientinput';
   input.min = 0;
   input.style.width = '200px';
 
@@ -979,5 +1044,77 @@ function hideOrderDetails() {
   $('body').removeClass('modal-open'); 
 }
 
+  function showVariants(variants) {
+    // Remove existing modal if present
+    const existingModal = document.getElementById('variantsModal');
+    if (existingModal) {
+      existingModal.remove();
+    }
 
+    // Create modal HTML with 3 columns and smaller width
+    const modalHTML = `
+      <div class="modal fade" id="variantsModal" tabindex="-1" role="dialog" aria-labelledby="variantsModalTitle">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="variantsModalTitle">Product Variants</h5>
+              <button type="button" class="btn-close" onclick="hideVariantsModal()" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="variantsTableContainer">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th scope="col" style="width: 40%">Color</th>
+                    <th scope="col" style="width: 30%">Size</th>
+                    <th scope="col" style="width: 30%">Stock</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${variants.map(variant => `
+                    <tr>
+                      <td>
+                        <div class="d-flex align-items-center">
+                          <div style="width: 20px; height: 20px; background-color: ${variant.color}; margin-right: 10px; border-radius: 50%;" role="presentation"></div>
+                          ${variant.color}
+                        </div>
+                      </td>
+                      <td>${variant.size}</td>
+                      <td>
+                       
+                          ${variant.count} units
+                       
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Add modal to DOM
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Show modal using jQuery since we're using Bootstrap 4
+    $('#variantsModal').modal({
+      keyboard: true,
+      backdrop: true,
+      focus: true
+    });
+    
+    // Add event listener for modal close
+    $('#variantsModal').on('hidden.bs.modal', function () {
+      setTimeout(() => {
+        $(this).remove();
+        $('body').removeClass('modal-open');
+        $('.modal-backdrop').remove();
+      }, 150); // Wait for fade animation to complete
+    });
+  }
+
+  function hideVariantsModal() {
+    $('#variantsModal').modal('hide');
+  }
 

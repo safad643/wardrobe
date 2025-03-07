@@ -792,7 +792,27 @@
 .payment-option[data-disabled="true"] input {
     pointer-events: none;
 }
-</style>
+
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 1rem 1.5rem;
+    background-color: #333;
+    color: white;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.3s ease;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+        </style>
     </head>
 <body>
     <div class="checkout-container">
@@ -922,6 +942,7 @@
                     <h2>Order Summary</h2>
                     <div class="order-items">
                         <% products.forEach(product => { %>
+                            
                             <div class="order-item">
                                 <div class="product-image-container">
                                     <img src="<%= product.images[0] %>" class="product-image" alt="<%= product.name %>">
@@ -938,7 +959,7 @@
                                         <span>Size: <%= product.size %></span>
                                     </div>
                                     <div class="quantity-control">
-                                        <button class="qty-btn minus" onclick="adjustQuantity(this, -1)">
+                                        <button class="qty-btn minus" onclick="adjustQuantity(this, -1,'<%= product.count %>')">
                                             <i class="fas fa-minus"></i>
                                         </button>
                                         <span class="qty-display" 
@@ -1173,12 +1194,15 @@ function togglePayment(option) {
 
 // Update the placeOrder function to collect product data including offers
 async function placeOrder(from) {
+    let status = null;
     if (!selectedAddressId) {
         alert('Please select a delivery address!');
         return;
     }
     
     if (!selectedPaymentMethod) {
+        document.getElementById('paymentError').innerText='Please select a payment method'
+        
         document.getElementById('paymentError').style.display = 'block';
         return;
     }
@@ -1186,9 +1210,19 @@ async function placeOrder(from) {
     // Handle different payment methods
     if (selectedPaymentMethod === "razorpay") {
         const totalAmount = parseFloat(document.querySelector('.total-value').textContent) * 100;
-        let status = await razorpay(totalAmount);
-        if (!status) {
-            alert("Payment failed");
+        status = await razorpay(totalAmount);
+        try {
+            const response = await fetch('/user/paymentcheck', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({response: status})
+            });
+            
+        } catch (error) {
+            alert("Payment verification failed");
+            console.log(error);
             return;
         }
     } else if (selectedPaymentMethod === "wallet") {
@@ -1199,6 +1233,16 @@ async function placeOrder(from) {
             alert("Insufficient wallet balance");
             return;
         }
+        status = "payment successful";
+    }
+    else if (selectedPaymentMethod === "cod") {
+        const totalAmount = parseFloat(document.querySelector('.total-value').textContent) ;
+        if(totalAmount>1000){
+            document.getElementById('paymentError').innerText='cod is not available for orders above 1000'
+            document.getElementById('paymentError').style.display = 'block'
+        return; 
+        }
+        status = "payment pending";
     }
 
     // Hide all out-of-stock messages first
@@ -1240,6 +1284,7 @@ async function placeOrder(from) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
+                
                 coupon: coupon,
                 from: from,
                 addressId: selectedAddressId,
@@ -1272,19 +1317,8 @@ async function placeOrder(from) {
             const html = await response.text();
             document.documentElement.innerHTML = html; // Assuming your success response includes a redirect URL
         } else {
-            const result = await response.json();
-            if (result.stockIssue) {
-                // Show out-of-stock message for the specific product
-                const productElement = document.querySelector(`[data-product-id="${result.productId}"]`);
-                if (productElement) {
-                    const outOfStockMessage = productElement.closest('.order-item').querySelector('.out-of-stock-message');
-                    if (outOfStockMessage) {
-                        outOfStockMessage.style.display = 'block';
-                    }
-                }
-            } else {
-                alert('Order failed: ' + (result.error || 'Unknown error'));
-            }
+            const errorHtml = await response.text();
+            document.documentElement.innerHTML = errorHtml;
         }
     } catch (error) {
         console.error('Error:', error);
@@ -1322,7 +1356,7 @@ document.getElementById('addressForm').addEventListener('submit', async (e) => {
         });
 
         const result = await response.json();
-        console.log(result);
+   
         if (result.status=="success") {
             // Update to add the new address to the address-grid container
             const addressGrid = document.querySelector('.address-grid');
@@ -1359,12 +1393,20 @@ function createAddressElement(address) {
 function adjustQuantity(button, change, max) {
     const qtyDisplay = button.parentElement.querySelector('.qty-display');
     const currentQty = parseInt(qtyDisplay.textContent);
-    if(max){
-        if(parseInt(max)<=currentQty || currentQty>=5){
-            return
+    
+    // Check both max stock (from variants) and absolute limit of 5
+    const maxAllowed = Math.min(parseInt(max) || 5, 5);
+    
+    // For increment
+    if (change > 0) {
+        if (currentQty >= maxAllowed) {
+            showToast(`Max quntity reached`);
+            return;
         }
     }
-    const newQty = Math.max(1, currentQty + change); // Ensure minimum is 1
+    
+    // For decrement, ensure minimum is 1
+    const newQty = Math.max(1, currentQty + change);
     qtyDisplay.textContent = newQty;
     updateQuantity(qtyDisplay);
 }
@@ -1403,7 +1445,7 @@ function updateOrderSummary() {
         // Calculate delivery fee per product
         const discountedPrice = itemSubtotal * (1 - (offer / 100));
         if (discountedPrice < 500) {
-            deliveryFee += 40 * quantity;
+            deliveryFee += 40 ;
         }
     });
 
@@ -1448,7 +1490,7 @@ function updateOrderSummary() {
     // Calculate final total
     const total = subtotalAfterDelivery - productDiscount - couponDiscount;
     const totalElement = document.querySelector('.total-value');
-    totalElement.textContent = Math.round(total);
+    totalElement.textContent = Math.floor(total);
 
     // Update coupon card states based on new total
     updateCouponCardStates(subtotalAfterDelivery);
@@ -1550,32 +1592,77 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 async function razorpay(total){
-      return new Promise((resolve, reject) => {
-        var options = {
-            key: 'rzp_test_PdAFPaTa6RKOxW', 
-            amount: total, 
-            currency: "INR",
-            name: "Wardrobe",
-            description: "Test Transaction",
-            handler: function (response) {
-                if (response.razorpay_payment_id) {
-                    resolve(true);
-                } else {
-                    resolve(false);
+    return new Promise((resolve, reject) => {
+        fetch('/user/payment',{
+            method:'POST',
+            headers:{
+                'Content-Type':'application/json'
+            },
+            body:JSON.stringify({
+                total:total
+            })
+        })
+        .then(response=>response.json())
+        .then(data=>{
+            var options = {
+                order_id: data.orderid,
+                key: data.key,
+                name: "Wardrobe", 
+                description: "Test Transaction",
+                handler: function (response) {
+                    if(response.razorpay_payment_id){
+                        resolve(response);
+                    } else {
+                        resolve(data.orderid);
+                    }
+                },
+                modal: {
+                    ondismiss: function() {
+                        resolve(data.orderid);
+                    }
+                },
+                "prefill": {
+                    "name": "Your Name",
+                    "email": "you@example.com",
+                    "contact": "9999999999"
+                },
+                "theme": {
+                    "color": "#3399cc"
                 }
-            },
-            "prefill": {
-                "name": "Your Name",
-                "email": "you@example.com",
-                "contact": "9999999999"
-            },
-            "theme": {
-                "color": "#3399cc"
-            }
-        };
-        var rzp = new Razorpay(options);
-        rzp.open();
+            };
+            var rzp = new Razorpay(options);
+            rzp.open();
+        })
+        .catch(error => {
+            reject(error);
+        });
     });
+}
+
+// Add this new function for toast notifications
+function showToast(message) {
+    // Remove existing toast if any
+    const existingToast = document.querySelector('.toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    
+    // Create new toast
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    
+    // Add to document
+    document.body.appendChild(toast);
+    
+    // Trigger animation
+    setTimeout(() => toast.classList.add('show'), 10);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
 }
 
     </script>

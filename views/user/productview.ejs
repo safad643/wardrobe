@@ -477,6 +477,8 @@
 							cursor: pointer;
 							position: relative;
 							display: block;
+							border: 2px solid transparent;
+							transition: all 0.2s ease;
 					}
 
 					.color-option .color {
@@ -484,6 +486,17 @@
 							height: 100%;
 							border-radius: 50%;
 							display: block;
+					}
+
+					.color-option.active {
+							border: 2px solid #007bff;
+							transform: scale(1.05);
+							box-shadow: 0 0 0 1px rgba(0, 123, 255, 0.3);
+					}
+
+					.color-option:hover {
+							transform: scale(1.02);
+							box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
 					}
 
 					.size-filter input[type="radio"] {
@@ -537,6 +550,18 @@
 
 					.size-option-wrapper {
 							display: inline-block;
+					}
+
+					.variant-error {
+							color: #dc3545;
+							font-size: 14px;
+							margin-top: 10px;
+							margin-bottom: 15px;
+							display: none;
+					}
+
+					.variant-error.show {
+							display: block;
 					}
 		</style>
 
@@ -842,13 +867,16 @@
 														</div>
 													<% }); %>
 												</div>
+												<div id="variantError" class="variant-error">Please select both color and size</div>
 											</div>
 								<!-- new start -->
 											<!-- Quantity and Actions -->
-										
+									
 											
 												<div class="clearfix">
+													
 													<div class="product-actions">
+														
 														<a class="luxury-button cart-btn" 
 																<% if (userid) { %>
 																		href="javascript:void(0);" 
@@ -1381,20 +1409,20 @@
 
 
 	function addtocart(userid, productid) {
+		const errorDiv = document.getElementById('variantError');
 		if(!(Object.keys(varienttosend).length === 2)){
-			alert('select color and size')
+			errorDiv.classList.add('show');
 			return;
 		}
+		errorDiv.classList.remove('show');
 		fetch('/user/addtocart', {
 			method: 'post',
 			body: JSON.stringify({ productid, userid,varient:varienttosend }),
 			headers: { 'Content-Type': 'application/json' }
 		})
-		.then(response => response.json()) // Parse the JSON response
+		.then(response => response.json())
 		.then(data => {
-			// Check the server message and show appropriate alert
 			if (data.message === 'product added to cart') {
-				// Increment cart count in header
 				document.querySelectorAll('.action-badge')[1].textContent = parseInt(document.querySelectorAll('.action-badge')[1].textContent) + 1;
 				showCustomAlert('Added To Cart');
 			} else if (data.message === 'product already exist') {
@@ -1407,31 +1435,33 @@
 	}
 
 	function buy(id) {
+		const errorDiv = document.getElementById('variantError');
 		if(!(Object.keys(varienttosend).length === 2)){
-			alert('select color and size')
+			errorDiv.classList.add('show');
 			return;
 		}
+		errorDiv.classList.remove('show');
 		const cartItems = {};
 		cartItems['1'] = {
-                productId: id,
-                quantity: 1,
-                size: varienttosend.size,
-                color: varienttosend.color
-            };
-			fetch('/user/checkout', {
-					method: 'POST',
-					headers: {
-							'Content-Type': 'application/json'
-					},
-					body: JSON.stringify({cartItems,from:"cart"})
-			})
-			.then(response => response.text()) // Get HTML response as text
-			.then(html => {
-					document.open();  // Open the document for writing
-					document.write(html); // Replace entire page with new HTML
-					document.close(); // Close the document
-			})
-			.catch(error => console.error('Error:', error));
+				productId: id,
+				quantity: 1,
+				size: varienttosend.size,
+				color: varienttosend.color
+		};
+		fetch('/user/checkout', {
+				method: 'POST',
+				headers: {
+						'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({cartItems})
+		})
+		.then(response => response.text())
+		.then(html => {
+				document.open();
+				document.write(html);
+				document.close();
+		})
+		.catch(error => console.error('Error:', error));
 	}
 
 
@@ -1609,6 +1639,48 @@ const varients=<%- JSON.stringify(product.variants)%>
 			delete varienttosend.size;
 		}
 	}
+
+	// Auto-select first color and size on page load
+	document.addEventListener('DOMContentLoaded', function() {
+		// Select first color
+		const firstColorOption = document.querySelector('.color-option');
+		if (firstColorOption) {
+			const firstColor = firstColorOption.querySelector('.color').dataset.color;
+			firstColorOption.classList.add('active');
+			varienttosend.color = firstColor;
+
+			// Filter variants for the first color
+			const matchingVariants = varients.filter(variant => variant.color === firstColor);
+			const availableSizes = matchingVariants.map(variant => variant.size);
+
+			// Update size options visibility
+			document.querySelectorAll('.size-option').forEach(option => {
+				const size = option.dataset.size;
+				if (availableSizes.includes(size)) {
+					option.classList.remove('disabled');
+					option.style.pointerEvents = 'auto';
+					option.style.opacity = '1';
+				} else {
+					option.classList.add('disabled');
+					option.style.pointerEvents = 'none';
+					option.style.opacity = '0.5';
+				}
+			});
+
+			// Select first available size
+			const firstAvailableSize = availableSizes[0];
+			if (firstAvailableSize) {
+				const firstSizeRadio = document.querySelector(`input[type="radio"][value="${firstAvailableSize}"]`);
+				const firstSizeLabel = document.querySelector(`label[data-size="${firstAvailableSize}"]`);
+				
+				if (firstSizeRadio && firstSizeLabel) {
+					firstSizeRadio.checked = true;
+					firstSizeLabel.classList.add('active');
+					varienttosend.size = firstAvailableSize;
+				}
+			}
+		}
+	});
 
 </script>
 		</body>

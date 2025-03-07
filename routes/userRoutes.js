@@ -126,5 +126,10 @@ router.get(
   usercontroller.getwishlist_cartcount
 );
 
+
+router.post('/payment',midddlewares.usersession,usercontroller.payment)
+router.post('/paymentcheck',midddlewares.usersession,usercontroller.paymentcheck)
+router.get('/retry-payment',midddlewares.usersession,usercontroller.retryPayment)
 router.get("/search", midddlewares.checkBan, usercontroller.search);
+router.get('/categories', usercontroller.getCategories);
 module.exports = router;

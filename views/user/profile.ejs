@@ -295,7 +295,7 @@
 
         .btn-edit:hover {
             background: rgb(114, 185, 255);
-            transform: scale(1.05);
+          
         }
 
         @media (max-width: 768px) {
@@ -322,6 +322,14 @@
     justify-content: space-between;
     gap: 2rem;
     box-shadow: rgba(0, 0, 0, 0.04) 0px 2px 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.order-card:hover {
+    background-color: #f8f9fa;
+   
+    box-shadow: rgba(0, 0, 0, 0.08) 0px 4px 8px;
 }
 
 .order-header {
@@ -385,20 +393,7 @@
 }
 
 .order-card .btn-edit {
-    padding: 0.7rem 1.4rem;
-    font-size: 0.9rem;
-    font-weight: 600;
-    background: #f8f9fa;
-    color: #1a1a1a;
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    min-width: 120px;
-    box-shadow: rgba(0, 0, 0, 0.02) 0px 1px 2px;
-}
-
-.order-card .btn-edit:hover {
-    background: rgb(114, 185, 255);
-    border-color: rgb(114, 185, 255);
+    display: none;
 }
 
 /* Enhanced status colors */
@@ -430,30 +425,51 @@
 @media (max-width: 768px) {
     .order-card {
         flex-direction: column;
-        align-items: flex-start;
-        padding: 1.3rem;
+        padding: 1rem;
+        gap: 1rem;
+    }
+
+    .product-image {
+        width: 80px;
+        height: 80px;
+        align-self: center;
+    }
+
+    .order-content {
+        width: 100%;
     }
 
     .order-header {
         flex-direction: column;
-        gap: 0.7rem;
+        gap: 1rem;
+        align-items: flex-start;
     }
 
     .order-details {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 0.7rem;
+        gap: 0.5rem;
         width: 100%;
     }
 
     .detail-item {
-        width: 100%;
+        display: flex;
         justify-content: space-between;
+        width: 100%;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f0f0f0;
     }
 
-    .order-card .btn-edit {
+    .detail-item:last-child {
+        border-bottom: none;
+    }
+
+    .order-status {
+        align-self: flex-start;
+    }
+
+    .btn-edit {
         width: 100%;
-        margin-top: 1rem;
+        justify-content: center;
     }
 }
 /* Add these styles to your existing CSS */
@@ -879,6 +895,84 @@
 #addMoneyModal .form-input[type="number"] {
     -moz-appearance: textfield; /* Firefox */
 }
+
+/* Add these styles to your CSS section */
+.order-status.failed {
+    background: #ffe3e3;
+    color: #c92a2a;
+}
+
+.payment-failed {
+    border: 1px solid #ffe3e3;
+    background: #fff8f8;
+}
+
+.retry-payment {
+    background: #c92a2a !important;
+    color: white !important;
+}
+
+.retry-payment:hover {
+    background: #b52525 !important;
+}
+
+/* Add to your existing CSS */
+.order-card {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.product-image {
+    flex-shrink: 0;
+    width: 100px;
+    height: 100px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.order-content {
+    flex: 1;
+}
+
+/* Update media query for mobile responsiveness */
+@media (max-width: 768px) {
+    .order-card {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1.3rem;
+    }
+
+    .product-image {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 1rem;
+    }
+}
+
+.action-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #FFD700 !important;
+    color: #333 !important;
+    font-size: 0.7rem;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 2px solid white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
     </style>
     <div id="addressModal" class="modal">
                 <div class="modal-content">
@@ -1048,41 +1142,48 @@
     <div class="orders-grid">
         <% if (orders.length > 0) { %>
             <% orders.forEach(function(order) { %>
+                
                 <% order.items.forEach(function(item) { %>
-                    <div class="order-card">
-                        <div class="order-header">
-                            <div>
-                                <div>Order #<%= order._id.toString().slice(-6).toUpperCase() %></div>
-                                <div><%= new Date(order.createdAt).toLocaleDateString('en-IN', {
-                                    day: 'numeric',
-                                    month: 'short',
-                                    year: 'numeric'
-                                }) %></div>
-                            </div>
-                            <span class="order-status <%= item.status %>"><%= item.status %></span>
+                   
+                    <div class="order-card <%= order.paymentStatus === 'pending' && order.paymentMethod === 'razorpay' ? 'payment-failed' : '' %>" 
+                         onclick="viewProductOrder('<%= order._id %>', '<%= item.productId %>', '<%= JSON.stringify(item.varient) %>')">
+                        <div class="product-image">
+                            <img src="<%= item.image %>" alt="Product Image">
                         </div>
-                        
-                        <div class="order-details">
-                            <div class="detail-item">
-                                <span class="detail-label">Quantity:</span>
-                                <span class="detail-value"><%= item.quantity %></span>
+                        <div class="order-content">
+                            <div class="order-header">
+                                <div>
+                                    <div>Order #<%= order._id.toString().slice(-6).toUpperCase() %></div>
+                                    <div><%= new Date(order.createdAt).toLocaleDateString('en-IN', {
+                                        day: 'numeric',
+                                        month: 'short',
+                                        year: 'numeric'
+                                    }) %></div>
+                                </div>
+                                <% if (order.paymentStatus === 'pending' && order.paymentMethod === 'razorpay') { %>
+                                    <span class="order-status failed">Payment Failed</span>
+                                <% } else { %>
+                                    <span class="order-status <%= item.status %>"><%= item.status %></span>
+                                <% } %>
                             </div>
                             
-                            <div class="detail-item">
-                                <span class="detail-label">Price:</span>
-                                <span class="detail-value">₹<%= item.total.toLocaleString('en-IN') %></span>
-                            </div>
-                            
-                            <div class="detail-item">
-                                <span class="detail-label">Variant:</span>
+                            <div class="order-details">
+                                <div class="detail-item">
+                                    <span class="detail-label">Quantity:</span>
+                                    <span class="detail-value"><%= item.quantity %></span>
+                                </div>
                                 
-                                <span class="detail-value"><%= item?.varient?.size %> / <%= item?.varient?.color %></span>
+                                <div class="detail-item">
+                                    <span class="detail-label">Price:</span>
+                                    <span class="detail-value">₹<%= item.total.toLocaleString('en-IN') %></span>
+                                </div>
+                                
+                                <div class="detail-item">
+                                    <span class="detail-label">Variant:</span>
+                                    <span class="detail-value"><%= item?.varient?.size %> / <%= item?.varient?.color %></span>
+                                </div>
                             </div>
                         </div>
-
-                        <button class="btn-edit" onclick="viewProductOrder('<%= order._id %>', '<%= item.productId %>', '<%= JSON.stringify(item.varient) %>')">
-                            View Details
-                        </button>
                     </div>
                 <% }); %>
             <% }); %>
@@ -1122,7 +1223,7 @@
                 </div>
             <% }); %>
             <% } else { %>
-            <p>No saved addresses found. Add your first address!</p>
+            <p id="no-address-message">No saved addresses found. Add your first address!</p>
             <% } %>
   
     </div>
@@ -1420,23 +1521,32 @@ document.getElementById('addressForm').addEventListener('submit', async (e) => {
 });
 
 function addNewAddressToDOM(address) {
+    // Check and remove "No addresses" message if it exists
+    const noAddressMessage = document.getElementById('no-address-message');
+    if (noAddressMessage) {
+        noAddressMessage.remove();
+    }
     const addressGrid = document.querySelector('.address-grid');
     
-    
-
     // Create new address element
     const addressDiv = document.createElement('div');
+    addressDiv.className = 'address-card';
+    addressDiv.setAttribute('data-address-id', address._id);
     addressDiv.innerHTML = `
-    <div class="address-card">
-        <div class='address-content"'>
+        <div class="address-actions">
+            <button class="edit-btn" onclick="openEditModal('${address._id}')">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="delete-btn" onclick="deleteAddress('${address._id}')">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+        <div class="address-content">
             <p>${address.street}</p>
             <p>${address.city}, ${address.state}</p>
             <p>${address.postalCode}</p>
             <p>${address.country}</p>
-            <button class="edit-btn" onclick="editAddress('${address._id}')" >
-                <i class="fas fa-edit"></i>
-            </button>
-        </div>
+            <p>📞 ${address.phone}</p>
         </div>
     `;
 
@@ -1444,6 +1554,16 @@ function addNewAddressToDOM(address) {
 }
 
 function removeAddress(addressId) {
+    // Check if this is the last address being removed
+    const remainingAddresses = document.querySelectorAll('.address-card');
+   
+    if (remainingAddresses.length === 2) { // If only 1 left (the one being removed)
+        const addressGrid = document.querySelector('.address-grid');
+        const noAddressMessage = document.createElement('p');
+        noAddressMessage.id = 'no-address-message';
+        noAddressMessage.textContent = 'No saved addresses found. Add your first address!';
+        addressGrid.appendChild(noAddressMessage);
+    }
     const addressElement = document.querySelector(`.address-card[data-address-id='${addressId}']`);
     if (addressElement) {
         addressElement.remove();
@@ -1697,6 +1817,62 @@ function handleLogout() {
             window.location.href = '/user/logout';
         }
     });
+}
+
+function retryPayment(orderId, amount) {
+    var options = {
+        key: "rzp_test_PdAFPaTa6RKOxW",
+        amount: amount * 100,
+        currency: "INR",
+        name: "Your Company Name",
+        description: "Order Payment Retry",
+        order_id: orderId,
+        handler: function (response) {
+            if (response.razorpay_payment_id) {
+                // Send the payment verification to your server
+                fetch('/user/verify-payment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        orderId: orderId,
+                        payment_id: response.razorpay_payment_id
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        Swal.fire({
+                            title: "Payment Successful",
+                            icon: "success",
+                            text: "Your order has been confirmed"
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire({
+                        title: "Error",
+                        icon: "error",
+                        text: "Something went wrong. Please try again."
+                    });
+                });
+            }
+        },
+        "prefill": {
+            "name": "Your Name",
+            "email": "you@example.com",
+            "contact": "9999999999"
+        },
+        "theme": {
+            "color": "#3399cc"
+        }
+    };
+    var rzp = new Razorpay(options);
+    rzp.open();
 }
 
     </script>

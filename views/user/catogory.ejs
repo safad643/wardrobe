@@ -323,6 +323,47 @@
     opacity: 0.5;
     cursor: not-allowed;
 }
+
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #000;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.products-container {
+    position: relative;
+    min-height: 200px;
+}
+
+.fade-transition {
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.fade-transition.loading {
+    opacity: 0.6;
+}
 	</style>
 	
 				
@@ -347,7 +388,7 @@
 						<!-- Category Dropdown -->
 						<div class="filter-group">
 								<div class="filter-group-title">Category</div>
-								<select id="categorySelect" class="sort-select" onchange="filterByCategory(this.value)">
+								<select id="categorySelect" class="sort-select" onchange="SFSP()">
 										<option value="">All Categories</option>
 										<% categories.forEach(category => { %>
 											<option value="<%= category.name %>"><%= category.name %></option>
@@ -358,7 +399,7 @@
 						<!-- Sorting Dropdown -->
 						<div class="filter-group">
 								<div class="filter-group-title">Sort By</div>
-								<select id="sortSelect" class="sort-select" >
+								<select onchange="SFSP()" id="sortSelect" class="sort-select" >
 										<option value="">Default</option>
 										<option value="price_asc">Price: Low to High</option>
 										<option value="price_desc">Price: High to Low</option>
@@ -433,18 +474,12 @@
             </div>
          
       </div>
-      // ... existing code ...
+   
 
 <!-- Add this right after your product grid, before the footer -->
 <div class="pagination-container">
     <ul class="pagination">
-        <li class="prev"><a href="#" aria-label="Previous">‹</a></li>
-        <li class="active"><a href="#">1</a></li>
-        <li><a href="#">2</a></li>
-        <li><a href="#">3</a></li>
-        <li><a href="#">4</a></li>
-        <li><a href="#">5</a></li>
-        <li class="next"><a href="#" aria-label="Next">›</a></li>
+       
     </ul>
 </div>
 
@@ -609,17 +644,6 @@
 	<!-- all js here -->
 <!-- jquery latest version -->
 <script>
-	function filterProducts() {
-    const selectedColors = Array.from(document.querySelectorAll('.color-option.selected'))
-        .map(co => co.dataset.color.toLowerCase());
-
-    document.querySelectorAll('.single-product').forEach(product => {
-        const colors = product.dataset.colors.toLowerCase().split(',');
-        const colorMatch = selectedColors.length === 0 || selectedColors.some(c => colors.includes(c));
-        
-        product.style.display = colorMatch ? 'block' : 'none';
-    });
-}
 
 
 
@@ -673,6 +697,7 @@ async function toggleWishlist(element, productId) {
     }
 }
 // When page loads, check which products are in wishlist
+SFSP()
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const response = await fetch('/user/wishlist/check', { method: 'GET' });
@@ -701,6 +726,137 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Error checking wishlist status:', error);
     }
 });
+
+async function SFSP(page = 1) {
+    const search = document.getElementById('searchInput').value;
+    const filter = document.getElementById('categorySelect').value;
+    const sort = document.getElementById('sortSelect').value;
+
+    // Get the container and add loading state
+    const productContainer = document.querySelector('.showcat');
+    productContainer.classList.add('products-container', 'fade-transition', 'loading');
+
+    // Add loading overlay if it doesn't exist
+    let loadingOverlay = productContainer.querySelector('.loading-overlay');
+    if (!loadingOverlay) {
+        loadingOverlay = document.createElement('div');
+        loadingOverlay.className = 'loading-overlay';
+        loadingOverlay.innerHTML = '<div class="loading-spinner"></div>';
+        productContainer.appendChild(loadingOverlay);
+    }
+    loadingOverlay.style.display = 'flex';
+
+    try {
+        // Add a small delay to ensure smooth transition
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        const response = await fetch(`/user/search?search=${search}&filter=${filter}&sort=${sort}&page=${page}`);
+        const data = await response.json();
+        
+        // Prepare the new content
+        const newContent = data.products.map(product => {
+            const discountedPrice = product.offer ? 
+                Math.floor(product.price - (product.price * product.offer / 100)) : 
+                product.price;
+            
+            return `
+                <div class="singprod tab-pane active single-product col-xl-3 col-lg-4 col-md-6"
+                    data-price="${product.price}"
+                    data-name="${product.name}">
+                    <div class="product-img">
+                        <a href="/user/product/${product.name}">
+                            <img src="${product.image}" alt="${product.name}" />
+                        </a>
+                        <div class="product-action clearfix">
+                            <a href="javascript:void(0)" 
+                                onclick="toggleWishlist(this, '${product._id}')" 
+                                class="wishlist-icon" 
+                                data-product-id="${product._id}">
+                                <i class="zmdi zmdi-favorite-outline"></i>
+                            </a>
+                            <a href="#" data-bs-toggle="modal" data-bs-target="#productModal" title="Quick View">
+                                <i class="zmdi zmdi-zoom-in"></i>
+                            </a>
+                            <a href="#" data-bs-toggle="tooltip" data-placement="top" title="Compare">
+                                <i class="zmdi zmdi-refresh"></i>
+                            </a>
+                            <a href="cart.html" data-bs-toggle="tooltip" data-placement="top" title="Add To Cart">
+                                <i class="zmdi zmdi-shopping-cart-plus"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="product-info clearfix">
+                        <div class="fix">
+                            <h4 class="post-title floatleft">
+                                <a href="/user/product/${product.name}">${product.name}</a>
+                            </h4>
+                        </div>
+                        <div class="fix">
+                            ${product.offer ? `
+                                <span class="pro-price floatleft">₹${discountedPrice}</span>
+                                <span class="original-price floatleft">₹${Math.floor(product.price)}</span>
+                            ` : `
+                                <span class="pro-price floatleft">₹${Math.floor(product.price)}</span>
+                            `}
+                            <span class="pro-rating floatright">
+                                <a href="#"><i class="zmdi zmdi-star"></i></a>
+                                <a href="#"><i class="zmdi zmdi-star"></i></a>
+                                <a href="#"><i class="zmdi zmdi-star"></i></a>
+                                <a href="#"><i class="zmdi zmdi-star-half"></i></a>
+                                <a href="#"><i class="zmdi zmdi-star-half"></i></a>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Update the content
+        productContainer.innerHTML = newContent;
+        
+        // Update pagination
+        updatePagination(data.pagination);
+
+    } catch (error) {
+        console.error('Error fetching search results:', error);
+        productContainer.innerHTML = '<div class="col-12 text-center">Error loading products</div>';
+    } finally {
+        // Remove loading state
+        productContainer.classList.remove('loading');
+        if (loadingOverlay) {
+            loadingOverlay.style.display = 'none';
+        }
+    }
+}
+
+// Helper function to update pagination
+function updatePagination(pagination) {
+    const paginationContainer = document.querySelector('.pagination');
+    if (!paginationContainer) return;
+
+    let paginationHTML = `
+        <li class="prev ${pagination.currentPage === 1 ? 'disabled' : ''}">
+            <a href="#" onclick="SFSP(${pagination.currentPage - 1}); return false;" aria-label="Previous">‹</a>
+        </li>
+    `;
+
+    for (let i = 1; i <= pagination.totalPages; i++) {
+        paginationHTML += `
+            <li class="${pagination.currentPage === i ? 'active' : ''}">
+                <a href="#" onclick="SFSP(${i}); return false;">${i}</a>
+            </li>
+        `;
+    }
+
+    paginationHTML += `
+        <li class="next ${pagination.currentPage === pagination.totalPages ? 'disabled' : ''}">
+            <a href="#" onclick="SFSP(${pagination.currentPage + 1}); return false;" aria-label="Next">›</a>
+        </li>
+    `;
+
+    paginationContainer.innerHTML = paginationHTML;
+}
+
 </script>
 <script src="/user/js/vendor/jquery-3.6.0.min.js"></script>
 <script src="/user/js/vendor/jquery-migrate-3.3.2.min.js"></script>

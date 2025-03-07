@@ -363,6 +363,16 @@ async function removeFromWishlist(productId) {
 }
 
 async function addToCart(productId) {
+    // Decrease wishlist count in header
+    const wishlistBadge = document.querySelectorAll('.action-badge')[0];
+    if (wishlistBadge) {
+        wishlistBadge.textContent = parseInt(wishlistBadge.textContent) - 1;
+    }
+    // Increase cart count in header
+    const cartBadge = document.querySelectorAll('.action-badge')[1];
+    if (cartBadge) {
+        cartBadge.textContent = parseInt(cartBadge.textContent) + 1;
+    }
     try {
         const response = await fetch('/user/addtocart', {
             method: 'POST',

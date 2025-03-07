@@ -410,6 +410,16 @@
                     </div>
 
                     <!-- Sales Data Table -->
+                    <div class="row mb-4" id="graphdiv">
+                      <div class="col-12">
+                        <div class="card bg-dark">
+                          <div id="graph" class="card-body">
+                            <canvas id="salesChart" style="width: 100%; height: 300px;"></canvas>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                     <div class="table-responsive">
                       <table class="table table-hover table-dark" id="salesTable">
                         <thead>
@@ -535,6 +545,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 
 <script>
 function updatereturnstatus(status) {
@@ -613,11 +625,9 @@ function loadReturnManagement() {
   });
 }
 
-function generateReport(period,a,b) {
- 
+function generateReport(period, a, b) {
   // Reset date filter inputs if this is a button click (not custom date range)
   if (a === 'button') {
-   
     const fromDateInput = document.getElementById('fromDate');
     const toDateInput = document.getElementById('toDate');
     fromDateInput.value = '';
@@ -641,31 +651,31 @@ function generateReport(period,a,b) {
 
   let endDate = new Date();
   if(a && b){
-    
     startDate = new Date(a);
     endDate = new Date(b);
     identifier = 'custom';
   }
   
 
-  fetch(`/admin/generatesalesdata`,{
-    method: 'POST', 
-    body: JSON.stringify({startDate: startDate, endDate: endDate,period: period,identifier: identifier||null}),
+  fetch(`/admin/generatesalesdata`, {
+    method: 'POST',
+    body: JSON.stringify({startDate: startDate, endDate: endDate, period: period, identifier: identifier||null}),
     headers: {
       'Content-Type': 'application/json'
     }
   })
   .then(response => response.json())
   .then(data => {
-   
     const salesData = data.salesData;
     const tabledata = data.tabledata;
     
-    
+    // Update stats
     document.getElementById('totalOrders').textContent = salesData.totalorders;
     document.getElementById('totalRevenue').textContent = salesData.totalrevenue;
     document.getElementById('returnedOrders').textContent = salesData.returnorders; 
     document.getElementById('cancelledOrders').textContent = salesData.cancelledorders;
+
+    // Update table
     const tableBody = document.getElementById('salesTableBody');
     tableBody.innerHTML = '';
     tabledata.forEach(row => {
@@ -679,6 +689,173 @@ function generateReport(period,a,b) {
       `;
       tableBody.appendChild(tr);
     });
+
+    // Create chart
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    
+    // Destroy existing chart if it exists
+    if (window.salesChart instanceof Chart) {
+      window.salesChart.destroy();
+    }
+
+    window.salesChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: tabledata.map(row => row.date),
+        datasets: [
+          {
+            label: 'Revenue',
+            data: tabledata.map(row => parseFloat(row.revenue.replace('₹', '').replace(/,/g, ''))),
+            borderColor: '#0d6efd',
+            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+            borderWidth: 2,
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: '#0d6efd',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          },
+          {
+            label: 'Growth %',
+            data: tabledata.map(row => parseFloat(row.growth.replace('%', ''))),
+            borderColor: '#198754',
+            backgroundColor: 'rgba(25, 135, 84, 0.1)',
+            borderWidth: 2,
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: '#198754',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          },
+          {
+            label: 'Orders',
+            data: tabledata.map(row => row.orders),
+            borderColor: '#dc3545',
+            backgroundColor: 'rgba(220, 53, 69, 0.1)',
+            borderWidth: 2,
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: '#dc3545',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          intersect: false,
+          mode: 'index'
+        },
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              padding: 20,
+              font: {
+                size: 14,
+                weight: 'bold'
+              },
+              color: '#fff',
+              usePointStyle: true,
+              pointStyle: 'circle'
+            }
+          },
+          title: {
+            display: true,
+            text: 'Sales Performance Overview',
+            color: '#fff',
+            font: {
+              size: 20,
+              weight: 'bold'
+            },
+            padding: {
+              top: 10,
+              bottom: 30
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            titleFont: {
+              size: 14,
+              weight: 'bold'
+            },
+            bodyFont: {
+              size: 13
+            },
+            padding: 12,
+            cornerRadius: 8,
+            displayColors: true,
+            callbacks: {
+              label: function(context) {
+                let label = context.dataset.label || '';
+                if (label) {
+                  label += ': ';
+                }
+                if (context.dataset.label === 'Revenue') {
+                  label += '₹' + context.parsed.y;
+                } else if (context.dataset.label === 'Growth %') {
+                  label += context.parsed.y + '%';
+                } else {
+                  label += context.parsed.y;
+                }
+                return label;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(255, 255, 255, 0.1)',
+              drawBorder: false
+            },
+            ticks: {
+              color: '#fff',
+              font: {
+                size: 12
+              },
+              padding: 10,
+              callback: function(value) {
+                return value.toLocaleString();
+              }
+            }
+          },
+          x: {
+            grid: {
+              color: 'rgba(255, 255, 255, 0.1)',
+              drawBorder: false,
+              display: false
+            },
+            ticks: {
+              color: '#fff',
+              font: {
+                size: 12
+              },
+              padding: 10,
+              maxRotation: 45,
+              minRotation: 45
+            }
+          }
+        },
+        layout: {
+          padding: {
+            left: 10,
+            right: 25,
+            top: 20,
+            bottom: 10
+          }
+        }
+      }
+    });
   })
   .catch(error => {
     console.error('Error generating sales data:', error);
@@ -686,81 +863,285 @@ function generateReport(period,a,b) {
 }
 
 function exportToPDF() {
-  // Get the element to download
-  const element = document.getElementById('download');
+  // Get report data
+  const fromDate = document.getElementById('fromDate').value;
+  const toDate = document.getElementById('toDate').value;
+  const isCustomDateFilter = fromDate && toDate;
   
-  // Clone the element to modify it without affecting the original
-  const elementToConvert = element.cloneNode(true);
-  
-  // Remove the export buttons from the clone
-  const exportButtons = elementToConvert.querySelector('.mt-4.d-flex.justify-content-end');
-  if (exportButtons) {
-    exportButtons.remove();
-  }
+  // Get the current active period from the button
+  const activePeriodButton = document.querySelector('.btn-group .btn.active');
+  const currentPeriod = activePeriodButton ? activePeriodButton.textContent.trim() : 'Daily';
 
-  // Remove the report controls div
-  const reportControls = elementToConvert.querySelector('.report-controls');
-  if (reportControls) {
-    reportControls.remove();
-  }
-
-  // Configure the PDF options
-  const opt = {
-    margin: 0,
-    filename: 'sales-report.pdf',
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { 
-      scale: 2,
-      useCORS: true,
-      logging: false,
-      backgroundColor: '#000000' // Pure black background
+  const reportData = {
+    period: currentPeriod, // Always use the actual period
+    dateRange: {
+      from: fromDate,
+      to: toDate
     },
-    jsPDF: { 
-      unit: 'mm', 
-      format: 'a4', 
-      orientation: 'portrait'
+    summary: {
+      totalOrders: document.getElementById('totalOrders').textContent,
+      totalRevenue: document.getElementById('totalRevenue').textContent,
+      returnedOrders: document.getElementById('returnedOrders').textContent,
+      cancelledOrders: document.getElementById('cancelledOrders').textContent
     },
-    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    tableData: Array.from(document.querySelectorAll('#salesTable tbody tr')).map(row => ({
+      date: row.cells[0].textContent.trim(),
+      orders: row.cells[1].textContent.trim(),
+      totalSales: row.cells[2].textContent.trim(),
+      revenue: row.cells[3].textContent.trim(),
+      growth: row.cells[4].textContent.trim()
+    }))
   };
 
-  // Add background color preservation and full page height
-  elementToConvert.style.backgroundColor = '#191c24';
-  elementToConvert.style.padding = '20px';
-  elementToConvert.style.height = '296mm'; // A4 height
-  elementToConvert.style.width = '210mm'; // A4 width
-  elementToConvert.style.display = 'flex';
-  elementToConvert.style.flexDirection = 'column';
-
-  // Ensure all parent elements also have dark background
-  const allElements = elementToConvert.getElementsByTagName('*');
-  for (let el of allElements) {
-    const bg = window.getComputedStyle(el).backgroundColor;
-    if (bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent') {
-      el.style.backgroundColor = '#191c24';
+  // Create report info section
+  const reportInfoContent = [
+    {
+      text: [
+        { text: 'Report Type: ', style: 'reportLabel' },
+        { text: reportData.period, style: 'reportValue' }
+      ],
+      margin: [0, 20, 0, 10],
+      alignment: 'center'
     }
+  ];
+
+  // Add date range info if custom filter is active
+  if (isCustomDateFilter) {
+    reportInfoContent.push({
+      text: [
+        { text: 'Date Range: ', style: 'reportLabel' },
+        { 
+          text: `${new Date(fromDate).toLocaleDateString()} - ${new Date(toDate).toLocaleDateString()}`,
+          style: 'reportValue',
+          color: '#3498db'
+        }
+      ],
+      margin: [0, 0, 0, 30],
+      alignment: 'center'
+    });
+  } else {
+    // Add extra margin to the report type if no date range
+    reportInfoContent[0].margin = [0, 20, 0, 30];
   }
 
-  // Generate PDF
-  html2pdf().set(opt).from(elementToConvert).save()
-    .then(() => {
-      Swal.fire({
-        icon: 'success',
-        title: 'Success',
-        text: 'PDF downloaded successfully!',
-        background: '#191c24',
-        color: '#fff'
-      });
-    })
-    .catch(error => {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Failed to generate PDF',
-        background: '#191c24',
-        color: '#fff'
-      });
-      console.error('PDF generation error:', error);
+  const content = {
+    pageSize: 'A4',
+    pageMargins: [40, 60, 40, 60],
+    header: {
+      stack: [
+        {
+          text: 'SALES ANALYTICS REPORT',
+          style: 'mainHeader',
+          margin: [0, 20, 0, 0]
+        },
+        {
+          canvas: [
+            {
+              type: 'line',
+              x1: 40,
+              y1: 5,
+              x2: 515,
+              y2: 5,
+              lineWidth: 1,
+              lineColor: '#2c3e50'
+            }
+          ]
+        }
+      ]
+    },
+    footer: function(currentPage, pageCount) {
+      return {
+        stack: [
+          {
+            canvas: [
+              {
+                type: 'line',
+                x1: 40,
+                y1: -5,
+                x2: 515,
+                y2: -5,
+                lineWidth: 1,
+                lineColor: '#ecf0f1'
+              }
+            ]
+          },
+          {
+            columns: [
+              {
+                text: `Generated on ${new Date().toLocaleString()}`,
+                alignment: 'left',
+                margin: [40, 10, 0, 0],
+                fontSize: 8,
+                color: '#7f8c8d'
+              },
+              {
+                text: `Page ${currentPage} of ${pageCount}`,
+                alignment: 'right',
+                margin: [0, 10, 40, 0],
+                fontSize: 8,
+                color: '#7f8c8d'
+              }
+            ]
+          }
+        ]
+      };
+    },
+    content: [
+      ...reportInfoContent,
+      
+      // Rest of the content remains the same
+      {
+        columns: [
+          {
+            stack: [
+              { text: 'Total Orders', style: 'statLabel' },
+              { text: reportData.summary.totalOrders, style: 'statValue', color: '#3498db' }
+            ],
+            style: 'statBox'
+          },
+          {
+            stack: [
+              { text: 'Total Revenue', style: 'statLabel' },
+              { text: reportData.summary.totalRevenue, style: 'statValue', color: '#2ecc71' }
+            ],
+            style: 'statBox'
+          },
+          {
+            stack: [
+              { text: 'Returned Orders', style: 'statLabel' },
+              { text: reportData.summary.returnedOrders, style: 'statValue', color: '#e74c3c' }
+            ],
+            style: 'statBox'
+          },
+          {
+            stack: [
+              { text: 'Cancelled Orders', style: 'statLabel' },
+              { text: reportData.summary.cancelledOrders, style: 'statValue', color: '#e67e22' }
+            ],
+            style: 'statBox'
+          }
+        ],
+        columnGap: 20,
+        margin: [0, 0, 0, 40]
+      },
+      {
+        text: 'Sales Data Overview',
+        style: 'sectionHeader',
+        margin: [0, 0, 0, 15]
+      },
+      {
+        table: {
+          headerRows: 1,
+          widths: ['*', 'auto', 'auto', 'auto', 'auto'],
+          body: [
+            [
+              { text: 'Date', style: 'tableHeader' },
+              { text: 'Orders', style: 'tableHeader' },
+              { text: 'Total Sales', style: 'tableHeader' },
+              { text: 'Revenue', style: 'tableHeader' },
+              { text: 'Growth', style: 'tableHeader' }
+            ],
+            ...reportData.tableData.map((row, i) => [
+              { text: row.date, style: i % 2 === 0 ? 'tableCell' : 'tableCellAlt' },
+              { text: row.orders, style: i % 2 === 0 ? 'tableCell' : 'tableCellAlt', alignment: 'right' },
+              { text: row.totalSales, style: i % 2 === 0 ? 'tableCell' : 'tableCellAlt', alignment: 'right' },
+              { text: row.revenue, style: i % 2 === 0 ? 'tableCell' : 'tableCellAlt', alignment: 'right' },
+              {
+                text: row.growth,
+                style: i % 2 === 0 ? 'tableCell' : 'tableCellAlt',
+                color: row.growth.includes('+') ? '#27ae60' : row.growth.includes('-') ? '#c0392b' : '#2c3e50',
+                alignment: 'right',
+                bold: true
+              }
+            ])
+          ]
+        }
+      }
+    ],
+    styles: {
+      mainHeader: {
+        fontSize: 24,
+        bold: true,
+        alignment: 'center',
+        color: '#2c3e50'
+      },
+      reportLabel: {
+        fontSize: 12,
+        color: '#7f8c8d',
+        bold: true
+      },
+      reportValue: {
+        fontSize: 12,
+        color: '#2c3e50',
+        bold: true
+      },
+      sectionHeader: {
+        fontSize: 18,
+        bold: true,
+        color: '#2c3e50',
+        margin: [0, 0, 0, 10]
+      },
+      statBox: {
+        alignment: 'center',
+        margin: [0, 0, 0, 0],
+        backgroundColor: '#f8f9fa',
+        padding: 15,
+        borderRadius: 5
+      },
+      statLabel: {
+        fontSize: 12,
+        color: '#7f8c8d',
+        margin: [0, 0, 0, 5],
+        alignment: 'center'
+      },
+      statValue: {
+        fontSize: 22,
+        bold: true,
+        alignment: 'center'
+      },
+      tableHeader: {
+        fontSize: 12,
+        bold: true,
+        color: '#ffffff',
+        fillColor: '#34495e',
+        alignment: 'left',
+        margin: [5, 8, 5, 8]
+      },
+      tableCell: {
+        fontSize: 11,
+        color: '#2c3e50',
+        margin: [5, 8, 5, 8],
+        backgroundColor: '#ffffff'
+      },
+      tableCellAlt: {
+        fontSize: 11,
+        color: '#2c3e50',
+        margin: [5, 8, 5, 8],
+        backgroundColor: '#f8f9fa'
+      }
+    }
+  };
+
+  try {
+    pdfMake.createPdf(content).download(`Sales_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+    
+    Swal.fire({
+      icon: 'success',
+      title: 'Success',
+      text: 'Sales report PDF generated successfully!',
+      background: '#191c24',
+      color: '#fff'
     });
+  } catch (error) {
+    console.error('PDF generation error:', error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Failed to generate sales report PDF',
+      background: '#191c24',
+      color: '#fff'
+    });
+  }
 }
 
 function downloadExcel() {

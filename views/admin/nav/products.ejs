@@ -5,12 +5,11 @@
             <table class="table">
               <thead>
                 <tr>
-                  <th>image</th>
                   <th>name</th>
+                  <th>image</th>
                   <th>price</th>
                   <th>catogory</th>
-                  <th>count</th>
-                  <th>colors</th>
+                  <th>variants</th>
                   <th>rating</th>
                   <th>created at</th>
                   <th>Updated at</th>
@@ -25,15 +24,15 @@
         style="display: none;"
       <% } %> 
       id="row<%= index %>">
-                    <td><button onclick="showproductimages('<%= product.images[0] %>','<%= product.images[1] %>','<%= product.images[2] %>')" class="btn btn-primary">show</button></td>
                     <td><%= product.name %></td>
+                    <td><button onclick="showproductimages('<%= product.images[0] %>','<%= product.images[1] %>','<%= product.images[2] %>')" class="btn btn-primary">show</button></td>
                     <td><%= product.price %></td>
                     <td><%= product.category %></td>
-                    <td><%= product.count %></td>
-                    <td><%= product.colors %></td>
+                    <td><button onclick="showVariants(<%= JSON.stringify(product.variants) %>)" class="btn btn-info">Variants</button></td>
                     <td><%= product.rating %></td>
-                    <td><%= product.createdAt %></td>
-                    <td><%= product?.updatedAt %></td>
+                   
+                    <td><%= product.createdAt ? product.createdAt.toLocaleDateString() : '' %></td>
+                    <td><%= product.updatedAt ? product.updatedAt.toLocaleDateString() : '' %></td>
                     
                     <td><button onclick="updateprodcts('<%= product.name %>','<%= product.images[0] %>','<%= product.images[1] %>','<%= product.images[2] %>', <%= JSON.stringify(product.variants) %>)" class="btn btn-secondary btn-rounded">update</button></td>
                     <td>
@@ -196,10 +195,41 @@
                   }
               }
           }
+          
+          /* Add these styles for dark theme SweetAlert */
+          .swal-dark-theme {
+            background-color: #2d2d2d !important;
+          }
+          
+          .swal2-popup {
+            background-color: #2d2d2d !important;
+            color: #ffffff !important;
+          }
+          
+          .swal2-title, .swal2-content {
+            color: #ffffff !important;
+          }
+          
+          /* Add these styles for variants modal */
+          .variants-container::-webkit-scrollbar {
+            width: 8px;
+          }
+          
+          .variants-container::-webkit-scrollbar-track {
+            background: #1a1a1a;
+            border-radius: 4px;
+          }
+          
+          .variants-container::-webkit-scrollbar-thumb {
+            background: #6a558e;
+            border-radius: 4px;
+          }
+          
+         
           </style>
+          
           </div>
           <button 
     class="btn btn-danger position-fixed rounded-circle" 
     style="bottom: 10px; right: 10px; width: 40px; height: 40px;" 
     onclick="productadd()"> <i class="mdi mdi-plus"></i></button>
-      

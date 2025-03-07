@@ -65,10 +65,7 @@
                 to { opacity: 1; transform: translateY(0); }
             }
     
-            .cart-item:hover {
-                transform: translateY(-3px);
-                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-            }
+           
     
             .item-image {
                 width: 120px;
@@ -82,6 +79,7 @@
             .item-details {
                 flex: 1;
                 position: relative;
+                padding-bottom: 3rem;
             }
     
             .item-title {
@@ -265,6 +263,16 @@
                 animation: slideAndFade 0.5s ease-out forwards;
                 overflow: hidden;
             }
+    
+            .error-message {
+                color: #ff0000;
+                font-size: 0.9rem;
+                margin-top: 0.5rem;
+                display: none;
+                position: absolute;
+                top: 0;
+                right: 0;
+            }
         </style>
     </head>
 <body>
@@ -287,6 +295,7 @@
      
     <img src="<%= product.images[0] %>" alt="<%= product.name %>" class="item-image">
     <div class="item-details">
+        <div class="error-message">No stock available - please remove</div>
         <h2 class="item-title"><%= product.name %></h2>
         <p class="item-price">
             <% if (product.offer && product.offer > 0) { %>
@@ -322,27 +331,32 @@
             let totalItems = 0;
         
             products.forEach(product => {
-                const price = parseInt(product.price);
-                const quantity = parseInt(product.quantity);
-                const offer = product.offer || 0;
-        
-                totalWithoutOffers += price * quantity;
-                totalItems += quantity;
-        
-                // Calculate discount
-                if (offer > 0) {
-                    discount += (price * (offer / 100)) * quantity;
-                }
-        
-                // Calculate delivery charges
-                const discountedPricePerItem = price * (1 - (offer / 100));
-                if (discountedPricePerItem * quantity < 500) {
-                    deliveryCharges += 40 * quantity;
+                // Get actual quantity based on stock availability
+                const actualQuantity = product.quantity > product.varient.count ? product.varient.count : product.quantity;
+                
+                // Only calculate if there is stock available
+                if (actualQuantity > 0) {
+                    const price = parseInt(product.price);
+                    const offer = product.offer || 0;
+            
+                    totalWithoutOffers += price * actualQuantity;
+                    totalItems += actualQuantity;
+            
+                    // Calculate discount
+                    if (offer > 0) {
+                        discount += (price * (offer / 100)) * actualQuantity;
+                    }
+            
+                    // Calculate delivery charges
+                    const discountedPricePerItem = price * (1 - (offer / 100));
+                    if (discountedPricePerItem * actualQuantity < 500) {
+                        deliveryCharges += 40 ;
+                    }
                 }
             });
         
             const totalAmount = (totalWithoutOffers - discount) + deliveryCharges;
-        %>
+            %>
     <h2 style="margin-bottom: 1.5rem; font-size: 1.2rem; color: #1a1a1a;">Price Details</h2>
 
     <div class="price-row">
@@ -448,7 +462,7 @@
         // Calculate delivery charges
         const discountedPricePerItem = price * (1 - (offer / 100));
         if (discountedPricePerItem * quantity < 500) {
-            deliveryCharges += 40 * quantity;
+            deliveryCharges += 40 ;
         }
     });
 
@@ -472,6 +486,25 @@
     }
     // Checkout button handler
     document.querySelector('.checkout-btn').addEventListener('click', async () => {
+        // First clear any existing error messages
+        document.querySelectorAll('.error-message').forEach(msg => {
+            msg.style.display = 'none';
+        });
+
+        // Check for zero quantity items
+        let hasZeroQuantity = false;
+        document.querySelectorAll('.cart-item').forEach(item => {
+            const quantity = parseInt(item.querySelector('.quantity').textContent);
+            if (quantity <= 0) {
+                hasZeroQuantity = true;
+                item.querySelector('.error-message').style.display = 'block';
+            }
+        });
+
+        if (hasZeroQuantity) {
+            return; // Stop checkout process if there are zero quantity items
+        }
+
         const cartItems = {};
         
         // Collect all product IDs and quantities

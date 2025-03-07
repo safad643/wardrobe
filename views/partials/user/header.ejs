@@ -429,6 +429,7 @@
     z-index: 1000;
     max-height: 400px;
     overflow-y: auto;
+    padding: 8px 0;
 }
 
 .suggestion-item {
@@ -437,11 +438,35 @@
     align-items: center;
     gap: 12px;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: all 0.3s ease;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
 }
 
 .suggestion-item:hover {
     background-color: var(--primary-light);
+}
+
+.suggestion-item.no-results {
+    color: #666;
+    text-align: center;
+    padding: 20px;
+    justify-content: center;
+}
+
+.suggestion-item.show-all {
+    color: var(--primary-dark);
+    font-weight: 600;
+    justify-content: center;
+    background-color: var(--primary-light);
+}
+
+.suggestion-item.show-all:hover {
+    background-color: var(--primary-light);
+    opacity: 0.9;
 }
 
 .suggestion-image {
@@ -482,6 +507,34 @@
         margin: 0.5rem 0;
         width: 100%;
     }
+}
+
+.search-results-container {
+    margin-top: 20px;
+    width: 100%;
+}
+
+.search-result-card {
+    background: white;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.show-all-btn {
+    display: block;
+    margin: 20px auto;
+    padding: 10px 20px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.show-all-btn:hover {
+    background: #0056b3;
 }
 	</style>
 		<meta charset="utf-8">
@@ -568,7 +621,7 @@
 						<div class="search-container">
 							<form action="/search" method="GET" class="search-form">
 								<input 
-                                oninput="SFSP()"
+                                oninput="typeof SFSP !== 'undefined' ? SFSP() : typeof sfsp !== 'undefined' ? sfsp() : ''"
 									type="text" 
 									name="q" 
 									id="searchInput"
@@ -590,14 +643,12 @@
 							<li class="dropdown">
 								<a href="/products"><i class="fas fa-tshirt"></i> All Products <i class="fas fa-chevron-down"></i></a>
 								<div class="dropdown-content">
-									<a href="/men"><i class="fas fa-male"></i> Men's Wear</a>
-									<a href="/women"><i class="fas fa-female"></i> Women's Wear</a>
-									<a href="/kids"><i class="fas fa-child"></i> Kids Wear</a>
+									
 								</div>
 							</li>
-							<li><a href="/new-arrivals"><i class="fas fa-star"></i> New Arrivals</a></li>
+							
 			
-							<li><a href="/deals"><i class="fas fa-tags"></i> Deals</a></li>
+				
 						</ul>
 					</nav>
 					<div class="header-actions">
@@ -622,17 +673,50 @@
 		</div>
 
 		<script>
-            			async function SFSP(page = 1) {
+            			async function sfsp() {
+                      
+                            
                 const search = document.getElementById('searchInput').value;
-                const filter = document.getElementById('categorySelect').value;
-                const sort = document.getElementById('sortSelect').value;
+                const searchSuggestions = document.getElementById('searchSuggestions');
+                
+              if(!search){
+                searchSuggestions.style.display = 'none';
+                return;
+              }
 
                 try {
-                    const response = await fetch(`/user/search?search=${search}&filter=${filter}&sort=${sort}&page=${page}`);
+                    const response = await fetch(`/user/search?search=${search}&page=1`);
                     const data = await response.json();
-                    console.log(data);
+                    
+                    if (data.products && data.products.length > 0) {
+                        // Show only first 2 results
+                        const limitedProducts = data.products.slice(0, 2);
+                        let html = limitedProducts.map(product => `
+                            <div class="suggestion-item" onclick="window.location.href='/user/product/${product.name}'">
+                                <img src="${product.image}" alt="${product.name}" class="suggestion-image">
+                                <div class="suggestion-content">
+                                    <div class="suggestion-text">${product.name}</div>
+                                    <div class="suggestion-category">₹${product.offerPrice || product.price}</div>
+                                </div>
+                            </div>
+                        `).join('');
+
+                        // Add "Show All Results" button
+                        html += `
+                            <div class="suggestion-item show-all" onclick="SFSP(1)">
+                                Show All Results
+                            </div>
+                        `;
+
+                        searchSuggestions.innerHTML = html;
+                        searchSuggestions.style.display = 'block';
+                    } else {
+                        searchSuggestions.innerHTML = '<div class="suggestion-item no-results">No results found</div>';
+                        searchSuggestions.style.display = 'block';
+                    }
                 } catch (error) {
                     console.error('Error fetching search results:', error);
+                    searchSuggestions.style.display = 'none';
                 }
             }
 	
@@ -687,6 +771,23 @@
             document.querySelectorAll('.action-badge')[0].textContent = data.wishlistcount
             document.querySelectorAll('.action-badge')[1].textContent = data.cartcount
         })
+
+		// Fetch categories and populate dropdown
+		fetch('/user/categories')
+		.then(res => res.json())
+		.then(categories => {
+          
+			const dropdownContent = document.querySelector('.dropdown-content');
+			categories.forEach(category => {
+				const link = document.createElement('a');
+				link.href = `/user/shop/${encodeURIComponent(category.name)}`;
+				link.textContent = category.name;
+				dropdownContent.appendChild(link);
+			});
+		})
+		.catch(err => {
+			console.error('Error fetching categories:', err);
+		});
 		</script>
 	</body>
 </html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <div >
+        asodiugsauydjhgfsva
+    </div>
+</body>
+   
+    
+    <script>
+        
+        function exportTableToPDF(tableElement, filename = 'table-report.pdf') {
+  if (!tableElement) {
+    console.error('No table element provided');
+    return;
+  }
+
+  // Clone the table to avoid modifying the original
+  const tableClone = tableElement.cloneNode(true);
+
+  // Remove unnecessary elements like export buttons and controls
+  const exportButtons = tableClone.querySelector('.mt-4.d-flex.justify-content-end');
+  if (exportButtons) exportButtons.remove();
+
+  const reportControls = tableClone.querySelector('.report-controls');
+  if (reportControls) reportControls.remove();
+
+  // Configure PDF options
+  const opt = {
+    margin: 0,
+    filename,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { 
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff' // Pure white background
+    },
+    jsPDF: { 
+      unit: 'mm', 
+      format: 'a4', 
+      orientation: 'portrait'
+    },
+    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+  };
+
+  // Style adjustments for proper rendering
+  tableClone.style.backgroundColor = '#ffffff';
+  tableClone.style.padding = '20px';
+  tableClone.style.width = '210mm'; // A4 width
+  tableClone.style.display = 'flex';
+  tableClone.style.flexDirection = 'column';
+
+  // Ensure all parent elements have a white background
+  const allElements = tableClone.getElementsByTagName('*');
+  for (let el of allElements) {
+    const bg = window.getComputedStyle(el).backgroundColor;
+    if (bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent') {
+      el.style.backgroundColor = '#ffffff';
+    }
+  }
+
+  // Generate PDF
+  html2pdf().set(opt).from(tableClone).save()
+    .then(() => {
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: 'PDF downloaded successfully!',
+        background: '#191c24',
+        color: '#fff'
+      });
+    })
+    .catch(error => {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to generate PDF',
+        background: '#191c24',
+        color: '#fff'
+      });
+      console.error('PDF generation error:', error);
+    });
+}
+
+    </script>
+</body>
+</html>

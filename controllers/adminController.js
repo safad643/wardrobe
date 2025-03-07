@@ -270,6 +270,7 @@ const productaddload = async (req, res) => {
 
     // Create initial document
     req.body.list = true;
+    req.body.createdAt = new Date();
     const result = await db.collection("products").insertOne(req.body);
     const productId = result.insertedId;
 
@@ -309,7 +310,6 @@ const productaddload = async (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 };
-
 const productupdate = async (req, res) => {
   try {
     const db = await mongo();
@@ -378,6 +378,9 @@ const productupdate = async (req, res) => {
         );
       }
     }
+
+    // Add updatedAt timestamp
+    req.body.updatedAt = new Date();
 
     // Update other product fields
     await db.collection("products").updateOne(

@@ -1,12 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Failed</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+        }
+        .container {
+            text-align: center;
+            padding: 3rem;
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            max-width: 500px;
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        .icon {
+            font-size: 64px;
+            margin-bottom: 1.5rem;
+            animation: shake 0.5s ease-in-out;
+        }
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-20deg); }
+            75% { transform: rotate(20deg); }
+        }
+        .title {
+            color: #2d3748;
+            margin-bottom: 1.5rem;
+            font-size: 2.2rem;
+            font-weight: 600;
+        }
+        .message {
+            color: #4a5568;
+            margin-bottom: 2rem;
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 28px;
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(66, 153, 225, 0.2);
+        }
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(66, 153, 225, 0.3);
+            background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+        }
+        .button:active {
+            transform: translateY(0);
+        }
+        .support-text {
+            margin-top: 1.5rem;
+            color: #718096;
+            font-size: 0.9rem;
+        }
+        .support-link {
+            color: #4299e1;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .support-link:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-  <button onclick="razorpay(200000)">Pay</button>
+    <div class="container">
+        <div class="icon">😕</div>
+        <h1 class="title">Payment Failed</h1>
+        <p class="message">
+            No worries! We've safely saved your order in our system.<br>
+            You can easily try the payment again whenever you're ready.
+        </p>
+        <a href="/order-history" class="button">Try Payment Again</a>
+        <p class="support-text">
+            Need help? <a href="/support" class="support-link">Contact our support team</a>
+        </p>
+    </div>
 </body>
-
 </html>
