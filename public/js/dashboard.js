@@ -149,13 +149,7 @@ function loadusermanagment(){
   .catch(err=>console.log(err))
 }
 function dashboard(){
-  fetch('dashboard',{method:'get'})
-  .then((r)=>r.text())
-  .then((html)=>{ 
-    document.querySelector('.main-panel').innerHTML=html
-    setActiveNavItem('dashboard')
-  })
-  .catch(err=>console.log(err))
+  window.location.reload()
 }
 
 function productload(){

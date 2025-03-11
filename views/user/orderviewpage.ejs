@@ -79,6 +79,50 @@
             display: flex;
             gap: 2rem;
             font-size: 0.9rem;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 0.5rem 0;
+        }
+
+        .order-id, .order-date, .payment-method {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: fit-content;
+        }
+
+        .payment-method .value {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.3rem 0.8rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            height: fit-content;
+            white-space: nowrap;
+        }
+
+        .label {
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .payment-method i {
+            color: #666;
+        }
+
+        /* Payment method specific colors */
+        .payment-method[data-method="cod"] i {
+            color: #28a745;  /* Green for COD */
+        }
+
+        .payment-method[data-method="wallet"] i {
+            color: #007bff;  /* Blue for Wallet */
+        }
+
+        .payment-method[data-method="razorpay"] i {
+            color: #17a2b8;  /* Cyan for Razorpay */
         }
 
         .product-section {
@@ -956,6 +1000,30 @@
     color: white !important;
     box-shadow: 0 5px 15px rgba(103, 114, 229, 0.3) !important;
 }
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .order-meta {
+        gap: 1rem;
+        justify-content: flex-start;
+    }
+
+    .order-id, .order-date, .payment-method {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .order-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .payment-method .value {
+        padding: 0.25rem 0.6rem;
+    }
+}
     </style>
 <%- include("../partials/user/header") %>
 
@@ -975,6 +1043,18 @@
                         <div class="order-date">
                             <span class="label">Ordered on:</span>
                             <span class="value"><%= new Date(order.createdAt).toLocaleDateString() %></span>
+                        </div>
+                        <div class="payment-method" data-method="<%= order.paymentMethod %>">
+                            <span class="label">Payment:</span>
+                            <span class="value">
+                                <% if (order.paymentMethod === 'cod') { %>
+                                    <i class="fas fa-money-bill-wave"></i> Cash on Delivery
+                                <% } else if (order.paymentMethod === 'wallet') { %>
+                                    <i class="fas fa-wallet"></i> Wallet
+                                <% } else if (order.paymentMethod === 'razorpay') { %>
+                                    <i class="fas fa-credit-card"></i> Razorpay
+                                <% } %>
+                            </span>
                         </div>
                     </div>
                     
@@ -1553,41 +1633,7 @@
                 otherReasonInput.style.display = 'none';
                 otherReasonInput.classList.remove('show');
             }
-        }})
-        const orderTrackerTemplate = `
-            <div class="order-status-tracker" data-status="pending" style="--progress-width: 15%;">
-                <div class="status-step active">
-                    <div class="status-icon">
-                        <i class="fas fa-clipboard-check"></i>
-                    </div>
-                    <div class="status-label">Order Placed</div>
-                </div>
-                <div class="status-step">
-                    <div class="status-icon">
-                        <i class="fas fa-cog"></i>
-                    </div>
-                    <div class="status-label">Processing</div>
-                </div>
-                <div class="status-step">
-                    <div class="status-icon">
-                        <i class="fas fa-truck"></i>
-                    </div>
-                    <div class="status-label">Shipped</div>
-                </div>
-                <div class="status-step">
-                    <div class="status-icon">
-                        <i class="fas fa-box-open"></i>
-                    </div>
-                    <div class="status-label">Delivered</div>
-                </div>
-            </div>
-        `;
-
-        const cancelButtonTemplate = `
-            <button class="cancel-btn" data-bs-toggle="modal" data-bs-target="#cancelModal">
-                <i class="fas fa-times-circle"></i> Cancel Order
-            </button>
-        `;
+        }
 
         async function retryPayment(orderid){
             const result = await Swal.fire({

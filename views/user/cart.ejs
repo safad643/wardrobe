@@ -383,6 +383,7 @@
 </div>
     </div>
 </body>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     // Get user ID from EJS
     const userId = '<%= userid %>'; 
@@ -486,6 +487,18 @@
     }
     // Checkout button handler
     document.querySelector('.checkout-btn').addEventListener('click', async () => {
+        // Check if cart is empty
+        const cartItemselement = document.querySelectorAll('.cart-item');
+        if (cartItemselement.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Empty Cart',
+                text: 'Your cart is empty. Please add items before checking out.',
+                confirmButtonColor: '#FFD700'
+            });
+            return;
+        }
+
         // First clear any existing error messages
         document.querySelectorAll('.error-message').forEach(msg => {
             msg.style.display = 'none';

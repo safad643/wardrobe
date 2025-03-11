@@ -1777,7 +1777,7 @@ async function addmoney(event){
 async function razorpay(amount){
       return new Promise((resolve, reject) => {
         var options = {
-            key: "rzp_test_PdAFPaTa6RKOxW", 
+            key: "rzp_test_e3wiAeWDzGn9sG", 
             amount: amount*100, 
             currency: "INR",
             name: "Your Company Name",
@@ -1876,13 +1876,14 @@ function retryPayment(orderId, amount) {
 }
 
     </script>
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+   
+</body>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <!-- Add this right before </body> in profile.ejs -->
 <script src="/user/js/vendor/jquery-3.6.0.min.js"></script>
 <script src="/user/js/vendor/jquery-migrate-3.3.2.min.js"></script>
 <script src="/user/js/bootstrap.bundle.min.js"></script>
 <script src="/user/js/jquery.meanmenu.js"></script>
 <script src="/user/js/main.min.js"></script>
-</body>
 </html>

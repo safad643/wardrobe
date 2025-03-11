@@ -198,11 +198,8 @@ const loadshop = async (req, res) => {
   try {
     const db = await mongo();
     const categories = await db.collection("catogories").find({}).toArray();
-    const products = await db
-      .collection("products")
-      .find({ list: true })
-      .toArray();
-    res.render("user/catogory", { categories, products, user: true });
+   
+    res.render("user/catogory", { categories, user: true });
   } catch (error) {
     console.error("Error in loadshop:", error);
     res.status(500).send("Internal Server Error");
@@ -633,6 +630,37 @@ const placeOrder = async (req, res) => {
         });
       }
     }
+
+    // Check stock availability for all products
+    const outOfStockProducts = [];
+    for (const product of products) {
+      const dbProduct = await db.collection("products").findOne({
+        _id: new ObjectId(product.productId),
+        "variants": {
+          $elemMatch: {
+            "size": product.size,
+            "color": product.color,
+            "count": { $gte: product.quantity }
+          }
+        }
+      });
+
+      if (!dbProduct) {
+        const productDetails = await db.collection("products").findOne({
+          _id: new ObjectId(product.productId)
+        });
+        outOfStockProducts.push(productDetails.name);
+      }
+    }
+
+    if (outOfStockProducts.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: "Some products are out of stock",
+        outOfStockProducts
+      });
+    }
+
     // If coupon exists, check if user has used it before
     if (coupon) {
       const user = await db
@@ -682,18 +710,6 @@ const placeOrder = async (req, res) => {
         discount: updatedCoupon.discountValue,
         code: updatedCoupon.code,
       };
-    }
-
-    // Check stock availability for all products
-    for (const pair of products) {
-      const product = await db
-        .collection("products")
-        .findOne({ _id: new ObjectId(pair["productId"]) });
-      if (product.count === 0) {
-        return res
-          .status(400)
-          .json({ stockIssue: true, productId: product._id });
-      }
     }
 
     // Update product counts
@@ -1303,7 +1319,7 @@ const search = async (req, res) => {
   try {
     const db = await mongo();
     const { search, filter, sort, page = 1 } = req.query;
-    const itemsPerPage = 8;
+    const itemsPerPage = 4;
     
     // Build match stage
     let matchStage = { list: true };

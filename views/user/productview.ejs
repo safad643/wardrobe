@@ -563,6 +563,25 @@
 					.variant-error.show {
 							display: block;
 					}
+
+					.out-of-stock-message {
+							text-align: center;
+							padding: 20px;
+							background: #fff5f5;
+							border-radius: 8px;
+							margin: 20px 0;
+					}
+
+					.out-of-stock-message h3 {
+							color: #dc3545;
+							margin-bottom: 10px;
+							font-size: 24px;
+					}
+
+					.out-of-stock-message p {
+							color: #666;
+							margin: 0;
+					}
 		</style>
 
 	 		
@@ -769,6 +788,7 @@
 									<div class="single-product clearfix">
 										<!-- Single-pro-slider Big-photo start -->
 										<div class="single-pro-slider single-big-photo view-lightbox slider-for">
+										
 											<% for (let i = 0; i < 3; i++) { %>
 												<% const imageField = `image${i}`; %>
 												<div style="position: relative;">
@@ -821,53 +841,61 @@
 								
 											<!-- Color Section -->
 											<div class="color-filter single-pro-color mb-20 clearfix">
-												<div class="filter-header">
-													<ul>
-														<li><span class="color-title text-capitalize">color</span></li>
-													</ul>
-													
-												</div>
-												<ul>
-													<% 
+												<% 
+												// Filter out variants with count > 0 and get unique colors
+												const inStockVariants = product.variants.filter(v => v.count > 0);
+												const uniqueColors = [...new Set(inStockVariants.map(variant => variant.color))];
 												
-													const uniqueColors = [...new Set(product.variants.map(variant => variant.color))];
-													uniqueColors.forEach((color, index) => { 
-													%>
-														<li>
-															<a onclick="selectvarient(event)" data-color="<%= color %>" class="color-option <%= index === 0 ? 'active' : '' %>" >
-																<span data-color="<%= color %>" class="color" style="background-color: <%= color.toLowerCase() %>"></span>
-															</a>
-														</li>
-													<% }); %>
-												</ul>
+												if (inStockVariants.length === 0) { %>
+													<div class="out-of-stock-message">
+														<h3>Out of Stock</h3>
+														<p>This product is currently unavailable</p>
+													</div>
+												<% } else { %>
+													<div class="filter-header">
+														<ul>
+															<li><span class="color-title text-capitalize">color</span></li>
+														</ul>
+													</div>
+													<ul>
+														<% uniqueColors.forEach((color, index) => { %>
+															<li>
+																<a onclick="selectvarient(event)" data-color="<%= color %>" class="color-option <%= index === 0 ? 'active' : '' %>">
+																	<span data-color="<%= color %>" class="color" style="background-color: <%= color.toLowerCase() %>"></span>
+																</a>
+															</li>
+														<% }); %>
+													</ul>
+												<% } %>
 											</div>
 								
 											<!-- Size Section -->
 											<div class="size-filter single-pro-size mb-35 clearfix">
-												<span class="color-title text-capitalize">size</span>
-												<div class="size-options-container">
-													<% 
-													// Get unique sizes
-													const uniqueSizes = [...new Set(product.variants.map(variant => variant.size))];
-													uniqueSizes.forEach((size, index) => { 
-													%>
-														<div class="size-option-wrapper">
-															<input type="radio" 
-																   id="size-<%= size %>" 
-																   name="size" 
-																   value="<%= size %>" 
-																   class="size-radio" 
-																   <%= index === 0 ? 'checked' : '' %>
-																   onchange="selectvarient(event, 'size')">
-															<label for="size-<%= size %>" 
-																   class="size-option <%= index === 0 ? 'active' : '' %>" 
-																   data-size="<%= size %>">
-																<%= size %>
-															</label>
-														</div>
-													<% }); %>
-												</div>
-												<div id="variantError" class="variant-error">Please select both color and size</div>
+												<% if (inStockVariants.length > 0) { %>
+													<span class="color-title text-capitalize">size</span>
+													<div class="size-options-container">
+														<% 
+														// Get unique sizes from in-stock variants
+														const uniqueSizes = [...new Set(inStockVariants.map(variant => variant.size))];
+														uniqueSizes.forEach((size, index) => { 
+														%>
+															<div class="size-option-wrapper">
+																<input type="radio" 
+																	   id="size-<%= size %>" 
+																	   name="size" 
+																	   value="<%= size %>" 
+																	   class="size-radio" 
+																	   <%= index === 0 ? 'checked' : '' %>
+																	   onchange="selectvarient(event, 'size')">
+																<label for="size-<%= size %>" 
+																	   class="size-option <%= index === 0 ? 'active' : '' %>" 
+																	   data-size="<%= size %>">
+																	<%= size %>
+																</label>
+															</div>
+														<% }); %>
+													</div>
+												<% } %>
 											</div>
 								<!-- new start -->
 											<!-- Quantity and Actions -->
@@ -877,22 +905,24 @@
 													
 													<div class="product-actions">
 														
-														<a class="luxury-button cart-btn" 
+														<% if (inStockVariants.length > 0) { %>
+															<a class="luxury-button cart-btn" 
 																<% if (userid) { %>
 																		href="javascript:void(0);" 
 																		onclick="addtocart('<%= userid %>','<%= product._id %>'); return false;"
 																<% } else { %>
 																		href="/user/login"
 																<% } %>
-														>
-																<i class="zmdi zmdi-shopping-cart"></i>
-																ADD TO CART
+															>
+																	<i class="zmdi zmdi-shopping-cart"></i>
+																	ADD TO CART
+															</a>
+															<a onclick="<%= userid ? `buy('${product._id}')` : `window.location.href='/user/login'` %>" class="luxury-button buynow-btn">
+																BUY NOW
 														</a>
-														<a onclick="<%= userid ? `buy('${product._id}')` : `window.location.href='/user/login'` %>" class="luxury-button buynow-btn">
-															BUY NOW
-													</a>
-													
-												</div>
+														<% } %>
+															
+													</div>
 												</div>
 										
 										<style>
@@ -1409,15 +1439,15 @@
 
 
 	function addtocart(userid, productid) {
-		const errorDiv = document.getElementById('variantError');
-		if(!(Object.keys(varienttosend).length === 2)){
-			errorDiv.classList.add('show');
+		// Check if both color and size are selected
+		if (!varienttosend.color || !varienttosend.size) {
+			showCustomAlert('Please select both color and size');
 			return;
 		}
-		errorDiv.classList.remove('show');
+		
 		fetch('/user/addtocart', {
 			method: 'post',
-			body: JSON.stringify({ productid, userid,varient:varienttosend }),
+			body: JSON.stringify({ productid, userid, varient:varienttosend }),
 			headers: { 'Content-Type': 'application/json' }
 		})
 		.then(response => response.json())
@@ -1435,12 +1465,12 @@
 	}
 
 	function buy(id) {
-		const errorDiv = document.getElementById('variantError');
-		if(!(Object.keys(varienttosend).length === 2)){
-			errorDiv.classList.add('show');
+		// Check if both color and size are selected
+		if (!varienttosend.color || !varienttosend.size) {
+			showCustomAlert('Please select both color and size');
 			return;
 		}
-		errorDiv.classList.remove('show');
+
 		const cartItems = {};
 		cartItems['1'] = {
 				productId: id,
@@ -1584,12 +1614,15 @@
 		}
 	});
 
-	let varienttosend={};
-const varients=<%- JSON.stringify(product.variants)%>
+	let varienttosend = {};
+	const varients = <%- JSON.stringify(product.variants.filter(v => v.count > 0)) %>;
+
 	function selectvarient(event, varient) {
+		if (!varients.length) return; // Exit if no in-stock variants
+		
 		if(varient === 'size') {
 			// Handle size selection
-			const selectedsize = event.target.value
+			const selectedsize = event.target.value;
 			varienttosend.size = selectedsize;
 			
 			// Update size options UI
@@ -1614,8 +1647,10 @@ const varients=<%- JSON.stringify(product.variants)%>
 			// Add active class to clicked color
 			event.target.closest('.color-option').classList.add('active');
 
-			// Filter variants that match the selected color
-			const matchingVariants = varients.filter(variant => variant.color === selectedColor);
+			// Filter variants that match the selected color and have stock
+			const matchingVariants = varients.filter(variant => 
+				variant.color === selectedColor && variant.count > 0
+			);
 			const availableSizes = matchingVariants.map(variant => variant.size);
 			
 			// Update size options - disable unavailable sizes

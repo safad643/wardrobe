@@ -795,8 +795,9 @@
 
 .toast {
     position: fixed;
-    top: 20px;
-    right: 20px;
+    bottom: 20px;  /* Changed from top to bottom */
+    left: 50%;     /* Added left positioning */
+    transform: translateX(-50%) translateY(100px); /* Center horizontally and start below screen */
     padding: 1rem 1.5rem;
     background-color: #333;
     color: white;
@@ -804,13 +805,12 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     z-index: 1000;
     opacity: 0;
-    transform: translateY(-20px);
     transition: all 0.3s ease;
 }
 
 .toast.show {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(-50%) translateY(0); /* Keep horizontal centering while moving up */
 }
         </style>
     </head>
@@ -959,14 +959,14 @@
                                         <span>Size: <%= product.size %></span>
                                     </div>
                                     <div class="quantity-control">
-                                        <button class="qty-btn minus" onclick="adjustQuantity(this, -1,'<%= product.count %>')">
+                                        <button class="qty-btn minus" onclick="adjustQuantity(this, -1, '<%= product.variants.find(v => v.color === product.color && v.size === product.size)?.count || 0 %>')">
                                             <i class="fas fa-minus"></i>
                                         </button>
                                         <span class="qty-display" 
                                             data-price="<%= product.price %>"
                                             data-product-id="<%= product._id %>"
                                             data-offer="<%= product.offer%>"><%=product.quantity%></span>
-                                        <button class="qty-btn plus" onclick="adjustQuantity(this, 1,'<%= product.count %>')">
+                                        <button class="qty-btn plus" onclick="adjustQuantity(this, 1, '<%= product.variants.find(v => v.color === product.color && v.size === product.size)?.count || 0 %>')">
                                             <i class="fas fa-plus"></i>
                                         </button>
                                     </div>
@@ -975,7 +975,7 @@
                                         <span class="item-total">₹<%= product.price %></span>
                                     </div>
                                     <div class="out-of-stock-message" style="display: none;">
-                                        Out of stock - Remove this product to proceed
+                                        Please reduce quantity or remove item - Limited stock 
                                     </div>
                                 </div>
                             </div>
@@ -1315,10 +1315,30 @@ async function placeOrder(from) {
             })
             }
             const html = await response.text();
-            document.documentElement.innerHTML = html; // Assuming your success response includes a redirect URL
+            document.documentElement.innerHTML = html;
         } else {
-            const errorHtml = await response.text();
-            document.documentElement.innerHTML = errorHtml;
+            // Handle error response
+            const errorData = await response.json();
+            if (errorData.outOfStockProducts) {
+                // Clear previous error states
+                document.querySelectorAll('.out-of-stock-message').forEach(msg => {
+                    msg.style.display = 'none';
+                });
+                
+                // Show error for each out of stock product
+                errorData.outOfStockProducts.forEach(productName => {
+                    const productElements = document.querySelectorAll('.product-name');
+                    productElements.forEach(element => {
+                        if (element.textContent.trim() === productName) {
+                            const orderItem = element.closest('.order-item');
+                            const outOfStockMsg = orderItem.querySelector('.out-of-stock-message');
+                            outOfStockMsg.style.display = 'block';
+                        }
+                    });
+                });
+            } else {
+                alert('Failed to place order: ' + (errorData.error || 'Unknown error'));
+            }
         }
     } catch (error) {
         console.error('Error:', error);
@@ -1395,12 +1415,20 @@ function adjustQuantity(button, change, max) {
     const currentQty = parseInt(qtyDisplay.textContent);
     
     // Check both max stock (from variants) and absolute limit of 5
-    const maxAllowed = Math.min(parseInt(max) || 5, 5);
+    
+    const maxStock = parseInt(max);
     
     // For increment
     if (change > 0) {
-        if (currentQty >= maxAllowed) {
-            showToast(`Max quntity reached`);
+        // Check stock limit first
+        if (currentQty >= maxStock) {
+            showToast(`Only ${maxStock} items in stock`);
+            return;
+        }
+        
+        // Then check order limit of 5
+        if (currentQty >= 5) {
+            showToast('Cannot buy more than 5 quantity');
             return;
         }
     }
