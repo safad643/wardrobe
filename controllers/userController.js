@@ -82,16 +82,23 @@ const otpverify = async (req, res) => {
       } else {
         const db = await mongo();
         data.createdAt = new Date().toDateString();
+        let a=''
         const doc = db
           .collection("users")
           .insertOne(data)
           .then((data) => {
+            a=data.insertedId
             req.session.uid = data.insertedId;
             req.session.save();
           });
 
-        console.log(req.session.uid);
+        console.log(a);
+        db.collection('wallet').insertOne({
+         
 
+          userId:a,
+          balance: 0
+        })
         req.session.user = true;
         res.redirect("home");
       }
@@ -611,6 +618,7 @@ const addadress = async (req, res) => {
 };
 
 const placeOrder = async (req, res) => {
+  
   try {
     const db = await mongo();
     const { addressId, paymentMethod, products, totals, coupon } = req.body;
@@ -778,7 +786,7 @@ const placeOrder = async (req, res) => {
     }
 
     if (paymentMethod === 'razorpay' && paymentStatus === 'pending') {
-      res.render("user/checkoutfailed");
+      res.render("user/checkoutfailed",{id:result.insertedId});
     } else {
       res.render("user/checkoutsuccess", { id: result.insertedId });
     }

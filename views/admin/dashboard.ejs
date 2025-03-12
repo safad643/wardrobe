@@ -302,7 +302,7 @@
                     </div>
                   </a>
                   <div class="dropdown-divider"></div>
-                  <a class="dropdown-item preview-item">
+                  <a href="/admin/logout" class="dropdown-item preview-item">
                     <div class="preview-thumbnail">
                       <div class="preview-icon bg-dark rounded-circle">
                         <i class="mdi mdi-logout text-danger"></i>
@@ -445,6 +445,58 @@
                       <button class="btn btn-outline-light" onclick="downloadExcel()">
                         <i class="mdi mdi-file-excel text-success"></i> Export Excel
                       </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-12 grid-margin">
+                <div class="card">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                      <h4 class="card-title mb-0">
+                        <i class="mdi mdi-crown text-warning"></i> 
+                        Best Sellers
+                      </h4>
+                      <div class="btn-group">
+                        <button type="button" class="btn btn-outline-primary active" onclick="switchBestSeller('category')">
+                          <i class="mdi mdi-format-list-bulleted"></i> Categories
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" onclick="switchBestSeller('product')">
+                          <i class="mdi mdi-package-variant"></i> Products
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Best Selling Categories Table -->
+                    <div id="bestCategories" class="table-responsive">
+                      <table class="table table-dark table-hover">
+                        <thead>
+                          <tr>
+                            <th>Category</th>
+                            <th>Total Orders</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <!-- Data will be populated dynamically -->
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <!-- Best Selling Products Table -->
+                    <div id="bestProducts" class="table-responsive" style="display: none;">
+                      <table class="table table-dark table-hover">
+                        <thead>
+                          <tr>
+                            <th>Product Name</th>
+                            <th>Total Orders</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <!-- Data will be populated dynamically -->
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 </div>
@@ -1186,6 +1238,80 @@ function customdatereport(){
     generateReport(period,fromDate,toDate);
   }
 }
+
+function switchBestSeller(table) {
+  // Remove active class from all buttons
+  document.querySelectorAll('.btn-group .btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  
+  // Add active class to clicked button
+  const clickedButton = document.querySelector(`.btn-group .btn[onclick="switchBestSeller('${table}')"]`);
+  if (clickedButton) {
+    clickedButton.classList.add('active');
+  }
+
+  // Show/hide appropriate table
+  document.getElementById('bestCategories').style.display = table === 'category' ? 'block' : 'none';
+  document.getElementById('bestProducts').style.display = table === 'product' ? 'block' : 'none';
+
+  fetch(`/admin/switchbestSeller?table=${table}`)
+    .then(response => response.json())
+    .then(data => {
+      console.log('Received data:', data); // Debug log
+
+      if (table === 'category') {
+        // Update categories table
+        const categoriesBody = document.querySelector('#bestCategories table tbody');
+        if (!categoriesBody) {
+          console.error('Categories table body not found');
+          return;
+        }
+        
+        if (data && Array.isArray(data.categories)) {
+          categoriesBody.innerHTML = data.categories.map(category => `
+            <tr>
+              <td>${category.name}</td>
+              <td>${category.orders}</td>
+            </tr>
+          `).join('');
+        } else {
+          console.error('Expected object with categories array, got:', typeof data);
+          throw new Error('Invalid data format for categories');
+        }
+      } else {
+        // Update products table
+        const productsBody = document.querySelector('#bestProducts table tbody');
+        if (!productsBody) {
+          console.error('Products table body not found');
+          return;
+        }
+        
+        if (data && Array.isArray(data.products)) {
+          productsBody.innerHTML = data.products.map(product => `
+            <tr>
+              <td>${product.name}</td>
+              <td>${product.orders}</td>
+            </tr>
+          `).join('');
+        } else {
+          console.error('Expected object with products array, got:', data);
+          throw new Error('Invalid data format for products');
+        }
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching best seller data:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to load best seller data',
+        background: '#191c24',
+        color: '#fff'
+      });
+    });
+}
+switchBestSeller('category');
 generateReport('daily');
 </script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>

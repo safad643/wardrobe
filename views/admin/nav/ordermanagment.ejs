@@ -28,15 +28,19 @@
                   <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
                   <td><%= Math.floor(order.total) %></td>
                   <td>
-                      <select class="form-select delivery-status" 
-                              id="delivery<%= order.orderId.toString() %>_<%= order.productId %>"
-                              onchange="updateProductStatus('<%= order.orderId.toString() %>', '<%= order.productId %>', this.value,<%=JSON.stringify(order.varient)%>)">
-                          <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>Pending</option>
-                          <option value="processing" <%= order.status === 'conformed' ? 'selected' : '' %>>conformed</option>
-                          <option value="shipped" <%= order.status === 'shipped' ? 'selected' : '' %>>Shipped</option>
-                          <option value="delivered" <%= order.status === 'delivered' ? 'selected' : '' %>>Delivered</option>
-                          <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
-                      </select>
+                      <% if (order.paymentStatus === 'pending' && order.paymentMethod === 'razorpay') { %>
+                          <%= order.status %>
+                      <% } else { %>
+                          <select class="form-select delivery-status" 
+                                  id="delivery<%= order.orderId.toString() %>_<%= order.productId %>"
+                                  onchange="updateProductStatus('<%= order.orderId.toString() %>', '<%= order.productId %>', this.value,<%=JSON.stringify(order.varient)%>)">
+                              <option value="pending" <%= order.status === 'pending' ? 'selected' : '' %>>Pending</option>
+                              <option value="processing" <%= order.status === 'conformed' ? 'selected' : '' %>>conformed</option>
+                              <option value="shipped" <%= order.status === 'shipped' ? 'selected' : '' %>>Shipped</option>
+                              <option value="delivered" <%= order.status === 'delivered' ? 'selected' : '' %>>Delivered</option>
+                              <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                          </select>
+                      <% } %>
                   </td>
                   <td><%= order.paymentMethod %></td>
                   <td>
@@ -363,6 +367,7 @@
   color: #fff;
   padding: 8px;
 }
+
 </style>
 
 

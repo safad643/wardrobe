@@ -769,6 +769,93 @@ const loadorderdetails = async (req,res)=>{
   }
 }
 
+const switchBestSeller = async (req, res) => {
+  try {
+    const { table } = req.query;
+    const db = await mongo();
+    if (table === 'category') {
+      // Simple count of category occurrences in orders
+      const topCategories = await db.collection('orders').aggregate([
+        { $unwind: '$items' },
+        {
+          $addFields: {
+            'items.productId': { $toObjectId: '$items.productId' }  // Convert string to ObjectId
+          }
+        },
+        {
+          $lookup: {
+            from: 'products',
+            localField: 'items.productId', 
+            foreignField: '_id',
+            as: 'product'
+          }
+        },
+        { $unwind: '$product' },
+        {
+          $group: {
+            _id: '$product.category',
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { count: -1 } },
+        { $limit: 3 }
+      ]).toArray();
+
+  
+
+      res.json({
+        categories: topCategories.map(cat => ({
+          name: cat._id,
+          orders: cat.count
+        }))
+      });
+
+    } else if (table === 'product') {
+      // Simple count of product occurrences in orders
+      const topProducts = await db.collection('orders').aggregate([
+        { $unwind: '$items' },
+        {
+          $addFields: {
+            'items.productId': { $toObjectId: '$items.productId' }  // Convert string to ObjectId
+          }
+        },
+        {
+          $lookup: {
+            from: 'products',
+            localField: 'items.productId',
+            foreignField: '_id',
+            as: 'product'
+          }
+        },
+        { $unwind: '$product' },
+        {
+          $group: {
+            _id: '$product.name',
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { count: -1 } },
+        { $limit: 3 }
+      ]).toArray();
+
+     
+
+      res.json({
+        products: topProducts.map(prod => ({
+          name: prod._id,
+          orders: prod.count
+        }))
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+const logout = async (req, res) => {
+  req.session.destroy();
+  res.redirect('/admin');
+}
 module.exports = {
   generatesalesdata,
   loadreturnmanagment,
@@ -803,6 +890,8 @@ module.exports = {
   deletecatogory,
   updateProductStatus,
   loadorderdetails,
+  switchBestSeller,
+  logout
 };
 
 

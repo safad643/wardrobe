@@ -154,4 +154,11 @@ router.get(
   midddlewares.adminsession,
   admincontroller.loadorderdetails
 );
+
+router.get(
+  "/switchbestSeller",
+  midddlewares.adminsession,
+  admincontroller.switchBestSeller
+);
+router.get("/logout", midddlewares.adminsession, admincontroller.logout);
 module.exports = router;

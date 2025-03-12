@@ -5,103 +5,132 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Payment Failed</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #fafafa;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+            color: #1a1a1a;
         }
-        .container {
-            text-align: center;
-            padding: 3rem;
-            background-color: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            max-width: 500px;
-            animation: slideIn 0.5s ease-out;
+
+        .error-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            width: 90%;
+            max-width: 480px;
         }
-        @keyframes slideIn {
-            from {
-                transform: translateY(20px);
-                opacity: 0;
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            gap: 0.75rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #dc2626;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-text {
+            color: #dc2626;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #1a1a1a;
+        }
+
+        .order-details {
+            background: #f5f5f5;
+            padding: 1.25rem;
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            font-size: 0.9375rem;
+        }
+
+        .order-details p {
+            color: #4b5563;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+
+        .order-details p:last-child {
+            margin-bottom: 0;
+        }
+
+        .action-btn {
+            background: #1a1a1a;
+            color: white;
+            border: none;
+            padding: 0.875rem 1.75rem;
+            border-radius: 8px;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .action-btn:hover {
+            background: #2d2d2d;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
             }
-            to {
-                transform: translateY(0);
+            50% {
+                transform: scale(1.2);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(1);
                 opacity: 1;
             }
         }
-        .icon {
-            font-size: 64px;
-            margin-bottom: 1.5rem;
-            animation: shake 0.5s ease-in-out;
-        }
-        @keyframes shake {
-            0%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(-20deg); }
-            75% { transform: rotate(20deg); }
-        }
-        .title {
-            color: #2d3748;
-            margin-bottom: 1.5rem;
-            font-size: 2.2rem;
-            font-weight: 600;
-        }
-        .message {
-            color: #4a5568;
-            margin-bottom: 2rem;
-            line-height: 1.8;
-            font-size: 1.1rem;
-        }
-        .button {
-            display: inline-block;
-            padding: 12px 28px;
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-            font-size: 1.1rem;
-            font-weight: 500;
-            box-shadow: 0 4px 15px rgba(66, 153, 225, 0.2);
-        }
-        .button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(66, 153, 225, 0.3);
-            background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
-        }
-        .button:active {
-            transform: translateY(0);
-        }
-        .support-text {
-            margin-top: 1.5rem;
-            color: #718096;
-            font-size: 0.9rem;
-        }
-        .support-link {
-            color: #4299e1;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .support-link:hover {
-            text-decoration: underline;
+
+        @media (max-width: 480px) {
+            .error-card {
+                padding: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="icon">😕</div>
-        <h1 class="title">Payment Failed</h1>
-        <p class="message">
-            No worries! We've safely saved your order in our system.<br>
-            You can easily try the payment again whenever you're ready.
-        </p>
-        <a href="/order-history" class="button">Try Payment Again</a>
-        <p class="support-text">
-            Need help? <a href="/support" class="support-link">Contact our support team</a>
-        </p>
+    <div class="error-card">
+        <div class="status-indicator">
+            <div class="status-dot"></div>
+            <span class="status-text">Transaction Failed</span>
+        </div>
+        <h1>Unable to Process Payment</h1>
+        <div class="order-details">
+            <p><strong>Order ID:</strong> <%=id%></p>
+            <p>Your payment could not be processed. Please verify your payment information and try again from your orders page.</p>
+        </div>
+        <button class="action-btn" onclick="window.location.href='/user/profile/orders'">
+            Review Order Details
+        </button>
     </div>
 </body>
 </html>
