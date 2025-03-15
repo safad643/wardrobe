@@ -9,8 +9,14 @@ const passportsetup=require('./config/passport')
 const userRoutes=require('./routes/userRoutes')
 const adminrouter=require('./routes/adminRoutes')
 const authroutes=require('./routes/authroutes')
-
-
+const allowedIP='223.239.36.18'
+app.use("/admin", (req, res, next) => {
+    const clientIP = req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    if (clientIP !== allowedIP) {
+        return res.status(403).send("Access Denied");
+    }
+    next();
+});
 app.use(session({
     secret: process.env.SESSION_SECRET, 
     resave: false,             

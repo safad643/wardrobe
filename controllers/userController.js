@@ -82,23 +82,23 @@ const otpverify = async (req, res) => {
       } else {
         const db = await mongo();
         data.createdAt = new Date().toDateString();
-        let a=''
+       
         const doc = db
           .collection("users")
           .insertOne(data)
           .then((data) => {
-            a=data.insertedId
+            db.collection('wallet').insertOne({
+         
+
+              userId:data.insertedId,
+              balance: 0
+            })
             req.session.uid = data.insertedId;
             req.session.save();
           });
 
-        console.log(a);
-        db.collection('wallet').insertOne({
-         
-
-          userId:a,
-          balance: 0
-        })
+      
+       
         req.session.user = true;
         res.redirect("home");
       }

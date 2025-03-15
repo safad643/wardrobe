@@ -163,16 +163,34 @@ function productload(){
 }
 
 function updateprodcts(name,img1,img2,img3,varientarray){
- 
+  // Clear existing croppers
+  for (let i in croppers) {
+    if (croppers[i]) {
+      croppers[i].destroy();
+      delete croppers[i];
+    }
+  }
   
   fetch('/admin/productUpdate',{method:'get'})
   .then(response => response.text())
   .then((html)=>{
     document.querySelector('.main-panel').innerHTML=html
     document.getElementById('ogname').value=name
+    
+    // Clear any existing preview images
+    for (let i = 1; i <= 3; i++) {
+      const previewImg = document.getElementById(`prev${i}`);
+      if (previewImg) {
+        previewImg.src = '';
+        previewImg.style.display = 'none';
+      }
+    }
+    
+    // Set original product images
     document.getElementById('img1').src = img1
     document.getElementById('img2').src = img2
     document.getElementById('img3').src = img3
+
     // Parse variant array and create input fields
     const variants = varientarray
     
