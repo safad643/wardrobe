@@ -1326,8 +1326,8 @@ const getwishlist_cartcount = async (req, res) => {
 const search = async (req, res) => {
   try {
     const db = await mongo();
-    const { search, filter, sort, page = 1 } = req.query;
-    const itemsPerPage = 4;
+    const { search, filter, sort, page = 1, limit = 8 } = req.query;
+    const itemsPerPage = parseInt(limit);
     
     // Build match stage
     let matchStage = { list: true };
