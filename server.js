@@ -33,13 +33,9 @@ app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ limit: '5mb', extended: true }));
 app.use('/auth',authroutes)
 app.use('/user',userRoutes)
+app.use('/',userRoutes)
 app.use('/admin',adminrouter)
 app.use('/images', express.static(path.join(__dirname, 'images')))
-
-// Add root route that redirects to user router
-app.get('/', (req, res) => {
-    res.redirect('/user');
-});
 
 app.use(express.static(path.join(__dirname,'public')))
 app.set('view engine','ejs')
