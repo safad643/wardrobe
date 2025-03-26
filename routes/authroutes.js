@@ -13,7 +13,7 @@ router.get("/google/redirect", passport.authenticate("google"), (req, res) => {
     req.session.user = true;
     req.session.data = { email: req.user.email };
   }
-  res.redirect("/user/home");
+  res.redirect("/user");
 });
 
 module.exports = router;

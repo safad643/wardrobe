@@ -10,7 +10,7 @@ const usersession = (req, res, next) => {
 
 const islogin = (req, res, next) => {
   if (req.session.user) {
-    res.redirect("/user/home");
+    res.redirect("/user");
   } else {
     next();
   }

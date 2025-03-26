@@ -100,7 +100,7 @@ const otpverify = async (req, res) => {
       
        
         req.session.user = true;
-        res.redirect("home");
+        res.redirect("/user");
       }
     } else {
       res.render("user/otp", { error: "wrong otp" });
@@ -138,7 +138,7 @@ const login = async (req, res) => {
       req.session.uid = users[0]._id;
 
       req.session.user = true;
-      res.redirect("home");
+      res.redirect("/user");
     } else {
       res.render("user/login", { error: "wrong credentials" });
     }

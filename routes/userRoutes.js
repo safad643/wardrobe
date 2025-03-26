@@ -13,7 +13,7 @@ router.get("/otp", usercontroller.loadotp);
 router.post("/otp", usercontroller.otpverify);
 router.post("/resendotp", usercontroller.reotp);
 router.get("/google/auth", usercontroller.googleauth);
-router.get("/home", midddlewares.checkBan, usercontroller.loadhome);
+router.get("/", midddlewares.checkBan, usercontroller.loadhome);
 router.get("/shop", midddlewares.checkBan, usercontroller.loadshop);
 router.get("/shop/:name", midddlewares.checkBan, usercontroller.loadcategory);
 router.get(

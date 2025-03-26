@@ -36,6 +36,11 @@ app.use('/user',userRoutes)
 app.use('/admin',adminrouter)
 app.use('/images', express.static(path.join(__dirname, 'images')))
 
+// Add root route that redirects to user router
+app.get('/', (req, res) => {
+    res.redirect('/user');
+});
+
 app.use(express.static(path.join(__dirname,'public')))
 app.set('view engine','ejs')
 app.listen(process.env.PORT)
