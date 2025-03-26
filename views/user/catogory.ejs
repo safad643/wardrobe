@@ -639,93 +639,44 @@
 	<!-- all js here -->
 <!-- jquery latest version -->
 <script>
-
-
-
-
-
-async function toggleWishlist(element, productId) {
-    try {
-        const isActive = element.classList.contains('active');
-        const method = isActive ? 'DELETE' : 'POST';
-        const endpoint = isActive 
-            ? `/user/wishlist/remove/${productId}`
-            : `/user/wishlist/add/${productId}`;
-
-        const response = await fetch(endpoint, { method });
-
-        // Handle both JSON and HTML responses
-        let data;
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-            data = await response.json();
-        } else {
-            // If HTML response, likely needs redirect
-            window.location.href = response.url;
-            return;
-        }
-
-      
-
-        if (response.ok) {
-            // Toggle the active class
-            element.classList.toggle('active');
-            
-            // Toggle the heart icon
-            const icon = element.querySelector('i');
-            icon.classList.toggle('zmdi-favorite-outline');
-            icon.classList.toggle('zmdi-favorite');
-            
-            // Add animation class
-            element.classList.add('animate');
-            setTimeout(() => element.classList.remove('animate'), 300);
-
-            // Update wishlist count in header
-            const wishlistBadge = document.querySelector('.action-link[href="/user/wishlist"] .action-badge');
-            if (wishlistBadge) {
-                const currentCount = parseInt(wishlistBadge.textContent);
-                wishlistBadge.textContent = isActive ? currentCount - 1 : currentCount + 1;
-            }
-        }
-    } catch (error) {
-        console.error('Error in toggleWishlist:', error);
+// Initialize the page when it loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Set search input if present in URL
+    const searchParam = urlParams.get('search');
+    if (searchParam && document.getElementById('searchInput')) {
+        document.getElementById('searchInput').value = searchParam;
     }
-}
-// When page loads, check which products are in wishlist
-SFSP()
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        const response = await fetch('/user/wishlist/check', { method: 'GET' });
-        if (response.ok) {
-            const wishlistProducts = await response.json();
-            
-            // Get all wishlist icons on the page
-            const wishlistIcons = document.querySelectorAll('.wishlist-icon');
-            
-            wishlistIcons.forEach(icon => {
-                const productId = icon.dataset.productId;
-                // Check if this product is in the wishlist
-                if (wishlistProducts.includes(productId)) {
-                    // Add active class to the icon container
-                    icon.classList.add('active');
-                    // Update the heart icon
-                    const heartIcon = icon.querySelector('i');
-                    if (heartIcon) {
-                        heartIcon.classList.remove('zmdi-favorite-outline');
-                        heartIcon.classList.add('zmdi-favorite');
-                    }
-                }
-            });
-        }
-    } catch (error) {
-        console.error('Error checking wishlist status:', error);
+    
+    // Set category dropdown if present in URL
+    const categoryParam = urlParams.get('category');
+    if (categoryParam && document.getElementById('categorySelect')) {
+        document.getElementById('categorySelect').value = categoryParam;
     }
+    
+    // Set sort dropdown if present in URL
+    const sortParam = urlParams.get('sort');
+    if (sortParam && document.getElementById('sortSelect')) {
+        document.getElementById('sortSelect').value = sortParam;
+    }
+    
+    // Get page if present in URL
+    const pageParam = urlParams.get('page');
+    const page = pageParam ? parseInt(pageParam) : 1;
+    
+    // Load products with these filters
+    SFSP(page);
 });
 
 async function SFSP(page = 1) {
-    const search = document.getElementById('searchInput').value;
+    const search = document.getElementById('searchInput') ? document.getElementById('searchInput').value : '';
     const filter = document.getElementById('categorySelect').value;
     const sort = document.getElementById('sortSelect').value;
+
+    // Update URL with current parameters for shareable links
+    updateURL(search, filter, sort, page);
 
     // Get the container and add loading state
     const productContainer = document.querySelector('.showcat');
@@ -746,6 +697,26 @@ async function SFSP(page = 1) {
         await new Promise(resolve => setTimeout(resolve, 300));
 
         const response = await fetch(`/user/search?search=${search}&filter=${filter}&sort=${sort}&page=${page}`);
+        
+        // Check if response is actually JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            console.error('Error: Expected JSON response but received:', contentType);
+            const text = await response.text();
+            console.error('First 100 characters of response:', text.substring(0, 100));
+            
+            // Handle non-JSON response gracefully - show error to user
+            productContainer.innerHTML = '<div class="col-12 text-center">Error loading products. Please refresh the page or try again later.</div>';
+            document.querySelector('.pagination').innerHTML = '';
+            
+            // Remove loading state
+            productContainer.classList.remove('loading');
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'none';
+            }
+            return; // Exit the function
+        }
+        
         const data = await response.json();
         
         // Check if there are no products to display
@@ -861,6 +832,28 @@ function clearAllFilters() {
     
     // Trigger search to refresh products
     SFSP();
+}
+
+// Function to update URL with current parameters without reloading the page
+function updateURL(search, filter, sort, page) {
+    // Create URL object from current location
+    const url = new URL(window.location.href);
+    
+    // Update or add query parameters
+    if (search) url.searchParams.set('search', search);
+    else url.searchParams.delete('search');
+    
+    if (filter) url.searchParams.set('category', filter);
+    else url.searchParams.delete('category');
+    
+    if (sort) url.searchParams.set('sort', sort);
+    else url.searchParams.delete('sort');
+    
+    if (page && page > 1) url.searchParams.set('page', page);
+    else url.searchParams.delete('page');
+    
+    // Update browser history without reloading the page
+    window.history.replaceState({}, '', url);
 }
 
 </script>

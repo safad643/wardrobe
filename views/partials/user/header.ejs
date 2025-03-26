@@ -539,7 +539,7 @@
 	</style>
 		<meta charset="utf-8">
 		<meta http-equiv="x-ua-compatible" content="ie=edge">
-		<title>Home one || Hurst</title>
+		<title>Wardrobe</title>
 		<meta name="description" content="Hurst – Furniture Store eCommerce HTML Template is a clean and elegant design – suitable for selling flower, cookery, accessories, fashion, high fashion, accessories, digital, kids, watches, jewelries, shoes, kids, furniture, sports….. It has a fully responsive width adjusts automatically to any screen size or resolution.">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -738,11 +738,32 @@
 
 
         fetch('/user/getwishlist&cartcount')
-        .then(res=>res.json())
-        .then(data=>{
-            document.querySelectorAll('.action-badge')[0].textContent = data.wishlistcount
-            document.querySelectorAll('.action-badge')[1].textContent = data.cartcount
+        .then(response => {
+            // Check if the response is actually JSON
+            const contentType = response.headers.get('content-type');
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            if (!contentType || !contentType.includes('application/json')) {
+                console.warn('Warning: Expected JSON response but received:', contentType);
+                // Return default counts to prevent error
+                return { wishlistcount: 0, cartcount: 0 };
+            }
+            return response.json();
         })
+        .then(data => {
+            // Check if data has the expected properties
+            if (data && typeof data === 'object') {
+                const wishlistCount = data.wishlistcount || 0;
+                const cartCount = data.cartcount || 0;
+                document.querySelectorAll('.action-badge')[0].textContent = wishlistCount;
+                document.querySelectorAll('.action-badge')[1].textContent = cartCount;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching wishlist and cart counts:', error);
+            // Don't update the badges on error - keep existing values
+        });
 		</script>
 	</body>
 </html>

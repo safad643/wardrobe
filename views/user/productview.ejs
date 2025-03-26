@@ -944,19 +944,19 @@
 					position: relative;
 					max-width: 1200px;
 					margin: 0 auto;
-					padding: 0 50px;
+					padding: 0;
 			}
 
 			.products-grid {
 					display: flex;
-					overflow-x: hidden;
-					scroll-behavior: smooth;
-					gap: 30px;
+					flex-wrap: wrap;
+					justify-content: space-between;
+					gap: 20px;
 					padding-bottom: 20px;
 			}
 
 			.product-card {
-					flex: 0 0 calc(20% - 24px);
+					flex: 0 0 calc(20% - 16px);
 					background: white;
 					padding: 15px;
 					border-radius: 12px;
@@ -972,27 +972,7 @@
 			}
 
 			.nav-button {
-					position: absolute;
-					top: 50%;
-					transform: translateY(-50%);
-					background: white;
-					border: 2px solid #000;
-					width: 40px;
-					height: 40px;
-					border-radius: 50%;
-					cursor: pointer;
-					display: flex;
-					align-items: center;
-					justify-content: center;
-					z-index: 10;
-			}
-
-			.nav-button.prev {
-					left: 0;
-			}
-
-			.nav-button.next {
-					right: 0;
+					display: none;
 			}
 											.product-actions {
 													display: flex;
@@ -1210,17 +1190,15 @@
 					<div class="container">
 							<h2 class="section-title">Related Products</h2>
 							<div class="related-products-container">
-									<button class="nav-button prev">❮</button>
-									<button class="nav-button next">❯</button>
 									<div class="products-grid">
-											<% relatedProducts.forEach(relatedProduct => { %>
+											<% relatedProducts.slice(0, 5).forEach(relatedProduct => { %>
 													<div class="product-card">
 															<div class="product-image-container">
 																	<% if (relatedProduct.offer > 0) { %>
 																			<div class="related-offer-badge"><%= relatedProduct.offer %>% OFF</div>
 																	<% } %>
 																	<a href="/user/product/<%= relatedProduct.name %>">
-																		<img src="<%= relatedProduct.image0 %>" alt="<%= relatedProduct.name %>">
+																		<img src="<%= relatedProduct.images[0] %>" alt="<%= relatedProduct.name %>">
 																	</a>
 															</div>
 															<div class="product-details">
