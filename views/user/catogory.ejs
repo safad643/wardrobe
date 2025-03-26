@@ -364,6 +364,44 @@
 .fade-transition.loading {
     opacity: 0.6;
 }
+
+/* No Results Styles */
+.no-results-container {
+    padding: 40px 0;
+    text-align: center;
+}
+
+.no-results-content {
+    padding: 40px;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.no-results-content h3 {
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.no-results-content p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.no-results-content button {
+    padding: 10px 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: none;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.no-results-content button:hover {
+    background: #f7f7f7;
+    border-color: #999;
+}
 	</style>
 	
 				
@@ -709,6 +747,23 @@ async function SFSP(page = 1) {
 
         const response = await fetch(`/user/search?search=${search}&filter=${filter}&sort=${sort}&page=${page}`);
         const data = await response.json();
+        
+        // Check if there are no products to display
+        if (!data.products || data.products.length === 0) {
+            productContainer.innerHTML = `
+                <div class="col-12 no-results-container">
+                    <div class="no-results-content">
+                        <i class="fas fa-search" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i>
+                        <h3>No products found</h3>
+                        <p>We couldn't find any products matching your search criteria.</p>
+                    </div>
+                </div>
+            `;
+            
+            // Clear pagination when no results
+            document.querySelector('.pagination').innerHTML = '';
+            return;
+        }
         
         // Prepare the new content
         const newContent = data.products.map(product => {

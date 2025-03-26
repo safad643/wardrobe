@@ -842,6 +842,7 @@
                 </div>
 
                 <!-- Coupon Section -->
+                <% if (coupons && coupons.length > 0) { %>
                 <div class="checkout-section" id="couponSection">
                     <h2>Available Coupons</h2>
                     <div class="coupon-list">
@@ -865,6 +866,7 @@
                         <% }); %>
                     </div>
                 </div>
+                <% } %>
 
                 <!-- Payment Section -->
                 <div class="checkout-section" id="paymentSection">
@@ -1525,19 +1527,24 @@ function updateOrderSummary() {
 }
 
 function updateCouponCardStates(total) {
-    document.querySelectorAll('.coupon-card').forEach(card => {
-        const minPurchase = parseFloat(card.dataset.minPurchase);
-        
-        if (total >= minPurchase) {
-            card.classList.remove('disabled');
-            card.classList.add('active');
-            card.setAttribute('onclick', `selectCoupon('${card.getAttribute('data-coupon-id')}')`);
-        } else {
-            card.classList.remove('active');
-            card.classList.add('disabled');
-            card.removeAttribute('onclick');
-        }
-    });
+    const couponCards = document.querySelectorAll('.coupon-card');
+    
+    // Only proceed if coupon cards exist
+    if (couponCards.length > 0) {
+        couponCards.forEach(card => {
+            const minPurchase = parseFloat(card.dataset.minPurchase);
+            
+            if (total >= minPurchase) {
+                card.classList.remove('disabled');
+                card.classList.add('active');
+                card.setAttribute('onclick', `selectCoupon('${card.getAttribute('data-coupon-id')}')`);
+            } else {
+                card.classList.remove('active');
+                card.classList.add('disabled');
+                card.removeAttribute('onclick');
+            }
+        });
+    }
 }
 
 function selectCoupon(id) {

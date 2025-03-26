@@ -619,14 +619,7 @@
 					<nav class="main-nav" id="main-nav">
 						<ul class="nav-links">
 							
-							<li class="dropdown">
-								<a href="/products"><i class="fas fa-tshirt"></i> All Products <i class="fas fa-chevron-down"></i></a>
-								<div class="dropdown-content">
-									
-								</div>
-							</li>
 							
-			
 				
 						</ul>
 					</nav>
@@ -750,23 +743,6 @@
             document.querySelectorAll('.action-badge')[0].textContent = data.wishlistcount
             document.querySelectorAll('.action-badge')[1].textContent = data.cartcount
         })
-
-		// Fetch categories and populate dropdown
-		fetch('/user/categories')
-		.then(res => res.json())
-		.then(categories => {
-          
-			const dropdownContent = document.querySelector('.dropdown-content');
-			categories.forEach(category => {
-				const link = document.createElement('a');
-				link.href = `/user/shop/${encodeURIComponent(category.name)}`;
-				link.textContent = category.name;
-				dropdownContent.appendChild(link);
-			});
-		})
-		.catch(err => {
-			console.error('Error fetching categories:', err);
-		});
 		</script>
 	</body>
 </html>
