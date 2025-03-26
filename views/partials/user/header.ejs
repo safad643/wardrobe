@@ -598,7 +598,7 @@
 					</div>
 					<div class="search-section">
 						<div class="search-container">
-							<form action="/search" method="GET" class="search-form">
+							<form onsubmit="event.preventDefault(); typeof SFSP !== 'undefined' ? SFSP() : typeof sfsp !== 'undefined' ? sfsp() : ''" class="search-form">
 								<input 
                                 oninput="typeof SFSP !== 'undefined' ? SFSP() : typeof sfsp !== 'undefined' ? sfsp() : ''"
 									type="text" 
@@ -609,7 +609,7 @@
 									data-mobile-placeholder="Search"
 									autocomplete="off"
 								>
-								<button type="submit" class="search-button">
+								<button type="button" onclick="typeof SFSP !== 'undefined' ? SFSP() : typeof sfsp !== 'undefined' ? sfsp() : ''" class="search-button">
 									<i class="fas fa-search"></i>
 								</button>
 							</form>
