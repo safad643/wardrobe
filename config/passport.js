@@ -17,8 +17,21 @@ passport.use(
        
         done(null, existingUser); // Pass the existing user to Passport
       } else {
-        const newUser = { gid: profile.id, name: profile.displayName,profilepic:profile.photos[0].value ,createdAt:new Date()};
-        await db.collection('users').insertOne(newUser);
+        const newUser = { 
+          gid: profile.id, 
+          name: profile.displayName,
+          profilepic: profile.photos[0].value,
+          list: true, // Set list to true to prevent redirect to ban page
+          createdAt: new Date()
+        };
+        const result = await db.collection('users').insertOne(newUser);
+        
+        // Use upsert for wallet - if wallet exists, it won't be modified, if not, it will be created
+        await db.collection('wallet').updateOne(
+          { userId: result.insertedId },
+          { $setOnInsert: { balance: 0 } },
+          { upsert: true }
+        );
       
         done(null, newUser); // Pass the new user to Passport
       }
