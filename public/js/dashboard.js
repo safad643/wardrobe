@@ -79,29 +79,70 @@ function catogoryadder(e) {
 }
 
 
-function updateCategory(ogname){
+function updateCategory(btnOrOgname, maybeDescr){
+  const ogname =
+    (btnOrOgname && btnOrOgname.dataset && btnOrOgname.dataset.ogname) ||
+    btnOrOgname;
+  const descr =
+    (btnOrOgname && btnOrOgname.dataset && btnOrOgname.dataset.descr) ||
+    maybeDescr ||
+    "";
+
   fetch('/admin/catogoryUpdate',{method:'get',headers:{'Content-Type':'application/json'}})
   .then(response => response.text())
   .then((html)=>{
     document.querySelector('.main-panel').innerHTML=html
-    document.getElementById('ogname').value=ogname
+    const form = document.querySelector('.main-panel form.forms-sample');
+    if (form) {
+      const ogInput = form.querySelector('input[name="ogname"]');
+      if (ogInput) ogInput.value = ogname;
+
+      const nameInput = form.querySelector('input[name="name"]');
+      if (nameInput) nameInput.value = ogname;
+
+      const descrInput = form.querySelector('textarea[name="description"]');
+      if (descrInput) descrInput.value = descr || '';
+    }
   })
   
 }
 
 function catogoryupdate(event){
   event.preventDefault()
-  const ogname = document.getElementById('ogname').value
-  const name = document.getElementById('updatename').value
+  const form = event.target;
+  const ogname = (form.querySelector('input[name="ogname"]')?.value || '').trim();
+  let name = (form.querySelector('input[name="name"]')?.value || '').trim();
+  let description = (form.querySelector('textarea[name="description"]')?.value || '').trim();
+
+  const nameError = form.querySelector('#nameError');
+  const descError = form.querySelector('#descError');
+  const updateNameError = form.querySelector('#errorcatognameupdate');
+
+  if (nameError) nameError.style.display = 'none';
+  if (descError) descError.style.display = 'none';
+  if (updateNameError) updateNameError.style.display = 'none';
+
+  if (!ogname) {
+    if (updateNameError) {
+      updateNameError.innerText = 'Please open update from the category list again.';
+      updateNameError.style.display = 'block';
+    }
+    return false;
+  }
+
+  // Fallback: if admin clears the input, keep old value
+  if (!name) name = ogname;
   
   
-  fetch('/admin/catogoryupdate',{method:'post',body:JSON.stringify({ogname,name}),headers:{'Content-Type':'application/json'}})
+  fetch('/admin/catogoryupdate',{method:'post',body:JSON.stringify({ogname,name,description}),headers:{'Content-Type':'application/json'}})
   .then(response => {
     if (!response.ok) {
       return response.json().then(data => {
-        const errorElement = document.getElementById('errorcatognameupdate');
-        errorElement.innerText = data.error;
-        errorElement.style.display = 'block';
+        const errorElement = form.querySelector('#errorcatognameupdate');
+        if (errorElement) {
+          errorElement.innerText = data.error;
+          errorElement.style.display = 'block';
+        }
       });
     }
     return response.text();
@@ -757,21 +798,25 @@ function addcouponloader(){
 }
 
 
- // Set min date for start date to today
- const today = new Date().toISOString().split('T')[0];
- document.getElementById('startDate').setAttribute('min', today);
+// Coupon date inputs exist only on coupon pages
+const startDateEl = document.getElementById('startDate');
+const endDateEl = document.getElementById('endDate');
+if (startDateEl) {
+  const today = new Date().toISOString().split('T')[0];
+  startDateEl.setAttribute('min', today);
 
- // Update end date min when start date changes
- document.getElementById('startDate').addEventListener('change', function() {
-   const startDate = this.value;
-   document.getElementById('endDate').setAttribute('min', startDate);
-   
-   // Clear end date if it's before start date
-   const endDate = document.getElementById('endDate').value;
-   if (endDate && endDate < startDate) {
-     document.getElementById('endDate').value = '';
-   }
- });
+  startDateEl.addEventListener('change', function() {
+    const startDate = this.value;
+    if (endDateEl) endDateEl.setAttribute('min', startDate);
+
+    if (endDateEl) {
+      const endDate = endDateEl.value;
+      if (endDate && endDate < startDate) {
+        endDateEl.value = '';
+      }
+    }
+  });
+}
 
 
 

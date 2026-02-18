@@ -1,6 +1,7 @@
 
 
-  
+ 
+ <% if (user && user.length > 0) { %>
   <div class="table-responsive">
     <table class="table">
       <thead>
@@ -189,4 +190,9 @@
           </style>
           
   </div>
+ <% } else { %>
+  <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
+    <h4 class="text-muted mb-0">No users found</h4>
+  </div>
+ <% } %>
   

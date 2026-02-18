@@ -1,6 +1,7 @@
 
 
   
+          <% if (categories && categories.length > 0) { %>
           <div class="table-responsive">
             <table class="table">
               <thead>
@@ -24,7 +25,17 @@
                     
                     <td><%= category.createdAt %></td>
                     <td><%= category?.updatedAt %></td>
-                    <td><button onclick="updateCategory('<%= category.name %>')" class="btn btn-secondary btn-rounded">update</button></td>
+                    <td>
+                      <button
+                        type="button"
+                        class="btn btn-secondary btn-rounded"
+                        data-ogname="<%= category.name %>"
+                        data-descr="<%= category.descr %>"
+                        onclick="updateCategory(this)"
+                      >
+                        update
+                      </button>
+                    </td>
                     <td>
                       <% if (category.list) { %>
                         <button onclick="Delete('catogories','<%= category.name %>',false)" class="btn btn-success btn-rounded">List</button>
@@ -187,6 +198,11 @@
           }
         </style>
           </div>
+          <% } else { %>
+          <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
+            <h4 class="text-muted mb-0">No categories found</h4>
+          </div>
+          <% } %>
           <button 
     class="btn btn-danger position-fixed rounded-circle" 
     style="bottom: 10px; right: 10px; width: 40px; height: 40px;" 

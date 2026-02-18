@@ -144,15 +144,30 @@ const loadcatogupdate = (req, res) => {
 const catogoryupdate = async (req, res) => {
   try {
     const { ogname, name, description } = req.body;
-
-console.log(name.trim());
-
+    const ognameTrim = (ogname ?? "").trim();
+    const nameTrim = (name ?? "").trim();
+    const descrTrim = typeof description === "string" ? description.trim() : "";
     
     const db = await mongo();
+    if (!ognameTrim) {
+      return res.status(400).json({ error: "Invalid category." });
+    }
+
+    const currentCategory = await db
+      .collection("catogories")
+      .findOne({ name: ognameTrim });
+
+    if (!currentCategory) {
+      return res.status(404).json({ error: "Category not found." });
+    }
+
+    const nextName = nameTrim || currentCategory.name;
+    const nextDescr = descrTrim || currentCategory.descr;
+
     const existingCategory = await db.collection("catogories").findOne({
       $and: [
-        { name: name.trim() },
-        { name: { $ne: ogname.trim() } } 
+        { name: nextName },
+        { name: { $ne: ognameTrim } },
       ]
     });
 
@@ -163,8 +178,8 @@ console.log(name.trim());
 
    
     await db.collection("catogories").updateOne(
-      { name: ogname.trim() },
-      { $set: { name: name.trim(),description} }
+      { name: ognameTrim },
+      { $set: { name: nextName, descr: nextDescr, updatedAt: new Date().toDateString() } }
     );
 
     
@@ -668,35 +683,94 @@ const removeReturnNotification = async (req, res) => {
 };
 
 const updateReturnStatus = async (req, res) => {
-  const {returnid,status} = req.body;
-  const db = await mongo();
-  if(status === 'approved'){
-    const returnData = await db.collection("returns").findOne({ _id: new ObjectId(returnid) });
-    const order = await db.collection("orders").findOne({ _id: new ObjectId(returnData.orderid) });
-    const item = order.items.find(item => item.productId === returnData.productid && item.varient.color === returnData.varient.color && item.varient.size === returnData.varient.size);
-    const price = item.total;
-   
-   
-    const walletUpdate = await db.collection("wallet").updateOne(
-      { userId:order.userId },
-      { 
-        $inc: { balance: price },
-        $push: {
-          transactions: {
-            type: "credit",
-            amount: price,
-            date: new Date(),
-            description: "Return refund"
-          }
-        }
+  try {
+    const { returnid, status } = req.body;
+    const db = await mongo();
+
+    const existingReturn = await db
+      .collection("returns")
+      .findOne({ _id: new ObjectId(returnid) });
+
+    if (!existingReturn) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Return request not found" });
+    }
+
+    if (existingReturn.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "Return request has already been processed",
+      });
+    }
+
+    if (status === "approved") {
+      const order = await db
+        .collection("orders")
+        .findOne({ _id: new ObjectId(existingReturn.orderid) });
+
+      if (!order) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found for this return request",
+        });
       }
-    );
-    console.log('Wallet update successful:', walletUpdate.modifiedCount > 0);
+
+      const item = order.items.find(
+        (item) =>
+          item.productId === existingReturn.productid &&
+          item.varient?.color === existingReturn.varient?.color &&
+          item.varient?.size === existingReturn.varient?.size
+      );
+
+      if (!item) {
+        return res.status(404).json({
+          success: false,
+          message: "Matching order item not found for this return request",
+        });
+      }
+
+      const price = item.total;
+
+      const rawUserId = order.userId;
+      const walletUserId =
+        typeof rawUserId === "string" ? new ObjectId(rawUserId) : rawUserId;
+
+      const walletUpdate = await db.collection("wallet").updateOne(
+        { userId: walletUserId },
+        {
+          $inc: { balance: price },
+          $push: {
+            transactions: {
+              type: "credit",
+              amount: price,
+              date: new Date(),
+              description: "Return refund",
+            },
+          },
+        }
+      );
+      console.log(
+        "Wallet update successful:",
+        walletUpdate.modifiedCount > 0
+      );
+    }
+
+    await db
+      .collection("returns")
+      .updateOne(
+        { _id: new ObjectId(existingReturn._id) },
+        { $set: { status: status } }
+      );
+
+    res.json({ success: true, message: "Return status updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ success: false, message: "Error updating return status" });
   }
-  
-  await db.collection("returns").updateOne({ _id: new ObjectId(returnid) }, { $set: { status: status } });
-  res.json({ success: true, message: "Return status updated successfully" });
-}
+};
 
 const loadreturnmanagment = async (req, res) => {
   try {

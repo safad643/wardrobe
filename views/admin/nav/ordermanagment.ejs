@@ -1,5 +1,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
+<% if (orders && orders.length > 0) { %>
 <div class="table-responsive">
   <table class="table">
       <thead>
@@ -362,7 +363,6 @@
   border-color: #666;
 }
 
-.delivery-status option {
   background-color: #2a2a2a;
   color: #fff;
   padding: 8px;
@@ -370,9 +370,10 @@
 
 </style>
 
-
-
-
-
+<% } else { %>
+  <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
+    <h4 class="text-muted mb-0">No orders found</h4>
+  </div>
+<% } %>
 
  

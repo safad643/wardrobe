@@ -323,21 +323,41 @@ const profileload = async (req, res) => {
       .sort({ createdAt: -1 }) // Sort by newest first
       .toArray();
 
-    // Fetch product details for each order item
+    // Enrich each order item with product image and effective status
     for (let order of orders) {
+      // Fetch any approved returns for this order so we can mark items as returned
+      const approvedReturns = await db
+        .collection("returns")
+        .find({ orderid: order._id.toString(), status: "approved" })
+        .toArray();
+
       for (let item of order.items) {
         const product = await db.collection("products").findOne(
           { _id: new ObjectId(item.productId) },
           { projection: { images: 1 } }
         );
+
         if (product && product.images && product.images.length > 0) {
-          item.image = product.images[0]; // Add first image to the item
+          item.image = product.images[0];
         }
+
+        const matchingReturn = approvedReturns.find(
+          (ret) =>
+            ret.productid === item.productId &&
+            ret.varient?.size === item.varient?.size &&
+            ret.varient?.color === item.varient?.color
+        );
+
+        item.displayStatus = matchingReturn ? "returned" : item.status;
       }
     }
+    const walletUserId =
+      typeof req.session.uid === "string"
+        ? new ObjectId(req.session.uid)
+        : req.session.uid;
     const wallet = await db
       .collection("wallet")
-      .findOne({ userId: req.session.uid });
+      .findOne({ userId: walletUserId });
     if (wallet?.transactions) {
       wallet.transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
     }
@@ -864,9 +884,13 @@ const loadcheckout = async (req, res) => {
         startDate: { $lte: new Date() },
       })
       .toArray();
+    const walletUserId =
+      typeof req.session.uid === "string"
+        ? new ObjectId(req.session.uid)
+        : req.session.uid;
     const wallet = await db
       .collection("wallet")
-      .findOne({ userId: req.session.uid });
+      .findOne({ userId: walletUserId });
     res.render("user/checkout", {
       walletbalance: wallet ? wallet.balance : 0,
       coupons,
@@ -1083,10 +1107,13 @@ const cancelOrder = async (req, res) => {
       orderResult.paymentMethod === "razorpay"
     ) {
       const refundAmount = cancelledItem.total;
+      const rawUserId = req.session.uid;
+      const walletUserId =
+        typeof rawUserId === "string" ? new ObjectId(rawUserId) : rawUserId;
 
       // Update wallet balance and add transaction history
       await db.collection("wallet").updateOne(
-        { userId: req.session.uid },
+        { userId: walletUserId },
         {
           $inc: { balance: refundAmount },
           $push: {
@@ -1250,14 +1277,16 @@ const checkWishlist = async (req, res) => {
 const updatewallet = async (req, res) => {
   const { amount, type } = req.body;
   const db = await mongo();
-  const userId = req.session.uid;
+  const rawUserId = req.session.uid;
+  const walletUserId =
+    typeof rawUserId === "string" ? new ObjectId(rawUserId) : rawUserId;
 
   // Determine whether to add or subtract based on transaction type
   const balanceChange =
     type === "credit" ? parseInt(amount) : -parseInt(amount);
 
   await db.collection("wallet").updateOne(
-    { userId: userId },
+    { userId: walletUserId },
     {
       $inc: { balance: balanceChange },
       $push: {
@@ -1270,7 +1299,9 @@ const updatewallet = async (req, res) => {
     },
     { upsert: true }
   );
-  const wallet = await db.collection("wallet").findOne({ userId: userId });
+  const wallet = await db
+    .collection("wallet")
+    .findOne({ userId: walletUserId });
   res.json({
     status: "success",
     balance: wallet.balance,

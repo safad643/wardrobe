@@ -1,6 +1,7 @@
 
 
-
+  
+          <% if (returns && returns.length > 0) { %>
           <div class="table-responsive">
             <table class="table">
               <thead>
@@ -185,11 +186,11 @@
                       margin-top: 4rem;
                   }
               }
-          }
+        }
         </style>
           </div>
-          <button 
-    class="btn btn-danger position-fixed rounded-circle" 
-    style="bottom: 10px; right: 10px; width: 40px; height: 40px;" 
-    onclick="catogoryadd()"> <i class="mdi mdi-plus"></i></button>
-      
+          <% } else { %>
+          <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
+            <h4 class="text-muted mb-0">No returns found</h4>
+          </div>
+          <% } %>

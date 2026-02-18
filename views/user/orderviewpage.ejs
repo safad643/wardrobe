@@ -871,6 +871,7 @@
             .order-status-tracker[data-status="processing"] { --progress-width: 40% !important; }
             .order-status-tracker[data-status="shipped"] { --progress-width: 65% !important; }
             .order-status-tracker[data-status="delivered"] { --progress-width: 80% !important; }
+            .order-status-tracker[data-status="returned"] { --progress-width: 80% !important; }
             .order-status-tracker[data-status="cancelled"] { --progress-width: 0% !important; }
         }
 
@@ -1058,42 +1059,44 @@
                         </div>
                     </div>
                     
+                    <% const effectiveStatus = returnStatus === 'approved' ? 'returned' : order.item.status; %>
                     <% if (!(order.paymentMethod === 'razorpay' && order.paymentStatus !== 'paid')) { %>
                         <!-- Order Status Tracker -->
                         <div class="order-status-tracker" 
-                            data-status="<%= order.item.status %>"
+                            data-status="<%= effectiveStatus %>"
                             style="--progress-width: <%= 
-                                order.item.status === 'pending' ? '15%' :
-                                order.item.status === 'processing' ? '40%' :
-                                order.item.status === 'shipped' ? '70%' :
-                                order.item.status === 'delivered' ? '90%' :
-                                order.item.status === 'cancelled' ? '0%' : '0%'
+                                effectiveStatus === 'pending' ? '15%' :
+                                effectiveStatus === 'processing' ? '40%' :
+                                effectiveStatus === 'shipped' ? '70%' :
+                                effectiveStatus === 'delivered' ? '90%' :
+                                effectiveStatus === 'returned' ? '90%' :
+                                effectiveStatus === 'cancelled' ? '0%' : '0%'
                             %>;">
-                            <div class="status-step <%= order.item.status === 'cancelled' ? 'faded' : ((['pending', 'processing', 'shipped', 'delivered'].includes(order.item.status)) ? 'active' : '') %>">
+                            <div class="status-step <%= effectiveStatus === 'cancelled' ? 'faded' : ((['pending', 'processing', 'shipped', 'delivered', 'returned'].includes(effectiveStatus)) ? 'active' : '') %>">
                                 <div class="status-icon">
                                     <i class="fas fa-clipboard-check"></i>
                                 </div>
                                 <div class="status-label">Order Placed</div>
                             </div>
-                            <div class="status-step <%= order.item.status === 'cancelled' ? 'faded' : ((['processing', 'shipped', 'delivered'].includes(order.item.status)) ? 'active' : '') %>">
+                            <div class="status-step <%= effectiveStatus === 'cancelled' ? 'faded' : ((['processing', 'shipped', 'delivered', 'returned'].includes(effectiveStatus)) ? 'active' : '') %>">
                                 <div class="status-icon">
                                     <i class="fas fa-cog"></i>
                                 </div>
                                 <div class="status-label">Processing</div>
                             </div>
-                            <div class="status-step <%= order.item.status === 'cancelled' ? 'faded' : ((['shipped', 'delivered'].includes(order.item.status)) ? 'active' : '') %>">
+                            <div class="status-step <%= effectiveStatus === 'cancelled' ? 'faded' : ((['shipped', 'delivered', 'returned'].includes(effectiveStatus)) ? 'active' : '') %>">
                                 <div class="status-icon">
                                     <i class="fas fa-truck"></i>
                                 </div>
                                 <div class="status-label">Shipped</div>
                             </div>
-                            <div class="status-step <%= order.item.status === 'cancelled' ? 'faded' : (order.item.status === 'delivered' ? 'active' : '') %>">
+                            <div class="status-step <%= effectiveStatus === 'cancelled' ? 'faded' : ((effectiveStatus === 'delivered' || effectiveStatus === 'returned') ? 'active' : '') %>">
                                 <div class="status-icon">
                                     <i class="fas fa-box-open"></i>
                                 </div>
-                                <div class="status-label">Delivered</div>
+                                <div class="status-label"><%= effectiveStatus === 'returned' ? 'Returned' : 'Delivered' %></div>
                             </div>
-                            <% if (order.item.status === 'cancelled') { %>
+                            <% if (effectiveStatus === 'cancelled') { %>
                                 <div class="status-step active cancelled">
                                     <div class="status-icon">
                                         <i class="fas fa-times-circle"></i>
@@ -1483,7 +1486,7 @@
             const steps = tracker.querySelectorAll('.status-step');
             const status = tracker.dataset.status;
             
-            const statusOrder = ['pending', 'processing', 'shipped', 'delivered'];
+            const statusOrder = ['pending', 'processing', 'shipped', 'delivered', 'returned'];
             const currentStatusIndex = statusOrder.indexOf(status);
             
             const totalNodes = steps.length - 1;

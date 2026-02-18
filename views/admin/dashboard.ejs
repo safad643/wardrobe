@@ -563,17 +563,18 @@ function updatereturnstatus(status) {
     }
     
   } )
-  .then(response => response.json())
-  .then(data => {
-    if(data.success) {
-      Swal.fire({
-        icon: 'success',
-        title: 'Return Status Updated',
-        text: data.message,
-        background: '#191c24',
-        color: '#fff'
-      });
+  .then(async response => {
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Failed to update return status');
     }
+    Swal.fire({
+      icon: 'success',
+      title: 'Return Status Updated',
+      text: data.message,
+      background: '#191c24',
+      color: '#fff'
+    });
     $('#returnModal').modal('hide');
   }).catch(error => {
     Swal.fire({
@@ -612,6 +613,17 @@ function showReturnModal(returnData) {
         img.alt = 'Product Image';
         imageContainer.appendChild(img);
     });
+
+    // Toggle action buttons based on current status
+    const approveBtn = document.getElementById('approveReturn');
+    const rejectBtn = document.getElementById('rejectReturn');
+    if (returnData.status === 'pending') {
+      approveBtn.style.display = '';
+      rejectBtn.style.display = '';
+    } else {
+      approveBtn.style.display = 'none';
+      rejectBtn.style.display = 'none';
+    }
 
     // Show the modal
     $('#returnModal').modal('show');

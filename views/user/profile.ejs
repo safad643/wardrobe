@@ -246,10 +246,11 @@
             font-weight: 600;
             text-transform: capitalize;
         }
-
+        
         .order-status.delivered { background: #e8f5e9; color: #2e7d32; }
         .order-status.processing { background: #fff3e0; color: #ef6c00; }
         .order-status.shipped { background: #e3f2fd; color: #1565c0; }
+        .order-status.returned { background: #fff4e5; color: #b4690e; }
 
         /* Modals */
         .modal {
@@ -420,6 +421,11 @@
 .order-status.cancelled { 
     background: #ffe3e3;
     color: #c92a2a;
+}
+
+.order-status.returned {
+    background: #fff3cd;
+    color: #856404;
 }
 
 @media (max-width: 768px) {
@@ -1160,7 +1166,8 @@
                                 <% if (order.paymentStatus === 'pending' && order.paymentMethod === 'razorpay') { %>
                                     <span class="order-status failed">Payment Failed</span>
                                 <% } else { %>
-                                    <span class="order-status <%= item.status %>"><%= item.status %></span>
+                                    <% const displayStatus = item.displayStatus || item.status; %>
+                                    <span class="order-status <%= displayStatus %>"><%= displayStatus %></span>
                                 <% } %>
                             </div>
                             
