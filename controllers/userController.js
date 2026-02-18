@@ -1403,13 +1403,64 @@ const search = async (req, res) => {
     const result = await db.collection("products").aggregate(pipeline).toArray();
     
     const totalProducts = result[0].metadata[0]?.total || 0;
-    const products = result[0].products;
+    const totalPages = Math.ceil(totalProducts / itemsPerPage);
+    const currentPage = parseInt(page);
+    
+    // Validate page number - if it exceeds total pages, set to last valid page
+    const validPage = currentPage > totalPages && totalPages > 0 ? totalPages : (currentPage < 1 ? 1 : currentPage);
+    
+    // If page was invalid, we need to refetch with the valid page
+    let products = result[0].products;
+    if (validPage !== currentPage && totalPages > 0) {
+      // Refetch with correct page
+      const correctedPipeline = [
+        { $match: matchStage },
+        {
+          $addFields: {
+            numericPrice: { $toDouble: "$price" },
+            numericOffer: { $toDouble: "$offer" },
+            offerPrice: {
+              $subtract: [
+                { $toDouble: "$price" },
+                {
+                  $multiply: [
+                    { $toDouble: "$price" },
+                    { $divide: [{ $toDouble: "$offer" }, 100] }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          $facet: {
+            products: [
+              sortStage,
+              { $skip: (validPage - 1) * itemsPerPage },
+              { $limit: itemsPerPage },
+              {
+                $project: {
+                  _id: 1,
+                  name: 1, 
+                  price: 1,
+                  offer: 1,
+                  offerPrice: 1,
+                  image: { $arrayElemAt: ["$images", 0] }
+                }
+              }
+            ]
+          }
+        }
+      ];
+      const correctedResult = await db.collection("products").aggregate(correctedPipeline).toArray();
+      products = correctedResult[0].products;
+    }
 
     res.json({
       products,
       pagination: {
-        currentPage: parseInt(page),
-        totalPages: Math.ceil(totalProducts / itemsPerPage),
+        currentPage: validPage,
+        totalPages: totalPages,
         totalProducts
       }
     });

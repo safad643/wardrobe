@@ -319,9 +319,16 @@
     line-height: 1;
 }
 
-.pagination .disabled a {
+.pagination .disabled a,
+.pagination .disabled span {
     opacity: 0.5;
     cursor: not-allowed;
+    pointer-events: none;
+}
+
+.pagination .disabled a:hover {
+    background-color: #fff;
+    border-color: #e0e0e0;
 }
 
 .loading-overlay {
@@ -682,6 +689,13 @@ async function SFSP(page = 1) {
         
         const data = await response.json();
         
+        // Validate pagination - if currentPage exceeds totalPages, redirect to last valid page
+        if (data.pagination && data.pagination.currentPage > data.pagination.totalPages && data.pagination.totalPages > 0) {
+            // Redirect to the last valid page
+            SFSP(data.pagination.totalPages);
+            return;
+        }
+        
         // Check if there are no products to display
         if (!data.products || data.products.length === 0) {
             productContainer.innerHTML = `
@@ -763,25 +777,63 @@ function updatePagination(pagination) {
     const paginationContainer = document.querySelector('.pagination');
     if (!paginationContainer) return;
 
-    let paginationHTML = `
-        <li class="prev ${pagination.currentPage === 1 ? 'disabled' : ''}">
-            <a href="#" onclick="SFSP(${pagination.currentPage - 1}); return false;" aria-label="Previous">‹</a>
-        </li>
-    `;
+    // If no pages or invalid pagination, clear pagination
+    if (!pagination.totalPages || pagination.totalPages === 0) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
 
+    // Ensure currentPage is within valid range
+    const currentPage = Math.min(Math.max(1, pagination.currentPage), pagination.totalPages);
+    
+    // If currentPage was corrected, update URL
+    if (currentPage !== pagination.currentPage) {
+        const search = document.getElementById('searchInput') ? document.getElementById('searchInput').value : '';
+        const filter = document.getElementById('categorySelect').value;
+        const sort = document.getElementById('sortSelect').value;
+        updateURL(search, filter, sort, currentPage);
+    }
+
+    let paginationHTML = '';
+    
+    // Previous button - disabled on first page
+    if (currentPage === 1) {
+        paginationHTML += `
+            <li class="prev disabled">
+                <span aria-label="Previous" style="display: flex; align-items: center; justify-content: center; min-width: 40px; height: 40px; padding: 0 10px; border-radius: 8px; background-color: #fff; border: 1px solid #e0e0e0; color: #999; cursor: not-allowed;">‹</span>
+            </li>
+        `;
+    } else {
+        paginationHTML += `
+            <li class="prev">
+                <a href="#" onclick="SFSP(${currentPage - 1}); return false;" aria-label="Previous">‹</a>
+            </li>
+        `;
+    }
+
+    // Page numbers
     for (let i = 1; i <= pagination.totalPages; i++) {
         paginationHTML += `
-            <li class="${pagination.currentPage === i ? 'active' : ''}">
+            <li class="${currentPage === i ? 'active' : ''}">
                 <a href="#" onclick="SFSP(${i}); return false;">${i}</a>
             </li>
         `;
     }
 
-    paginationHTML += `
-        <li class="next ${pagination.currentPage === pagination.totalPages ? 'disabled' : ''}">
-            <a href="#" onclick="SFSP(${pagination.currentPage + 1}); return false;" aria-label="Next">›</a>
-        </li>
-    `;
+    // Next button - disabled on last page
+    if (currentPage === pagination.totalPages) {
+        paginationHTML += `
+            <li class="next disabled">
+                <span aria-label="Next" style="display: flex; align-items: center; justify-content: center; min-width: 40px; height: 40px; padding: 0 10px; border-radius: 8px; background-color: #fff; border: 1px solid #e0e0e0; color: #999; cursor: not-allowed;">›</span>
+            </li>
+        `;
+    } else {
+        paginationHTML += `
+            <li class="next">
+                <a href="#" onclick="SFSP(${currentPage + 1}); return false;" aria-label="Next">›</a>
+            </li>
+        `;
+    }
 
     paginationContainer.innerHTML = paginationHTML;
 }
