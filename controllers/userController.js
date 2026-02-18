@@ -1475,29 +1475,48 @@ const search = async (req, res) => {
 };
 
 const payment = async (req, res) => {
-  const {total} = req.body;
-  const razorpay = new Razorpay({
-    key_id: 'rzp_test_e3wiAeWDzGn9sG',
-    key_secret: 'ytrkbWg7Ve1ZO4bkmMAfNxn8',
-  }); 
-  const options = {
+  try {
+    const total = Number(req.body.total);
     
-    amount: total,
-    currency: "INR",
-    receipt: `order_${Date.now()}`
-  };  
-  const order = await razorpay.orders.create(options);
-  res.json({
-    orderid: order.id,
-    key: 'rzp_test_e3wiAeWDzGn9sG',
-  })
+    // Validate amount
+    if (!Number.isInteger(total) || total <= 0) {
+      return res.status(400).json({ 
+        error: "Invalid amount",
+        message: "Amount must be a positive integer"
+      });
+    }
+
+    const razorpay = new Razorpay({
+      key_id: 'rzp_test_SHYEuhRPPyW7nY',
+      key_secret: 'YCHaHV75siTK0ucSfGf2oDgM',
+    }); 
+    
+    const options = {
+      amount: total,
+      currency: "INR",
+      receipt: `order_${Date.now()}`
+    };  
+    
+    const order = await razorpay.orders.create(options);
+    
+    res.json({
+      orderid: order.id,
+      key: 'rzp_test_SHYEuhRPPyW7nY',
+    });
+  } catch (error) {
+    console.error("Razorpay order creation failed:", error);
+    res.status(500).json({ 
+      error: "Payment initialization failed",
+      message: error.message || "Unable to create payment order"
+    });
+  }
 }
 
 const paymentcheck = async (req, res) => {
   const {response} = req.body;
  
   
-  const secret = 'ytrkbWg7Ve1ZO4bkmMAfNxn8';
+  const secret = 'YCHaHV75siTK0ucSfGf2oDgM';
   const generatedSignature = crypto.createHmac('sha256', secret)
     .update(`${response.razorpay_order_id}|${response.razorpay_payment_id}`)
     .digest('hex');

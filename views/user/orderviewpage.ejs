@@ -1222,6 +1222,8 @@
                     <button class="cancel-btn retry-payment-btn" onclick="retryPayment('<%= order.paymentorderid %>')">
                         <i class="fas fa-sync"></i> Retry Payment
                     </button>
+                <% } else if (order.item.status === 'cancelled') { %>
+                    <!-- Order is already cancelled, no action button needed -->
                 <% } else { %>
                     <button class="cancel-btn" data-bs-toggle="modal" data-bs-target="#cancelModal">
                         <i class="fas fa-times-circle"></i> Cancel Order
@@ -1244,8 +1246,11 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <form id="cancelOrderForm" action="/user/orders/<%= order._id %>/cancel?varient=<%= encodeURIComponent(JSON.stringify(order.item.varient)) %>&productid=<%= order.item.productId %>" method="POST">
-                        <button type="submit" class="btn btn-danger">Confirm Cancellation</button>
+                    <form
+                        id="cancelOrderForm"
+                        data-cancel-url="/user/orders/<%= order._id %>/cancel?varient=<%= encodeURIComponent(JSON.stringify(order.item.varient)) %>&productid=<%= order.item.productId %>"
+                    >
+                        <button type="button" id="confirmCancelBtn" class="btn btn-danger">Confirm Cancellation</button>
                     </form>
                 </div>
             </div>
@@ -1425,37 +1430,42 @@
             const mainNav = document.getElementById('main-nav');
             const dropdowns = document.querySelectorAll('.dropdown');
 
-            menuToggle.addEventListener('click', function() {
-                this.classList.toggle('active');
-                mainNav.classList.toggle('active');
-                
-                if(this.classList.contains('active')) {
-                    this.children[0].style.transform = 'rotate(45deg) translate(6px, 6px)';
-                    this.children[1].style.opacity = '0';
-                    this.children[2].style.transform = 'rotate(-45deg) translate(6px, -6px)';
-                    document.body.style.overflow = 'hidden';
-                } else {
-                    this.children[0].style.transform = 'none';
-                    this.children[1].style.opacity = '1';
-                    this.children[2].style.transform = 'none';
-                    document.body.style.overflow = '';
-                }
-            });
+            if (menuToggle && mainNav) {
+                menuToggle.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    mainNav.classList.toggle('active');
+                    
+                    if(this.classList.contains('active')) {
+                        this.children[0].style.transform = 'rotate(45deg) translate(6px, 6px)';
+                        this.children[1].style.opacity = '0';
+                        this.children[2].style.transform = 'rotate(-45deg) translate(6px, -6px)';
+                        document.body.style.overflow = 'hidden';
+                    } else {
+                        this.children[0].style.transform = 'none';
+                        this.children[1].style.opacity = '1';
+                        this.children[2].style.transform = 'none';
+                        document.body.style.overflow = '';
+                    }
+                });
+            }
 
             dropdowns.forEach(dropdown => {
                 const link = dropdown.querySelector('a');
+                if (!link) return;
                 link.addEventListener('click', function(e) {
                     if(window.innerWidth <= 992) {
                         e.preventDefault();
                         dropdown.classList.toggle('active');
                         const content = dropdown.querySelector('.dropdown-content');
-                        content.style.display = dropdown.classList.contains('active') ? 'block' : 'none';
+                        if (content) {
+                            content.style.display = dropdown.classList.contains('active') ? 'block' : 'none';
+                        }
                     }
                 });
             });
 
             document.addEventListener('click', function(e) {
-                if(!mainNav.contains(e.target) && !menuToggle.contains(e.target) && window.innerWidth <= 992) {
+                if(menuToggle && mainNav && !mainNav.contains(e.target) && !menuToggle.contains(e.target) && window.innerWidth <= 992) {
                     mainNav.classList.remove('active');
                     menuToggle.classList.remove('active');
                     menuToggle.children[0].style.transform = 'none';
@@ -1467,6 +1477,9 @@
 
             // Add status tracker animation
             const tracker = document.querySelector('.order-status-tracker');
+            if (!tracker) {
+                return;
+            }
             const steps = tracker.querySelectorAll('.status-step');
             const status = tracker.dataset.status;
             
@@ -1498,68 +1511,119 @@
                 }
             });
 
-            // Add form submission handler for cancel order
-            const cancelOrderForm = document.getElementById('cancelOrderForm');
-            cancelOrderForm.addEventListener('submit', async function(e) {
+            // Add click handler for cancel order (API-only endpoint)
+            function attachCancelHandler() {
+                const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+                const cancelOrderForm = document.getElementById('cancelOrderForm');
                 
-                e.preventDefault();
-                
-                try {
-                    const response = await fetch(this.action, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
+                if (confirmCancelBtn && cancelOrderForm) {
+                    // Remove any existing listeners
+                    const newBtn = confirmCancelBtn.cloneNode(true);
+                    confirmCancelBtn.parentNode.replaceChild(newBtn, confirmCancelBtn);
+                    
+                    // Attach click handler
+                    newBtn.addEventListener('click', async function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        const cancelUrl = cancelOrderForm.dataset.cancelUrl;
+                        if (!cancelUrl) {
+                            console.error('Cancel URL not found');
+                            alert('Error: Cancel URL not found');
+                            return;
+                        }
+
+                        // Disable button to prevent double clicks
+                        newBtn.disabled = true;
+                        newBtn.textContent = 'Cancelling...';
+
+                        try {
+                            const response = await fetch(cancelUrl, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                }
+                            });
+
+                            const data = await response.json();
+
+                            if (response.ok && data.success) {
+                                // Close the modal
+                                const cancelModal = document.getElementById('cancelModal');
+                                const modal = bootstrap.Modal.getInstance(cancelModal);
+                                if (modal) {
+                                    modal.hide();
+                                }
+
+                                // Update the order status tracker
+                                const tracker = document.querySelector('.order-status-tracker');
+                                if (tracker) {
+                                    tracker.dataset.status = 'cancelled';
+                                    tracker.style.setProperty('--progress-width', '0%');
+
+                                    // Reset all steps to faded state
+                                    const steps = tracker.querySelectorAll('.status-step');
+                                    steps.forEach(step => {
+                                        step.classList.remove('active');
+                                        step.classList.add('faded');
+                                    });
+
+                                    // Add cancelled step if it doesn't exist
+                                    if (!tracker.querySelector('.status-step.cancelled')) {
+                                        const cancelledStep = document.createElement('div');
+                                        cancelledStep.className = 'status-step active cancelled';
+                                        cancelledStep.innerHTML = `
+                                            <div class="status-icon">
+                                                <i class="fas fa-times-circle"></i>
+                                            </div>
+                                            <div class="status-label">Cancelled</div>
+                                        `;
+                                        tracker.appendChild(cancelledStep);
+                                    } else {
+                                        // Activate the cancelled step
+                                        const cancelledStep = tracker.querySelector('.status-step.cancelled');
+                                        if (cancelledStep) {
+                                            cancelledStep.classList.add('active');
+                                            cancelledStep.classList.remove('faded');
+                                        }
+                                    }
+                                }
+
+                                // Remove the cancel button section
+                                const actionSection = document.querySelector('.action-section');
+                                if (actionSection) {
+                                    actionSection.remove();
+                                }
+                                
+                                // Reload page to show updated status
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 500);
+                            } else {
+                                alert(data.message || 'Failed to cancel order. Please try again.');
+                                newBtn.disabled = false;
+                                newBtn.textContent = 'Confirm Cancellation';
+                            }
+                        } catch (error) {
+                            console.error('Error:', error);
+                            alert('An error occurred while cancelling the order. Please try again.');
+                            newBtn.disabled = false;
+                            newBtn.textContent = 'Confirm Cancellation';
                         }
                     });
-
-                    if (response.ok) {
-                       
-                        // Close the modal
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('cancelModal'));
-                        modal.hide();
-
-                        // Update the order status tracker
-                        const tracker = document.querySelector('.order-status-tracker');
-                        tracker.dataset.status = 'cancelled';
-                        tracker.style.setProperty('--progress-width', '0%');
-
-                        // Reset all steps to faded state
-                        const steps = tracker.querySelectorAll('.status-step');
-                        steps.forEach(step => {
-                            step.classList.remove('active');
-                            step.classList.add('faded');
-                        });
-
-                        // Add cancelled step if it doesn't exist
-                        if (!tracker.querySelector('.status-step.cancelled')) {
-                            const cancelledStep = document.createElement('div');
-                            cancelledStep.className = 'status-step active cancelled';
-                            cancelledStep.innerHTML = `
-                                <div class="status-icon">
-                                    <i class="fas fa-times-circle"></i>
-                                </div>
-                                <div class="status-label">Cancelled</div>
-                            `;
-                            tracker.appendChild(cancelledStep);
-                        } else {
-                            // Activate the cancelled step
-                            const cancelledStep = tracker.querySelector('.status-step.cancelled');
-                            cancelledStep.classList.add('active');
-                            cancelledStep.classList.remove('faded');
-                        }
-
-                        // Remove the cancel button section
-                        const actionSection = document.querySelector('.action-section');
-                        if (actionSection) {
-                            actionSection.remove();
-                        }
-                    } else {
-                        console.error('Failed to cancel order');
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
                 }
-            });
+            }
+            
+            // Attach handler on page load
+            attachCancelHandler();
+            
+            // Also attach when modal is shown (in case modal content is lazy-loaded)
+            const cancelModal = document.getElementById('cancelModal');
+            if (cancelModal) {
+                cancelModal.addEventListener('shown.bs.modal', function() {
+                    attachCancelHandler();
+                });
+            }
         });
         function returnOrder() {
             let reason;
