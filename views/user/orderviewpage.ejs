@@ -1759,7 +1759,7 @@
             try {
                 const status = await razorpay(orderid);
 
-                const paymentCheckResponse = await fetch('/user/paymentcheck', {
+                const paymentCheckResponse = await fetch('/user/payments/verify', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1769,8 +1769,8 @@
                     })
                 });
 
-                const retryResponse = await fetch('/user/retry-payment?orderid=' + orderid, {
-                    method: 'GET',
+                const retryResponse = await fetch('/user/payments/' + orderid + '/retry', {
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     }

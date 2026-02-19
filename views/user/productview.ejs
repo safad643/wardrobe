@@ -767,7 +767,7 @@
 											<li style="margin: 0 12px; color: #aaa;"><i class="zmdi zmdi-chevron-right" style="font-size: 16px;"></i></li>
 											<li><a href="/user/shop" style="color: #333; text-decoration: none; font-weight: 500; transition: color 0.2s ease;">Shop</a></li>
 											<li style="margin: 0 12px; color: #aaa;"><i class="zmdi zmdi-chevron-right" style="font-size: 16px;"></i></li>
-											<li><a href="/user/shop/<%= product.category %>" style="color: #333; text-decoration: none; font-weight: 500; transition: color 0.2s ease;"><%= product.category %></a></li>
+											<li><a href="/user/categories/<%= product.category %>" style="color: #333; text-decoration: none; font-weight: 500; transition: color 0.2s ease;"><%= product.category %></a></li>
 											<li style="margin: 0 12px; color: #aaa;"><i class="zmdi zmdi-chevron-right" style="font-size: 16px;"></i></li>
 											<li style="color: #007bff; font-weight: 600;"><%= product.name %></li>
 										</ul>
@@ -1422,11 +1422,10 @@
 				color: varienttosend.color
 		};
 		fetch('/user/checkout', {
-				method: 'POST',
+				method: 'GET',
 				headers: {
 						'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({cartItems})
+				}
 		})
 		.then(response => response.text())
 		.then(html => {

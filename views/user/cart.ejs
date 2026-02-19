@@ -562,9 +562,8 @@
        
         try {
             const response = await fetch('/user/checkout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({cartItems,from:"cart"})
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
             });
 
             const html = await response.text();
@@ -583,7 +582,7 @@
             const cartItem = event.target.closest('.cart-item');
             cartItem.classList.add('removing');
 
-            const response = await fetch(`/user/cartremove/${productId}?size=${size}&color=${color}`, {
+            const response = await fetch(`/user/cart/items/${productId}?size=${size}&color=${color}`, {
                 method: 'DELETE'
             });
 

@@ -24,6 +24,7 @@
                       <button
                         type="button"
                         class="btn btn-secondary btn-rounded"
+                        data-id="<%= category._id %>"
                         data-ogname="<%= category.name %>"
                         data-descr="<%= category.descr %>"
                         onclick="updateCategory(this)"
@@ -33,10 +34,10 @@
                     </td>
                     <td>
                       <% if (category.list) { %>
-                        <button onclick="Delete('catogories','<%= category.name %>',false)" class="btn btn-success btn-rounded">List</button>
+                        <button onclick="Delete('catogories','<%= category._id %>',false)" class="btn btn-success btn-rounded">List</button>
                       <% } else { %>
                         
-                        <button onclick="Delete('catogories','<%= category.name %>',true)" class="btn btn-danger btn-rounded">
+                        <button onclick="Delete('catogories','<%= category._id %>',true)" class="btn btn-danger btn-rounded">
                           <span class="mdi mdi-delete"></span> 
                         </button>
                       <% } %>

@@ -1,5 +1,5 @@
 function loadcatogory(){
-  fetch('/admin/catogory',{
+  fetch('/admin/categories',{
     method:'get'})
     .then(response => response.text())
     .then((html)=>{
@@ -9,7 +9,7 @@ function loadcatogory(){
 }
 
 function catogoryadd(){
-  fetch('/admin/catogoryadd',{
+  fetch('/admin/categories/new',{
     method:'get'})
     .then(response => response.text())
     .then((html)=>{
@@ -48,7 +48,7 @@ function catogoryadder(e) {
   }
 
   // Make the fetch request to add the category
-  fetch('/admin/catogoryadd', {
+  fetch('/admin/categories', {
     method: 'post',
     body: JSON.stringify({ description, catogoryName }),
     headers: { 'Content-Type': 'application/json' }
@@ -87,15 +87,16 @@ function updateCategory(btnOrOgname, maybeDescr){
     (btnOrOgname && btnOrOgname.dataset && btnOrOgname.dataset.descr) ||
     maybeDescr ||
     "";
+  const categoryId = btnOrOgname?.dataset?.id || btnOrOgname?.id;
 
-  fetch('/admin/catogoryUpdate',{method:'get',headers:{'Content-Type':'application/json'}})
+  fetch(`/admin/categories/${categoryId}/edit`,{method:'get',headers:{'Content-Type':'application/json'}})
   .then(response => response.text())
   .then((html)=>{
     document.querySelector('.main-panel').innerHTML=html
     const form = document.querySelector('.main-panel form.forms-sample');
     if (form) {
-      const ogInput = form.querySelector('input[name="ogname"]');
-      if (ogInput) ogInput.value = ogname;
+      const idInput = form.querySelector('input[name="id"]');
+      if (idInput) idInput.value = categoryId;
 
       const nameInput = form.querySelector('input[name="name"]');
       if (nameInput) nameInput.value = ogname;
@@ -110,7 +111,7 @@ function updateCategory(btnOrOgname, maybeDescr){
 function catogoryupdate(event){
   event.preventDefault()
   const form = event.target;
-  const ogname = (form.querySelector('input[name="ogname"]')?.value || '').trim();
+  const categoryId = form.querySelector('input[name="id"]')?.value || form.dataset.id;
   let name = (form.querySelector('input[name="name"]')?.value || '').trim();
   let description = (form.querySelector('textarea[name="description"]')?.value || '').trim();
 
@@ -122,7 +123,7 @@ function catogoryupdate(event){
   if (descError) descError.style.display = 'none';
   if (updateNameError) updateNameError.style.display = 'none';
 
-  if (!ogname) {
+  if (!categoryId) {
     if (updateNameError) {
       updateNameError.innerText = 'Please open update from the category list again.';
       updateNameError.style.display = 'block';
@@ -130,11 +131,17 @@ function catogoryupdate(event){
     return false;
   }
 
-  // Fallback: if admin clears the input, keep old value
-  if (!name) name = ogname;
+  if (!name) {
+    if (nameError) {
+      nameError.textContent = 'Name is required';
+      nameError.style.display = 'block';
+    }
+    return false;
+  }
   
-  
-  fetch('/admin/catogoryupdate',{method:'post',body:JSON.stringify({ogname,name,description}),headers:{'Content-Type':'application/json'}})
+  // Convert ObjectId to string if needed
+  const idStr = categoryId.toString ? categoryId.toString() : categoryId;
+  fetch(`/admin/categories/${idStr}`,{method:'PATCH',body:JSON.stringify({name,description}),headers:{'Content-Type':'application/json'}})
   .then(response => {
     if (!response.ok) {
       return response.json().then(data => {
@@ -229,9 +236,9 @@ const Delete = function(identifier, data, bool) {
 
       const targetCategory = result.value;
 
-      fetch('/admin/catogory-delete', {
-        method: 'post',
-        body: JSON.stringify({ name: data, targetCategory }),
+      fetch(`/admin/categories/${data}`, {
+        method: 'DELETE',
+        body: JSON.stringify({ targetCategory }),
         headers: { 'Content-Type': 'application/json' },
       })
         .then(async (r) => {
@@ -336,7 +343,7 @@ const Delete = function(identifier, data, bool) {
 }
 
 function loadusermanagment(){
-  fetch('user-managment',{method:'get'})
+  fetch('/admin/users',{method:'get'})
   .then((r)=>r.text())
   .then((html)=>{
     document.querySelector('.main-panel').innerHTML=html
@@ -349,7 +356,7 @@ function dashboard(){
 }
 
 function productload(){
-  fetch('product-managment',{method:'get'})
+  fetch('/admin/products',{method:'get'})
   .then((r)=>r.text())
   .then((html)=>{
     document.querySelector('.main-panel').innerHTML=html
@@ -358,7 +365,7 @@ function productload(){
   .catch(err=>console.log(err))
 }
 
-function updateprodcts(name, price, category, rating, img1, img2, img3, varientarray){
+function updateprodcts(productId, name, price, category, rating, img1, img2, img3, varientarray){
   // Clear existing croppers
   for (let i in croppers) {
     if (croppers[i]) {
@@ -367,11 +374,12 @@ function updateprodcts(name, price, category, rating, img1, img2, img3, varienta
     }
   }
   
-  fetch('/admin/productUpdate',{method:'get'})
+  fetch(`/admin/products/${productId}/edit`,{method:'get'})
   .then(response => response.text())
   .then((html)=>{
     document.querySelector('.main-panel').innerHTML=html
-    document.getElementById('ogname').value=name
+    const idInput = document.querySelector('input[name="id"]');
+    if (idInput) idInput.value = productId;
     
     // Prefill basic product fields
     const nameInput = document.querySelector('input[name="name"]');
@@ -454,7 +462,7 @@ function updateprodcts(name, price, category, rating, img1, img2, img3, varienta
 function productadd(){
  
   
-  fetch('/admin/productadd',{method:'get'})
+  fetch('/admin/products/new',{method:'get'})
   .then(response => response.text())
   .then((html)=>{
     document.querySelector('.main-panel').innerHTML=html
@@ -577,8 +585,14 @@ function updateproduct(e) {
     }
   }
 
-  fetch('/admin/productUpdate', {
-    method: 'post',
+  const productId = data.id || document.querySelector('input[name="id"]')?.value;
+  if (!productId) {
+    alert('Product ID is required');
+    return;
+  }
+  delete data.id;
+  fetch(`/admin/products/${productId}`, {
+    method: 'PATCH',
     body: JSON.stringify(data),
     headers: {
       'Content-Type': 'application/json'
@@ -622,7 +636,7 @@ function filterRows() {
 
 function laodordermanagment(){
   setActiveNavItem('Order Management')
-    fetch('/admin/ordermanagment',{
+    fetch('/admin/orders',{
       method:'get'})
       .then(response => response.text())
       .then((html)=>{
@@ -725,7 +739,7 @@ function productAdder(e) {
  
 
   // Send the data to the server
-  fetch('/admin/productadd', {
+  fetch('/admin/products', {
     method: 'POST',
     body: JSON.stringify(formObject),
     headers: { 'Content-Type': 'application/json' },
@@ -834,13 +848,12 @@ function removeVariant(id) {
   }
   }
 function updateProductStatus(orderId, productId, status,varient) {
-  fetch(`/admin/orders/update-status`, {
-      method: 'PUT',
+  fetch(`/admin/orders/${orderId}/status`, {
+      method: 'PATCH',
       headers: {
           'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-          orderId,
           productId,
           status,
           varient
@@ -913,7 +926,7 @@ const styles = `
 
 
 function coupnload(){
-  fetch('coupon-managment',{method:'get'})
+  fetch('/admin/coupons',{method:'get'})
   .then((r)=>r.text())
   .then((html)=>{
     document.querySelector('.main-panel').innerHTML=html
@@ -924,7 +937,7 @@ function coupnload(){
 
 
 function addcouponloader(){
-  fetch('addcoupon',{method:'get'})
+  fetch('/admin/coupons/new',{method:'get'})
   .then((r)=>r.text())
   .then((html)=>{
     document.querySelector('.main-panel').innerHTML=html
@@ -1017,7 +1030,7 @@ if (startDateEl) {
      const formData = new FormData(form);
      const data = Object.fromEntries(formData);
 
-     const response = await fetch('/admin/add-coupon', {
+     const response = await fetch('/admin/coupons', {
        method: 'POST',
        headers: {
          'Content-Type': 'application/json'
@@ -1060,15 +1073,12 @@ if (startDateEl) {
      });
 
      if (result.isConfirmed) {
-       const response = await fetch('/admin/delete-coupon', {
-         method: 'POST',
-         headers: {
-           'Content-Type': 'application/json'
-         },
-         body: JSON.stringify({
-           id: id
-         })
-       });
+      const response = await fetch(`/admin/coupons/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
 
        if (!response.ok) {
          throw new Error('Failed to delete coupon');
@@ -1100,7 +1110,7 @@ if (startDateEl) {
  }
 
 function updateCouponloader(id){
-  fetch('updatecouponloader',{method:'post',body:JSON.stringify({id}),headers:{'Content-Type':'application/json'}})
+  fetch(`/admin/coupons/${id}/edit`,{method:'get'})
   .then((r)=>r.text())
   .then((html)=>{
     document.querySelector('.main-panel').innerHTML=html
@@ -1117,7 +1127,7 @@ function couponupdate(e){
   const form = e.target
   const formData = new FormData(form)
   const data = Object.fromEntries(formData)
-  fetch('/admin/updatecoupon',{method:'post',body:JSON.stringify({id,data}),headers:{'Content-Type':'application/json'}})
+  fetch(`/admin/coupons/${id}`,{method:'PATCH',body:JSON.stringify({data}),headers:{'Content-Type':'application/json'}})
   .then((r)=>r.text())
   .then((html)=>{
     document.querySelector('.main-panel').innerHTML=html
@@ -1133,9 +1143,8 @@ async function getreturndata(returnid,notification) {
 
     
     if(notification){
-      const notificationResponse = await fetch('/admin/removereturnnotification', {
-      method: 'POST',
-      body: JSON.stringify({returnid: returnid}),
+      const notificationResponse = await fetch(`/admin/returns/${returnid}/notification`, {
+      method: 'DELETE',
       headers: {
         'Content-Type': 'application/json'
       }
@@ -1180,8 +1189,13 @@ function setActiveNavItem(menuTitle) {
 }
 
 
-function showOrderDetails(orderId,productid,varient) {
-  fetch(`/admin/orderdetails/${orderId}/${productid}/${varient}`,{method:'get'})  
+function showOrderDetails(orderId,productId,varient) {
+  let varientParam = '';
+  if (varient) {
+    const varientObj = typeof varient === 'string' ? JSON.parse(varient) : varient;
+    varientParam = '?varient=' + encodeURIComponent(JSON.stringify(varientObj));
+  }
+  fetch(`/admin/orders/${orderId}/items/${productId}${varientParam}`,{method:'get'})  
   .then((r)=>r.json())
   .then((data)=>{
     const order = data.order;

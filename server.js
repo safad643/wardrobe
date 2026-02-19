@@ -6,9 +6,8 @@ const flash=require('connect-flash')
 const path=require('path')
 const app=express()
 const passportsetup=require('./config/passport')
-const userRoutes=require('./routes/userRoutes')
-const adminrouter=require('./routes/adminRoutes')
-const authroutes=require('./routes/authroutes')
+const userRoutes = require("./routes/user");
+const adminrouter = require("./routes/admin");
 app.use(session({
     secret: process.env.SESSION_SECRET, 
     resave: false,             
@@ -23,8 +22,7 @@ app.use(passportsetup.session());
 app.use(nochache())
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ limit: '5mb', extended: true }));
-app.use('/auth',authroutes)
-app.use('/user',userRoutes)
+app.use("/user", userRoutes);
 app.use('/',userRoutes)
 app.use('/admin',adminrouter)
 app.use('/images', express.static(path.join(__dirname, 'images')))

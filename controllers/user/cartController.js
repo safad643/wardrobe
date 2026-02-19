@@ -1,0 +1,234 @@
+const mongo = require("../../mongodb/mongo");
+const { ObjectId } = require("mongodb");
+
+const addtocart = async (req, res) => {
+  try {
+    let { productid, varient } = req.body;
+    const userid = req.session.uid;
+    const db = await mongo();
+
+    const query = {
+      _id: new ObjectId(productid),
+      ...(varient && {
+        variants: {
+          $elemMatch: {
+            color: varient.color,
+            size: varient.size,
+          },
+        },
+      }),
+    };
+
+    const product = await db.collection("products").findOne(query);
+
+    if (!varient && product) {
+      varient = product.variants[0];
+    }
+
+    if (!product) {
+      return res.status(404).json({ message: "Product or variant not found" });
+    }
+
+    const matchingVariant = product.variants.find(
+      (v) => v.color === varient.color && v.size === varient.size
+    );
+
+    varient.count = matchingVariant.count;
+
+    const existingProduct = await db.collection("cart").findOne({
+      userid: userid,
+      products: {
+        $elemMatch: {
+          productid: productid,
+          "varient.color": varient.color,
+          "varient.size": varient.size,
+        },
+      },
+    });
+
+    if (existingProduct) {
+      return res.status(400).json({ message: "product already exist" });
+    }
+
+    await db
+      .collection("wishlist")
+      .updateOne({ userId: userid }, { $pull: { products: productid } });
+
+    await db.collection("cart").updateOne(
+      { userid: userid },
+      {
+        $push: { products: { productid: productid, quantity: 1, varient } },
+        $setOnInsert: { userid: userid },
+      },
+      { upsert: true }
+    );
+
+    res.status(200).json({ message: "product added to cart" });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Error updating cart" });
+  }
+};
+
+const laodcart = async (req, res) => {
+  const db = await mongo();
+  const products = await db
+    .collection("products")
+    .aggregate([
+      {
+        $lookup: {
+          from: "cart",
+          let: { productId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                userid: req.session.uid,
+              },
+            },
+            { $unwind: "$products" },
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$$productId", { $toObjectId: "$products.productid" }],
+                },
+              },
+            },
+            {
+              $project: {
+                quantity: "$products.quantity",
+                varient: "$products.varient",
+                _id: 0,
+              },
+            },
+          ],
+          as: "cartDetails",
+        },
+      },
+      { $unwind: "$cartDetails" },
+      {
+        $addFields: {
+          quantity: "$cartDetails.quantity",
+          varient: {
+            $let: {
+              vars: {
+                matchingVariant: {
+                  $arrayElemAt: [
+                    {
+                      $filter: {
+                        input: "$variants",
+                        cond: {
+                          $and: [
+                            {
+                              $eq: [
+                                "$$this.color",
+                                "$cartDetails.varient.color",
+                              ],
+                            },
+                            {
+                              $eq: ["$$this.size", "$cartDetails.varient.size"],
+                            },
+                          ],
+                        },
+                      },
+                    },
+                    0,
+                  ],
+                },
+              },
+              in: {
+                color: "$cartDetails.varient.color",
+                size: "$cartDetails.varient.size",
+                count: "$$matchingVariant.count",
+              },
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          cartDetails: 0,
+        },
+      },
+    ])
+    .toArray();
+
+  res.render("user/cart", { products, userid: req.session.uid, user: true });
+};
+
+const removeFromCart = async (req, res) => {
+  try {
+    const productId = req.params.productId;
+    const userId = req.session.uid;
+    const { size, color } = req.query;
+
+    const db = await mongo();
+
+    await db.collection("cart").updateOne(
+      { userid: userId },
+      {
+        $pull: {
+          products: {
+            productid: productId,
+            "varient.size": size,
+            "varient.color": color,
+          },
+        },
+      }
+    );
+
+    res.status(200).json({ message: "removed from cart" });
+  } catch (err) {
+    console.error(err);
+    req.flash("error", "Failed to remove product from cart");
+    res.redirect("/user/cart");
+  }
+};
+
+const updatecart = async (req, res) => {
+  try {
+    const { productid, userid, quantity, varient } = req.body;
+
+    const db = await mongo();
+
+    const result = await db.collection("cart").updateOne(
+      {
+        userid,
+        products: {
+          $elemMatch: {
+            productid: productid,
+            "varient.size": varient.size,
+            "varient.color": varient.color,
+          },
+        },
+      },
+      { $set: { "products.$.quantity": quantity } }
+    );
+
+    if (result.modifiedCount === 0)
+      return res.status(404).json({ message: "Product not found" });
+    res.status(200).json({ message: "Quantity updated" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error updating quantity" });
+  }
+};
+
+const getwishlist_cartcount = async (req, res) => {
+  const db = await mongo();
+  const userId = req.session.uid;
+  const wishlist = await db.collection("wishlist").findOne({ userId: userId });
+  const cart = await db.collection("cart").findOne({ userid: userId });
+  res.json({
+    wishlistcount: wishlist ? wishlist.products.length : 0,
+    cartcount: cart ? cart.products.length : 0,
+  });
+};
+
+module.exports = {
+  addtocart,
+  laodcart,
+  removeFromCart,
+  updatecart,
+  getwishlist_cartcount,
+};
+

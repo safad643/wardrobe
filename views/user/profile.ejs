@@ -1040,7 +1040,7 @@
             <div class="modal-content">
                 <span class="modal-close" onclick="closeModal()">&times;</span>
                 <h2>Edit Profile</h2>
-                <form action="/user/editname" method="post">
+                <form action="/user/profile/name" method="post">
                     <label> Name</label>
                     <input type="text" class="form-input" name="name" required>
                     <input type="text"  name="email" value="<%= user.email %>"  hidden>
@@ -1358,10 +1358,10 @@ document.getElementById("editAddressForm").addEventListener("submit", async func
     const postalCode = document.getElementById("editPostalCode").value;
     const phone = document.getElementById("editPhone").value;
 
-    const response = await fetch(`/user/update-address`, {
-        method: "PUT",
+    const response = await fetch(`/user/addresses/${addressId}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ addressId, street, city, state, country, postalCode, phone })
+        body: JSON.stringify({ street, city, state, country, postalCode, phone })
     });
 
     const result = await response.json();
@@ -1501,7 +1501,7 @@ document.getElementById('addressForm').addEventListener('submit', async (e) => {
     };
 
     try {
-        const response = await fetch('/user/adresss', {
+        const response = await fetch('/user/addresses', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1613,7 +1613,7 @@ function viewProductOrder(orderId, productId, variantJson) {
         color: variant.color
     }).toString();
     
-    window.location.href = `/user/orderdetails/${orderId}/${productId}?${queryParams}`;
+    window.location.href = `/user/orders/${orderId}/items/${productId}?${queryParams}`;
 }
 
 function changepassowrd(event) {
@@ -1662,8 +1662,8 @@ function changepassowrd(event) {
     
     // Only proceed with fetch if validation passes
     if (isValid) {
-        fetch('/user/change-password', {
-            method: 'POST',
+        fetch('/user/password', {
+            method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1713,7 +1713,7 @@ async function addmoney(event){
     const amount = document.getElementById("amountinput").value;
     const result = await razorpay(amount);
     if(result){
-        fetch('/user/updatewallet', {
+        fetch('/user/wallet/transactions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

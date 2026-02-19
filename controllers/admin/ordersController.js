@@ -1,0 +1,148 @@
+const mongo = require("../../mongodb/mongo");
+const { ObjectId } = require("mongodb");
+const { getPagination } = require("../../helpers/pagination");
+
+const loadordermanagment = async (req, res) => {
+  try {
+    const db = await mongo();
+
+    const countResult = await db
+      .collection("orders")
+      .aggregate([
+        { $project: { itemCount: { $size: "$items" } } },
+        {
+          $group: {
+            _id: null,
+            totalItems: { $sum: "$itemCount" },
+          },
+        },
+      ])
+      .toArray();
+
+    const total = countResult[0]?.totalItems || 0;
+    const { currentPage, totalPages, skip, limit } = getPagination(
+      req.query.page,
+      total
+    );
+
+    const allOrderItems = await db
+      .collection("orders")
+      .aggregate([
+        { $unwind: "$items" },
+        { $sort: { createdAt: -1, _id: -1 } },
+        { $skip: skip },
+        { $limit: limit },
+        {
+          $project: {
+            orderId: "$_id",
+            createdAt: "$createdAt",
+            paymentMethod: "$paymentMethod",
+            paymentStatus: { $ifNull: ["$paymentStatus", "pending"] },
+            productId: "$items.productId",
+            status: "$items.status",
+            quantity: "$items.quantity",
+            price: "$items.price",
+            total: "$items.total",
+            varient: "$items.varient",
+          },
+        },
+      ])
+      .toArray();
+
+    res.render("admin/nav/ordermanagment", {
+      orders: allOrderItems,
+      pagination: {
+        currentPage,
+        totalPages,
+        total,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const updateProductStatus = async (req, res) => {
+  try {
+    const orderId = req.params.orderId;
+    const { productId, status, varient } = req.body;
+
+    const db = await mongo();
+
+    const result = await db.collection("orders").updateOne(
+      {
+        _id: new ObjectId(orderId),
+        "items.productId": productId,
+        "items.varient.color": varient.color,
+        "items.varient.size": varient.size,
+      },
+      {
+        $set: {
+          "items.$.status": status,
+          updatedAt: new Date(),
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: "Order or product not found." });
+    }
+
+    res.json({
+      success: true,
+      message: "Product status updated successfully",
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      error: "An error occurred while updating the product status.",
+    });
+  }
+};
+
+const loadorderdetails = async (req, res) => {
+  try {
+    const { orderId, productId } = req.params;
+    const varient = req.query.varient ? JSON.parse(req.query.varient) : null;
+    const db = await mongo();
+
+    const order = await db.collection("orders").findOne(
+      {
+        _id: new ObjectId(orderId),
+        "items.productId": productId,
+        ...(varient && { "items.varient": varient }),
+      },
+      {
+        projection: {
+          _id: 0,
+        },
+      }
+    );
+    const product = await db.collection("products").findOne(
+      { _id: new ObjectId(order.items[0].productId) },
+      { projection: { _id: 0, name: 1, images: { $slice: 1 } } }
+    );
+    const user = await db.collection("users").findOne(
+      { _id: new ObjectId(order.userId) },
+      { projection: { _id: 0, name: 1, email: 1 } }
+    );
+    res.json({
+      order: {
+        ...order,
+        name: product.name,
+        image: product.images[0],
+        user: user,
+      },
+    });
+  } catch (error) {
+    console.error("Error loading order details:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to load order details",
+    });
+  }
+};
+
+module.exports = { loadordermanagment, updateProductStatus, loadorderdetails };
+

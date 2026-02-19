@@ -737,7 +737,7 @@
 		window.addEventListener('resize', updatePlaceholder);
 
 
-        fetch('/user/getwishlist&cartcount')
+        fetch('/user/me/counts')
         .then(response => {
             // Check if the response is actually JSON
             const contentType = response.headers.get('content-type');

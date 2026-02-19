@@ -142,7 +142,7 @@
 																	<!-- Category heading with Show All button -->
 																	<div class="d-flex justify-content-between align-items-center mb-3">
 																			<h3 class="category-title"><%= category %></h3>
-																			<a href="/user/shop/<%= category %>" class="btn btn-primary btn-sm">Show All</a>
+																			<a href="/user/categories/<%= category %>" class="btn btn-primary btn-sm">Show All</a>
 																	</div>
 																	<div class="row showcat">
 																			<% 
@@ -378,7 +378,7 @@
 				function loadview(name) {
 				
 						
-					fetch(`/user/productview/${name}`, { method: 'GET' })
+					fetch(`/user/products/${name}`, { method: 'GET' })
 							.then(response => response.text())
 							.then(html => {
 									document.querySelector('.main').innerHTML = html;
