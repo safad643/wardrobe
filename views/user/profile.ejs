@@ -1781,7 +1781,7 @@ async function addmoney(event){
 async function razorpay(amount){
       return new Promise((resolve, reject) => {
         var options = {
-            key: "rzp_test_e3wiAeWDzGn9sG", 
+            key: "<%= razorpayKey %>", 
             amount: amount*100, 
             currency: "INR",
             name: "Your Company Name",
@@ -1825,7 +1825,7 @@ function handleLogout() {
 
 function retryPayment(orderId, amount) {
     var options = {
-        key: "rzp_test_PdAFPaTa6RKOxW",
+        key: "<%= razorpayKey %>",
         amount: amount * 100,
         currency: "INR",
         name: "Your Company Name",

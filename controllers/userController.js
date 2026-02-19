@@ -366,7 +366,7 @@ const profileload = async (req, res) => {
       user: user,
       addresses: addresses,
       orders: orders,
-      wallet: wallet,
+      razorpayKey: process.env.RAZORPAY_KEY_ID,
     });
   } catch (error) {
     console.error(error);
@@ -973,7 +973,7 @@ const loadorderview = async (req, res) => {
       });
     const returnStatus = returndoc?.status || "not-requested";
 
-    res.render("user/orderviewpage", { order: orderView, returnStatus });
+    res.render("user/orderviewpage", { order: orderView, returnStatus, razorpayKey: process.env.RAZORPAY_KEY_ID });
   } catch (error) {
     console.error(error);
     res.status(500).send("Error loading order view");
@@ -1518,8 +1518,8 @@ const payment = async (req, res) => {
     }
 
     const razorpay = new Razorpay({
-      key_id: 'rzp_test_SHYEuhRPPyW7nY',
-      key_secret: 'YCHaHV75siTK0ucSfGf2oDgM',
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
     }); 
     
     const options = {
@@ -1532,7 +1532,7 @@ const payment = async (req, res) => {
     
     res.json({
       orderid: order.id,
-      key: 'rzp_test_SHYEuhRPPyW7nY',
+      key: process.env.RAZORPAY_KEY_ID,
     });
   } catch (error) {
     console.error("Razorpay order creation failed:", error);
@@ -1547,7 +1547,7 @@ const paymentcheck = async (req, res) => {
   const {response} = req.body;
  
   
-  const secret = 'YCHaHV75siTK0ucSfGf2oDgM';
+  const secret = process.env.RAZORPAY_KEY_SECRET;
   const generatedSignature = crypto.createHmac('sha256', secret)
     .update(`${response.razorpay_order_id}|${response.razorpay_payment_id}`)
     .digest('hex');
