@@ -1,26 +1,45 @@
-<div class="pagination-container">
-  <div class="admin-pagination">
-    <button class="pagination-btn" onclick="pageback()">
-      <div class="btn-content">
-        <i class="mdi mdi-chevron-left"></i>
-        <span>Previous</span>
+<% if (typeof pagination !== 'undefined' && pagination && pagination.totalPages > 1) { %>
+  <div class="pagination-container">
+    <div class="admin-pagination">
+      <% const currentPage = pagination.currentPage || 1; %>
+      <% const totalPages = pagination.totalPages || 1; %>
+
+      <% const url = new URL(request.originalUrl, 'http://dummy'); %>
+      <% function buildPageHref(page) {
+           url.searchParams.set('page', page);
+           return url.pathname + url.search;
+         } %>
+
+      <button
+        class="pagination-btn"
+        onclick="loadAdminPanel('<%= buildPageHref(currentPage - 1) %>')"
+        <%= currentPage === 1 ? 'disabled' : '' %>>
+        <div class="btn-content">
+          <i class="mdi mdi-chevron-left"></i>
+          <span>Previous</span>
+        </div>
+      </button>
+      
+      <div class="page-number">
+        <div class="number-wrapper">
+          <span id="pageno">
+            <%= String(currentPage).padStart(2, '0') %> / <%= String(totalPages).padStart(2, '0') %>
+          </span>
+        </div>
       </div>
-    </button>
-    
-    <div class="page-number">
-      <div class="number-wrapper">
-        <span id="pageno">01</span>
-      </div>
+      
+      <button
+        class="pagination-btn"
+        onclick="loadAdminPanel('<%= buildPageHref(currentPage + 1) %>')"
+        <%= currentPage === totalPages ? 'disabled' : '' %>>
+        <div class="btn-content">
+          <span>Next</span>
+          <i class="mdi mdi-chevron-right"></i>
+        </div>
+      </button>
     </div>
-    
-    <button class="pagination-btn" onclick="pagenext()">
-      <div class="btn-content">
-        <span>Next</span>
-        <i class="mdi mdi-chevron-right"></i>
-      </div>
-    </button>
   </div>
-</div>
+<% } %>
 
 <style>
 .pagination-container {

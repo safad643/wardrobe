@@ -17,14 +17,9 @@
                 </tr>
               </thead>
               <tbody>
-                <% let index = 0; %>
                 <% products.forEach(product => { %>
                   
-                    <tr 
-      <% if (++index >= 4) { %>
-        style="display: none;"
-      <% } %> 
-      id="row<%= index %>">
+                    <tr>
                     <td><%= product.name %></td>
                     <td><button onclick="showproductimages('<%= product.images[0] %>','<%= product.images[1] %>','<%= product.images[2] %>')" class="btn btn-primary">show</button></td>
                     <td><%= product.price %></td>
@@ -35,7 +30,23 @@
                     <td><%= product.createdAt ? product.createdAt.toLocaleDateString() : '' %></td>
                     <td><%= product.updatedAt ? product.updatedAt.toLocaleDateString() : '' %></td>
                     
-                    <td><button onclick="updateprodcts('<%= product.name %>','<%= product.images[0] %>','<%= product.images[1] %>','<%= product.images[2] %>', <%= JSON.stringify(product.variants) %>)" class="btn btn-secondary btn-rounded">update</button></td>
+                    <td>
+                      <button 
+                        onclick="updateprodcts(
+                          '<%= product.name %>',
+                          <%= product.price %>,
+                          '<%= product.category %>',
+                          <%= typeof product.rating !== 'undefined' && product.rating !== null ? product.rating : 'null' %>,
+                          '<%= product.images[0] %>',
+                          '<%= product.images[1] %>',
+                          '<%= product.images[2] %>',
+                          <%= JSON.stringify(product.variants) %>
+                        )" 
+                        class="btn btn-secondary btn-rounded"
+                      >
+                        update
+                      </button>
+                    </td>
                     <td>
                       <% if (!product.list) { %>
                         <button onclick="Delete('product','<%=  product.name%>',true)" class="btn btn-success btn-rounded">List</button>

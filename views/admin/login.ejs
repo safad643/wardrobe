@@ -14,15 +14,28 @@
   <div class="center">
     <h2>Log In</h2>
     <form action="/admin" method="post" >
-      <input name="email" type="email" placeholder="email"/ value="safad@gmail.com">
-      <input id="password" name="password" type="password" placeholder="password" value="safad"/>
+      <input name="email" type="email" placeholder="email" value="safad@gmail.com">
+      <input id="password" name="password" type="password" placeholder="password" value="safad">
       <p style="margin-left:30%;color: red;"><%= msg %></p>
-      <button style="margin-left: 40%;" type="submit">LOGIN</button>
+      <button id="admin-login-btn" style="margin-left: 40%;" type="submit">LOGIN</button>
       
     </form>
     
     <h2>&nbsp;</h2>
   </div>
 </div>
+<script>
+  (function () {
+    const loginButton = document.getElementById('admin-login-btn');
+    if (loginButton) {
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          loginButton.click();
+        }
+      });
+    }
+  })();
+</script>
 </body>
 </html>

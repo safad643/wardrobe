@@ -14,13 +14,8 @@
         </tr>
       </thead>
       <tbody>
-        <% let index = 0; %>
         <% user.forEach(user => { %>
-          <tr
-          <% if (++index >= 11) { %>
-            style="display: none;"
-          <% } %> 
-          id="row<%= index %>">
+          <tr>
             <td><%= user.email %></td>
             <td><%= user.name %></td>
             <td><%= user.createdAt%></td>
@@ -41,8 +36,7 @@
         <% }); %>
       </tbody>
     </table>
-   
-       
+    
     <%- include('../nav/shared/pagination.ejs') %>
           <style>
           @import url('https://fonts.googleapis.com/css2?family=Rowdies&display=swap');

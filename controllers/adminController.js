@@ -3,6 +3,7 @@ const mongo = require("../mongodb/mongo");
 const fs = require("fs");
 const { error } = require("console");
 const { ObjectId } = require("mongodb");
+const { getPagination } = require("../helpers/pagination");
 
 const loadlogin = (req, res) => {
   try {
@@ -35,8 +36,29 @@ const loginverify = async (req, res) => {
 const loadusermanagment = async (req, res) => {
   try {
     const db = await mongo();
-    const user = await db.collection("users").find({}).toArray();
-    res.render("admin/nav/usermanagment", { user });
+
+    const total = await db.collection("users").countDocuments({});
+    const { currentPage, totalPages, skip, limit } = getPagination(
+      req.query.page,
+      total
+    );
+
+    const user = await db
+      .collection("users")
+      .find({})
+      .sort({ createdAt: -1, _id: -1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray();
+
+    res.render("admin/nav/usermanagment", {
+      user,
+      pagination: {
+        currentPage,
+        totalPages,
+        total,
+      },
+    });
   } catch (err) {
     console.error(err);
     res.status(500).send("Internal Server Error");
@@ -90,8 +112,29 @@ const loadAdduser = (req, res) => {
 const loadcatogory = async (req, res) => {
   try {
     const db = await mongo();
-    const categories = await db.collection("catogories").find({}).toArray();
-    res.render("admin/nav/catogory", { categories });
+
+    const total = await db.collection("catogories").countDocuments({});
+    const { currentPage, totalPages, skip, limit } = getPagination(
+      req.query.page,
+      total
+    );
+
+    const categories = await db
+      .collection("catogories")
+      .find({})
+      .sort({ createdAt: -1, _id: -1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray();
+
+    res.render("admin/nav/catogory", {
+      categories,
+      pagination: {
+        currentPage,
+        totalPages,
+        total,
+      },
+    });
   } catch (err) {
     console.error(err);
     res.status(500).send("Internal Server Error");
@@ -217,8 +260,29 @@ const loaddashboard = async (req, res) => {
 const loadproducts = async (req, res) => {
   try {
     const db = await mongo();
-    const products = await db.collection("products").find({}).toArray();
-    res.render("admin/nav/products", { products });
+
+    const total = await db.collection("products").countDocuments({});
+    const { currentPage, totalPages, skip, limit } = getPagination(
+      req.query.page,
+      total
+    );
+
+    const products = await db
+      .collection("products")
+      .find({})
+      .sort({ createdAt: -1, _id: -1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray();
+
+    res.render("admin/nav/products", {
+      products,
+      pagination: {
+        currentPage,
+        totalPages,
+        total,
+      },
+    });
   } catch (err) {
     console.error(err);
     res.status(500).send("Internal Server Error");
@@ -414,38 +478,58 @@ const productupdate = async (req, res) => {
 const loadordermanagment = async (req, res) => {
   try {
     const db = await mongo();
-    const orders = await db.collection("orders").find({}).sort({ createdAt: -1 }).toArray();
-    
-    // Create array to hold all order items
-    let allOrderItems = [];
 
-    // Iterate through each order
-    for (const order of orders) {
-      // Iterate through items in each order
-      for (const item of order.items) {
-        // Create new object for each item with common order properties
-        const orderItem = {
-          orderId: order._id,
-          createdAt: order.createdAt,
-          paymentMethod: order.paymentMethod,
-          paymentStatus: order.paymentStatus || 'pending', // Default to pending if not set
-          // Item specific properties
-          productId: item.productId,
-          status: item.status,
-          quantity: item.quantity,
-          price: item.price,
-          total: item.total,
-          varient: item.varient // Include size and color
-        };
-        
-        allOrderItems.push(orderItem);
-      }
-    }
+    const countResult = await db
+      .collection("orders")
+      .aggregate([
+        { $project: { itemCount: { $size: "$items" } } },
+        {
+          $group: {
+            _id: null,
+            totalItems: { $sum: "$itemCount" },
+          },
+        },
+      ])
+      .toArray();
 
-    // Sort all items by creation date descending
-    allOrderItems.sort((a, b) => b.createdAt - a.createdAt);
+    const total = countResult[0]?.totalItems || 0;
+    const { currentPage, totalPages, skip, limit } = getPagination(
+      req.query.page,
+      total
+    );
 
-    res.render("admin/nav/ordermanagment", { orders: allOrderItems });
+    const allOrderItems = await db
+      .collection("orders")
+      .aggregate([
+        { $unwind: "$items" },
+        { $sort: { createdAt: -1, "_id": -1 } },
+        { $skip: skip },
+        { $limit: limit },
+        {
+          $project: {
+            orderId: "$_id",
+            createdAt: "$createdAt",
+            paymentMethod: "$paymentMethod",
+            paymentStatus: { $ifNull: ["$paymentStatus", "pending"] },
+            productId: "$items.productId",
+            status: "$items.status",
+            quantity: "$items.quantity",
+            price: "$items.price",
+            total: "$items.total",
+            varient: "$items.varient",
+          },
+        },
+      ])
+      .toArray();
+
+    res.render("admin/nav/ordermanagment", {
+      orders: allOrderItems,
+      pagination: {
+        currentPage,
+        totalPages,
+        total,
+      },
+    });
   } catch (err) {
     console.error(err);
     res.status(500).send("Internal Server Error");
@@ -496,24 +580,40 @@ const updateProductStatus = async (req, res) => {
 const loadcoupons = async (req, res) => {
   try {
     const db = await mongo();
-    const coupons = await db.collection("coupons").find({}).toArray();
-    
-    // Fetch categories and create a map of category IDs to names
+
+    const total = await db.collection("coupons").countDocuments({});
+    const { currentPage, totalPages, skip, limit } = getPagination(
+      req.query.page,
+      total
+    );
+
+    const coupons = await db
+      .collection("coupons")
+      .find({})
+      .sort({ startDate: -1, _id: -1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray();
+
     const categories = await db.collection("catogories").find({}).toArray();
     const categoryMap = {};
-    categories.forEach(cat => {
+    categories.forEach((cat) => {
       categoryMap[cat._id.toString()] = cat.name;
     });
 
-    // Add category name to each coupon
-    const couponsWithCategories = coupons.map(coupon => {
-      return {
-        ...coupon,
-        catogory: categoryMap[coupon.applicableCategories] || 'Unknown Category'
-      };
+    const couponsWithCategories = coupons.map((coupon) => ({
+      ...coupon,
+      catogory: categoryMap[coupon.applicableCategories] || "Unknown Category",
+    }));
+
+    res.render("admin/nav/coupons", {
+      coupons: couponsWithCategories,
+      pagination: {
+        currentPage,
+        totalPages,
+        total,
+      },
     });
-    
-    res.render("admin/nav/coupons", { coupons: couponsWithCategories });
   } catch (err) {
     console.error(err);
     res.status(500).send("Internal Server Error");
@@ -775,13 +875,34 @@ const updateReturnStatus = async (req, res) => {
 const loadreturnmanagment = async (req, res) => {
   try {
     const db = await mongo();
-    const returns = await db.collection("returns").find({}).sort({_id: -1}).toArray();
-    res.render("admin/nav/returnmanagment", { returns });
+
+    const total = await db.collection("returns").countDocuments({});
+    const { currentPage, totalPages, skip, limit } = getPagination(
+      req.query.page,
+      total
+    );
+
+    const returns = await db
+      .collection("returns")
+      .find({})
+      .sort({ _id: -1 })
+      .skip(skip)
+      .limit(limit)
+      .toArray();
+
+    res.render("admin/nav/returnmanagment", {
+      returns,
+      pagination: {
+        currentPage,
+        totalPages,
+        total,
+      },
+    });
   } catch (err) {
     console.error(err);
     res.status(500).send("Internal Server Error");
   }
-}
+};
 
 
 const generatesalesdata = async (req, res) => {

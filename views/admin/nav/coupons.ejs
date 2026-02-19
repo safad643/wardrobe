@@ -19,13 +19,8 @@
       </tr>
     </thead>
     <tbody>
-      <% let index = 0; %>
       <% coupons.forEach(coupon => { %>
-        <tr
-        <% if (++index >= 11) { %>
-          style="display: none;"
-        <% } %> 
-        id="row<%= index %>">
+        <tr>
           <td class="text-center"><%= coupon.code %></td>
           <td class="text-center"><%= coupon.discountValue %></td>
           <td class="text-center"><%= coupon.minPurchase %></td>

@@ -14,12 +14,12 @@ passport.use(
       console.log(JSON.stringify(profile, null, 2));
 
       if (existingUser) {
-       
         done(null, existingUser); // Pass the existing user to Passport
       } else {
         const newUser = { 
           gid: profile.id, 
           name: profile.displayName,
+          email: profile.emails && profile.emails[0] ? profile.emails[0].value : null,
           profilepic: profile.photos[0].value,
           list: true, // Set list to true to prevent redirect to ban page
           createdAt: new Date()

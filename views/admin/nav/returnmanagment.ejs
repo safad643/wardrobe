@@ -16,14 +16,8 @@
                 </tr>
               </thead>
               <tbody>
-                <% let index = 0; %>
-          
                 <% returns.forEach(returnItem => { %>
-                  <tr
-                  <% if (++index >= 11) { %>
-                    style="display: none;"
-                  <% } %> 
-                  id="row<%= index %>">
+                  <tr>
                     <td><%= returnItem.orderid %></td>
                     <td><%= returnItem.productid %></td>
                     <td>

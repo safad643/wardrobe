@@ -13,13 +13,8 @@
                 </tr>
               </thead>
               <tbody>
-                <% let index = 0; %>
                 <% categories.forEach(category => { %>
-                  <tr
-                  <% if (++index >= 11) { %>
-                    style="display: none;"
-                  <% } %> 
-                  id="row<%= index %>">
+                  <tr>
                     <td><%= category.name %></td>
                     <td style="width: 400px; white-space: normal; word-wrap: break-word;"><%= category.descr %></td>
                     

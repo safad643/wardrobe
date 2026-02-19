@@ -156,27 +156,62 @@ function catogoryupdate(event){
   
 }
 
-const Delete=function(identifier,data,bool){
+const Delete = function(identifier, data, bool) {
+  // Build a context-aware title based on what we're acting on
+  let noun = 'item';
+  if (identifier === 'user') noun = 'user';
+  else if (identifier === 'product') noun = 'product';
+  else if (identifier === 'catogories') noun = 'category';
+
+  const actionVerb = bool ? 'delete' : 'list';
+  const title = `Do you want to ${actionVerb} this ${noun}?`;
+
   Swal.fire({
-    title: "Do you want to delete this user?",
+    title,
+    icon: "warning",
+    background: "#191c24",
+    color: "#ffffff",
+    showCancelButton: true,
+    confirmButtonText: "Delete",
+    cancelButtonText: "Cancel",
+    reverseButtons: true,
+    buttonsStyling: true,
+    confirmButtonColor: "#e74c3c",
+    cancelButtonColor: "#6c757d",
     customClass: {
       title: "swal_title",
-    },
-    showDenyButton: true,
-    denyButtonText: `Delete`,
-    confirmButtonText: "Cancel"
-  }).then((result) => {
-    if (result.isConfirmed) {
-      Swal.fire("Changes are not saved", "", "info");
-    } else if (result.isDenied) {
-      fetch('/admin/delete',{method:'post',body:JSON.stringify({identifier,data,bool}),headers:{'Content-Type':'application/json'}})
-      .then(Swal.fire("delted", "", "success"))
-      .then((r)=>r.text())
-      .then((html)=>{
-        document.querySelector('.main-panel').innerHTML=html
-      })
-      .catch(err=>console.log(err))
+      popup: "swal-dark-theme"
     }
+  }).then((result) => {
+    // If user clicks "Delete"
+    if (result.isConfirmed) {
+      fetch('/admin/delete', {
+        method: 'post',
+        body: JSON.stringify({ identifier, data, bool }),
+        headers: { 'Content-Type': 'application/json' }
+      })
+        .then((r) => r.text())
+        .then((html) => {
+          document.querySelector('.main-panel').innerHTML = html;
+          // Optional success notice, kept dark as well
+          const successTitle = bool
+            ? `${noun.charAt(0).toUpperCase() + noun.slice(1)} deleted`
+            : `${noun.charAt(0).toUpperCase() + noun.slice(1)} listed`;
+          Swal.fire({
+            title: successTitle,
+            icon: "success",
+            background: "#191c24",
+            color: "#ffffff",
+            confirmButtonText: "OK",
+            buttonsStyling: false,
+            customClass: {
+              confirmButton: "btn btn-primary"
+            }
+          });
+        })
+        .catch(err => console.log(err));
+    }
+    // If user clicks "Cancel" or closes modal, do nothing – it just closes
   });
 }
 
@@ -203,7 +238,7 @@ function productload(){
   .catch(err=>console.log(err))
 }
 
-function updateprodcts(name,img1,img2,img3,varientarray){
+function updateprodcts(name, price, category, rating, img1, img2, img3, varientarray){
   // Clear existing croppers
   for (let i in croppers) {
     if (croppers[i]) {
@@ -217,6 +252,19 @@ function updateprodcts(name,img1,img2,img3,varientarray){
   .then((html)=>{
     document.querySelector('.main-panel').innerHTML=html
     document.getElementById('ogname').value=name
+    
+    // Prefill basic product fields
+    const nameInput = document.querySelector('input[name="name"]');
+    if (nameInput) nameInput.value = name;
+
+    const priceInput = document.querySelector('input[name="price"]');
+    if (priceInput && (price || price === 0)) priceInput.value = price;
+
+    const categorySelect = document.querySelector('select[name="category"]');
+    if (categorySelect && category) categorySelect.value = category;
+
+    const ratingInput = document.querySelector('input[name="rating"]');
+    if (ratingInput && rating !== null && typeof rating !== 'undefined') ratingInput.value = rating;
     
     // Clear any existing preview images
     for (let i = 1; i <= 3; i++) {
@@ -424,52 +472,18 @@ function updateproduct(e) {
 
 
 
-function pageback(){
-  console.log('hahahah');
-  
-  if(!(document.getElementById('pageno').innerHTML==1)){
-    document.getElementById('pageno').innerHTML--
-  }
-  const current =parseInt(document.getElementById('pageno').innerHTML)
-
-  
-  if(current<10){
-    const startrow=(current)*3
-    const endrow=(current+1)*3
-    
-    
-    
-    
-    for(let i=startrow;i<=endrow;i++){
-      let rowElement = document.getElementById(`row${i}`);
-      console.log(rowElement)
-      if (rowElement) { 
-        rowElement.style.display = 'none';
-    }
-    }
-  }
-  const startrow=(current-1)*3+1//10
-  const endrow=(current)*3//20
-  for(let i=startrow;i<=endrow;i++){
-    document.getElementById(`row${i}`).style.display=''
-  }
-}
-
-function pagenext(){
-  let current=document.getElementById('pageno').innerHTML++
-  current++
-  if(current>1){
-    const startrow=(current-1)*3//20
-    const endrow=((current-2)*3)+1//11
-    for(let i=startrow;i>=endrow;i--){
-      document.getElementById(`row${i}`).style.display='none'
-    }
-  }
-  const startrow=(current-1)*3+1//21
-  const endrow=(current)*3//30
-  for(let i=startrow;i<=endrow;i++){
-    document.getElementById(`row${i}`).style.display=''
-  }
+function loadAdminPanel(url) {
+  fetch(url, { method: 'get' })
+    .then(response => response.text())
+    .then(html => {
+      const mainPanel = document.querySelector('.main-panel');
+      if (mainPanel) {
+        mainPanel.innerHTML = html;
+      }
+    })
+    .catch(err => {
+      console.error('Failed to load admin panel page:', err);
+    });
 }
 
 function filterRows() {
@@ -1054,7 +1068,7 @@ function showOrderDetails(orderId,productid,varient) {
     const item = order.items[0];
 
     // Order Summary
-    
+    document.getElementById('modalOrderId').textContent = orderId;
     document.getElementById('modalOrderDate').textContent = new Date(order.createdAt).toLocaleString();
     document.getElementById('modalPaymentMethod').textContent = order.paymentMethod;
     document.getElementById('modalSubtotal').textContent = item.subtotal;
