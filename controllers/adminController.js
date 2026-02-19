@@ -237,9 +237,48 @@ const catogoryupdate = async (req, res) => {
 const deletecatogory = async (req, res) => {
   try {
     const db = await mongo();
-    await db.collection("catogories").deleteOne({ name: req.body.name });
-    const a = await db.collection("catogories").find({}).toArray();
-    res.render("admin/nav/catogory", { categories: a });
+    const { name, targetCategory } = req.body || {};
+
+    const trimmedName = (name || "").trim();
+    const trimmedTarget = (targetCategory || "").trim();
+
+    if (!trimmedName || !trimmedTarget) {
+      return res
+        .status(400)
+        .json({ error: "Both source and target categories are required." });
+    }
+
+    if (trimmedName === trimmedTarget) {
+      return res
+        .status(400)
+        .json({ error: "Target category must be different from the deleted category." });
+    }
+
+    const [sourceCat, targetCat] = await Promise.all([
+      db.collection("catogories").findOne({ name: trimmedName }),
+      db.collection("catogories").findOne({ name: trimmedTarget }),
+    ]);
+
+    if (!sourceCat) {
+      return res.status(404).json({ error: "Category to delete not found." });
+    }
+
+    if (!targetCat) {
+      return res.status(404).json({ error: "Target category not found." });
+    }
+
+    // Reassign all products from the old category to the target category
+    await db
+      .collection("products")
+      .updateMany({ category: trimmedName }, { $set: { category: trimmedTarget } });
+
+    // Now remove the old category
+    await db.collection("catogories").deleteOne({ name: trimmedName });
+
+    const categories = await db.collection("catogories").find({}).toArray();
+
+    // Return updated category list view
+    res.render("admin/nav/catogory", { categories });
   } catch (err) {
     console.error(err);
     res.status(500).send("Internal Server Error");

@@ -45,6 +45,11 @@ router.post(
   midddlewares.adminsession,
   admincontroller.catogoryupdate
 );
+router.post(
+  "/catogory-delete",
+  midddlewares.adminsession,
+  admincontroller.deletecatogory
+);
 
 // product managment routes
 router.get(

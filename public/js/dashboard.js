@@ -163,6 +163,126 @@ const Delete = function(identifier, data, bool) {
   else if (identifier === 'product') noun = 'product';
   else if (identifier === 'catogories') noun = 'category';
 
+  // Special flow: deleting a category with reassignment
+  if (identifier === 'catogories' && bool === true) {
+    // Collect available categories from the current table, excluding the one being deleted
+    const options = Array.from(
+      document.querySelectorAll('table tbody tr td:first-child')
+    )
+      .map(td => (td.textContent || '').trim())
+      .filter(name => name && name !== data);
+
+    if (!options.length) {
+      Swal.fire({
+        title: 'No other categories available',
+        text: 'Create another category first to move products into.',
+        icon: 'error',
+        background: '#191c24',
+        color: '#ffffff',
+      });
+      return;
+    }
+
+    const selectHtml = `
+      <p style="margin-bottom:8px; text-align:center;">
+        Move all products from "<strong>${data}</strong>" to:
+      </p>
+      <div style="display:flex; justify-content:center; align-items:center;">
+        <select
+          id="targetCategorySelect"
+          class="swal2-select"
+          style="min-width:220px; max-width:260px;"
+        >
+          ${options
+            .map(
+              (name) =>
+                `<option value="${name.replace(/"/g, '&quot;')}">${name}</option>`
+            )
+            .join('')}
+        </select>
+      </div>
+    `;
+
+    Swal.fire({
+      title: 'Reassign products before delete',
+      html: selectHtml,
+      icon: 'warning',
+      background: '#191c24',
+      color: '#ffffff',
+      showCancelButton: true,
+      confirmButtonText: 'Move & Delete',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true,
+      buttonsStyling: true,
+      confirmButtonColor: '#e74c3c',
+      cancelButtonColor: '#6c757d',
+      customClass: {
+        title: 'swal_title',
+        popup: 'swal-dark-theme',
+      },
+      preConfirm: () => {
+        const select = document.getElementById('targetCategorySelect');
+        return select ? select.value : null;
+      },
+    }).then((result) => {
+      if (!result.isConfirmed || !result.value) return;
+
+      const targetCategory = result.value;
+
+      fetch('/admin/catogory-delete', {
+        method: 'post',
+        body: JSON.stringify({ name: data, targetCategory }),
+        headers: { 'Content-Type': 'application/json' },
+      })
+        .then(async (r) => {
+          const contentType = r.headers.get('content-type') || '';
+          if (!r.ok) {
+            let errorMessage = 'Failed to delete category';
+            if (contentType.includes('application/json')) {
+              const errData = await r.json().catch(() => ({}));
+              if (errData.error) errorMessage = errData.error;
+            }
+            throw new Error(errorMessage);
+          }
+
+          if (contentType.includes('text/html')) {
+            return r.text();
+          }
+
+          return r.text();
+        })
+        .then((html) => {
+          if (html) {
+            document.querySelector('.main-panel').innerHTML = html;
+          }
+          Swal.fire({
+            title: 'Category deleted',
+            text: `Products were moved to "${targetCategory}".`,
+            icon: 'success',
+            background: '#191c24',
+            color: '#ffffff',
+            confirmButtonText: 'OK',
+            buttonsStyling: false,
+            customClass: {
+              confirmButton: 'btn btn-primary',
+            },
+          });
+        })
+        .catch((err) => {
+          console.error(err);
+          Swal.fire({
+            title: 'Error',
+            text: err.message || 'Failed to delete category',
+            icon: 'error',
+            background: '#191c24',
+            color: '#ffffff',
+          });
+        });
+    });
+
+    return;
+  }
+
   const actionVerb = bool ? 'delete' : 'list';
   const title = `Do you want to ${actionVerb} this ${noun}?`;
 
