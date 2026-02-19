@@ -1,5 +1,6 @@
 const { ObjectId } = require("mongodb");
 const { getPagination } = require("../../helpers/pagination");
+const STATUS_CODES = require("../../constants/statusCodes");
 
 const loadordermanagment = async (req, res) => {
   try {
@@ -58,7 +59,7 @@ const loadordermanagment = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -85,7 +86,7 @@ const updateProductStatus = async (req, res) => {
     );
 
     if (result.matchedCount === 0) {
-      return res.status(404).json({ error: "Order or product not found." });
+      return res.status(STATUS_CODES.NOT_FOUND).json({ error: "Order or product not found." });
     }
 
     res.json({
@@ -94,7 +95,7 @@ const updateProductStatus = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       error: "An error occurred while updating the product status.",
     });
   }
@@ -136,7 +137,7 @@ const loadorderdetails = async (req, res) => {
     });
   } catch (error) {
     console.error("Error loading order details:", error);
-    res.status(500).json({
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       status: "error",
       message: "Failed to load order details",
     });

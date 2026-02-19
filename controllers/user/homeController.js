@@ -1,3 +1,4 @@
+const STATUS_CODES = require("../../constants/statusCodes");
 
 const loadhome = async (req, res) => {
   try {
@@ -23,7 +24,7 @@ const loadhome = async (req, res) => {
     res.render("user/index", { categories, products });
   } catch (error) {
     console.error("Error in loadhome:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -35,7 +36,7 @@ const loadshop = async (req, res) => {
     res.render("user/catogory", { categories, user: true });
   } catch (error) {
     console.error("Error in loadshop:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -48,7 +49,7 @@ const loadproductview = async (req, res) => {
     const product = await db.collection("products").findOne({ name: slug });
 
     if (!product) {
-      return res.status(404).send("Product not found");
+      return res.status(STATUS_CODES.NOT_FOUND).send("Product not found");
     }
 
     const relatedProducts = await db
@@ -70,7 +71,7 @@ const loadproductview = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in loadproductview:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -87,7 +88,7 @@ const loadcategory = async (req, res) => {
     res.render("user/catogory", { categories, products, user: true });
   } catch (error) {
     console.error("Error in loadcategory:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -235,7 +236,7 @@ const search = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in search:", error);
-    res.status(500).json({
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       status: "error",
       message: "Failed to search products",
     });

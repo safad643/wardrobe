@@ -1,3 +1,4 @@
+const STATUS_CODES = require("../../constants/statusCodes");
 
 const switchBestSeller = async (req, res) => {
   try {
@@ -78,7 +79,7 @@ const switchBestSeller = async (req, res) => {
     }
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ error: "Internal Server Error" });
   }
 };
 

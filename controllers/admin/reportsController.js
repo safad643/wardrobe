@@ -1,3 +1,4 @@
+const STATUS_CODES = require("../../constants/statusCodes");
 
 const generateSalesData = async (period, startDate, endDate) => {
   const db = req.db;
@@ -192,7 +193,7 @@ const generatesalesdata = async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error("Error generating sales data:", error);
-    res.status(500).json({ error: "Failed to generate sales data" });
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ error: "Failed to generate sales data" });
   }
 };
 

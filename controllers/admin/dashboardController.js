@@ -1,3 +1,4 @@
+const STATUS_CODES = require("../../constants/statusCodes");
 
 const loaddashboard = async (req, res) => {
   try {
@@ -6,7 +7,7 @@ const loaddashboard = async (req, res) => {
     res.render("admin/dashboard", { adminName: req.session.name, notifications });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 

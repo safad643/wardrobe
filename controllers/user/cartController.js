@@ -1,4 +1,5 @@
 const { ObjectId } = require("mongodb");
+const STATUS_CODES = require("../../constants/statusCodes");
 
 const addtocart = async (req, res) => {
   try {
@@ -25,7 +26,7 @@ const addtocart = async (req, res) => {
     }
 
     if (!product) {
-      return res.status(404).json({ message: "Product or variant not found" });
+      return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Product or variant not found" });
     }
 
     const matchingVariant = product.variants.find(
@@ -46,7 +47,7 @@ const addtocart = async (req, res) => {
     });
 
     if (existingProduct) {
-      return res.status(400).json({ message: "product already exist" });
+      return res.status(STATUS_CODES.BAD_REQUEST).json({ message: "product already exist" });
     }
 
     await db
@@ -62,10 +63,10 @@ const addtocart = async (req, res) => {
       { upsert: true }
     );
 
-    res.status(200).json({ message: "product added to cart" });
+    res.status(STATUS_CODES.OK).json({ message: "product added to cart" });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ message: "Error updating cart" });
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ message: "Error updating cart" });
   }
 };
 
@@ -175,7 +176,7 @@ const removeFromCart = async (req, res) => {
       }
     );
 
-    res.status(200).json({ message: "removed from cart" });
+    res.status(STATUS_CODES.OK).json({ message: "removed from cart" });
   } catch (err) {
     console.error(err);
     req.flash("error", "Failed to remove product from cart");
@@ -204,11 +205,11 @@ const updatecart = async (req, res) => {
     );
 
     if (result.modifiedCount === 0)
-      return res.status(404).json({ message: "Product not found" });
-    res.status(200).json({ message: "Quantity updated" });
+      return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Product not found" });
+    res.status(STATUS_CODES.OK).json({ message: "Quantity updated" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Error updating quantity" });
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ message: "Error updating quantity" });
   }
 };
 

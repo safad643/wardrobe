@@ -1,4 +1,5 @@
 const { ObjectId } = require("mongodb");
+const STATUS_CODES = require("../../constants/statusCodes");
 
 const profileload = async (req, res) => {
   try {
@@ -64,7 +65,7 @@ const profileload = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).send("Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Server Error");
   }
 };
 
@@ -102,7 +103,7 @@ const addadress = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
       error: "Internal Server Error",
     });
@@ -121,11 +122,11 @@ const deleteAddress = async (req, res) => {
     if (result.deletedCount === 1) {
       res.json({ status: "success", message: "Address deleted successfully" });
     } else {
-      res.status(404).json({ success: false, error: "Address not found" });
+      res.status(STATUS_CODES.NOT_FOUND).json({ success: false, error: "Address not found" });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, error: "Internal Server Error" });
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, error: "Internal Server Error" });
   }
 };
 
@@ -151,7 +152,7 @@ const updateAddress = async (req, res) => {
     );
 
     if (result.modifiedCount === 0) {
-      return res.status(404).json({
+      return res.status(STATUS_CODES.NOT_FOUND).json({
         success: false,
         error: "Address not found or no changes made.",
       });
@@ -160,7 +161,7 @@ const updateAddress = async (req, res) => {
     res.json({ success: true, message: "Address updated successfully." });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, error: "Internal Server Error" });
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, error: "Internal Server Error" });
   }
 };
 

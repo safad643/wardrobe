@@ -1,5 +1,6 @@
 const { ObjectId } = require("mongodb");
 const { getPagination } = require("../../helpers/pagination");
+const STATUS_CODES = require("../../constants/statusCodes");
 
 const loadcoupons = async (req, res) => {
   try {
@@ -40,7 +41,7 @@ const loadcoupons = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -51,7 +52,7 @@ const loadaddcoupon = async (req, res) => {
     res.render("admin/forms/couponadd", { categories });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -90,7 +91,7 @@ const addCoupon = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Error adding coupon",
     });
@@ -113,7 +114,7 @@ const deleteCoupon = async (req, res) => {
     }
   } catch (err) {
     console.error(err);
-    res.status(500).json({
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Error deleting coupon",
     });
@@ -131,7 +132,7 @@ const loadupdatecoupon = async (req, res) => {
     res.render("admin/forms/updatecoupon", { categories, coupon });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -155,7 +156,7 @@ const updatecoupon = async (req, res) => {
     res.render("admin/nav/coupons", { coupons });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 

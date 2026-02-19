@@ -1,5 +1,6 @@
 const { ObjectId } = require("mongodb");
 const { getPagination } = require("../../helpers/pagination");
+const STATUS_CODES = require("../../constants/statusCodes");
 
 const getReturnData = async (req, res) => {
   try {
@@ -27,7 +28,7 @@ const getReturnData = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -44,7 +45,7 @@ const removeReturnNotification = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Error removing return notification",
     });
@@ -62,14 +63,14 @@ const updateReturnStatus = async (req, res) => {
       .findOne({ _id: new ObjectId(returnId) });
 
     if (!existingReturn) {
-      return res.status(404).json({
+      return res.status(STATUS_CODES.NOT_FOUND).json({
         success: false,
         message: "Return request not found",
       });
     }
 
     if (existingReturn.status !== "pending") {
-      return res.status(400).json({
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
         success: false,
         message: "Return request has already been processed",
       });
@@ -81,7 +82,7 @@ const updateReturnStatus = async (req, res) => {
         .findOne({ _id: new ObjectId(existingReturn.orderid) });
 
       if (!order) {
-        return res.status(404).json({
+        return res.status(STATUS_CODES.NOT_FOUND).json({
           success: false,
           message: "Order not found for this return request",
         });
@@ -95,7 +96,7 @@ const updateReturnStatus = async (req, res) => {
       );
 
       if (!item) {
-        return res.status(404).json({
+        return res.status(STATUS_CODES.NOT_FOUND).json({
           success: false,
           message: "Matching order item not found for this return request",
         });
@@ -133,7 +134,7 @@ const updateReturnStatus = async (req, res) => {
     res.json({ success: true, message: "Return status updated successfully" });
   } catch (err) {
     console.error(err);
-    res.status(500).json({
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Error updating return status",
     });
@@ -168,7 +169,7 @@ const loadreturnmanagment = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 

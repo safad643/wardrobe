@@ -1,12 +1,13 @@
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
+const STATUS_CODES = require("../../constants/statusCodes");
 
 const payment = async (req, res) => {
   try {
     const total = Number(req.body.total);
 
     if (!Number.isInteger(total) || total <= 0) {
-      return res.status(400).json({
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
         error: "Invalid amount",
         message: "Amount must be a positive integer",
       });
@@ -31,7 +32,7 @@ const payment = async (req, res) => {
     });
   } catch (error) {
     console.error("Razorpay order creation failed:", error);
-    res.status(500).json({
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       error: "Payment initialization failed",
       message: error.message || "Unable to create payment order",
     });

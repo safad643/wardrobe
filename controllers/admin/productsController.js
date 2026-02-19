@@ -1,5 +1,6 @@
 const fs = require("fs");
 const { getPagination } = require("../../helpers/pagination");
+const STATUS_CODES = require("../../constants/statusCodes");
 
 const loadproducts = async (req, res) => {
   try {
@@ -29,7 +30,7 @@ const loadproducts = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -42,7 +43,7 @@ const productupdateload = async (req, res) => {
       .collection("products")
       .findOne({ _id: new ObjectId(productId) });
     if (!product) {
-      return res.status(404).send("Product not found");
+      return res.status(STATUS_CODES.NOT_FOUND).send("Product not found");
     }
     const optionsobj = await db
       .collection("catogories")
@@ -52,7 +53,7 @@ const productupdateload = async (req, res) => {
     res.render("admin/forms/productupdate", { options, product });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -67,7 +68,7 @@ const productaddload = async (req, res) => {
     res.render("admin/forms/productadd", { options });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -78,7 +79,7 @@ const productadd = async (req, res) => {
       .collection("products")
       .findOne({ name: req.body.name });
     if (existingProduct) {
-      return res.status(400).json({ error: "Product name already exists" });
+      return res.status(STATUS_CODES.BAD_REQUEST).json({ error: "Product name already exists" });
     }
 
     const imageData = [req.body.image0, req.body.image1, req.body.image2];
@@ -136,7 +137,7 @@ const productadd = async (req, res) => {
     res.render("admin/nav/products", { products });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -149,13 +150,13 @@ const productupdate = async (req, res) => {
       .collection("products")
       .findOne({ _id: new ObjectId(productId) });
     if (!product) {
-      return res.status(404).json({ error: "Product not found" });
+      return res.status(STATUS_CODES.NOT_FOUND).json({ error: "Product not found" });
     }
     const existingProduct = await db.collection("products").findOne({
       $and: [{ name: req.body.name }, { _id: { $ne: new ObjectId(productId) } }],
     });
     if (existingProduct) {
-      return res.status(400).json({ error: "Product name already exists" });
+      return res.status(STATUS_CODES.BAD_REQUEST).json({ error: "Product name already exists" });
     }
 
     delete req.body.ogname;
@@ -214,7 +215,7 @@ const productupdate = async (req, res) => {
     res.render("admin/nav/products", { products });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 

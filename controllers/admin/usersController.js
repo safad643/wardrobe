@@ -1,4 +1,5 @@
 const { getPagination } = require("../../helpers/pagination");
+const STATUS_CODES = require("../../constants/statusCodes");
 
 const loadusermanagment = async (req, res) => {
   try {
@@ -28,7 +29,7 @@ const loadusermanagment = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -37,7 +38,7 @@ const userupdateLoad = async (req, res) => {
     res.render("admin/forms/userupdate", { error: "", ogmail: "" });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -46,7 +47,7 @@ const loadAdduser = (req, res) => {
     res.render("admin/forms/addform.ejs");
   } catch (err) {
     console.error(err);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 

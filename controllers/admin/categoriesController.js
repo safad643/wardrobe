@@ -1,4 +1,5 @@
 const { getPagination } = require("../../helpers/pagination");
+const STATUS_CODES = require("../../constants/statusCodes");
 
 const loadcatogory = async (req, res) => {
   try {
@@ -28,7 +29,7 @@ const loadcatogory = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -37,7 +38,7 @@ const catogoryaddload = (req, res) => {
     res.render("admin/forms/catogoryaddform.ejs");
   } catch (err) {
     console.error(err);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -56,7 +57,7 @@ const catogoryadd = async (req, res) => {
       .collection("catogories")
       .findOne({ name: data.name });
     if (existingCategory) {
-      return res.status(400).json({ error: "Category already exists." });
+      return res.status(STATUS_CODES.BAD_REQUEST).json({ error: "Category already exists." });
     }
 
     await db.collection("catogories").insertOne(data);
@@ -65,7 +66,7 @@ const catogoryadd = async (req, res) => {
   } catch (err) {
     console.error(err);
     res
-      .status(500)
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
       .json({ error: "An error occurred while processing your request." });
   }
 };
@@ -79,12 +80,12 @@ const loadcatogupdate = async (req, res) => {
       .collection("catogories")
       .findOne({ _id: new ObjectId(categoryId) });
     if (!category) {
-      return res.status(404).send("Category not found");
+      return res.status(STATUS_CODES.NOT_FOUND).send("Category not found");
     }
     res.render("admin/forms/catogoryupdateform", { category: category || null });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -102,7 +103,7 @@ const catogoryupdate = async (req, res) => {
       .findOne({ _id: new ObjectId(categoryId) });
 
     if (!currentCategory) {
-      return res.status(404).json({ error: "Category not found." });
+      return res.status(STATUS_CODES.NOT_FOUND).json({ error: "Category not found." });
     }
 
     const nextName = nameTrim || currentCategory.name;
@@ -113,7 +114,7 @@ const catogoryupdate = async (req, res) => {
     });
 
     if (existingCategory) {
-      return res.status(400).json({ error: "Category name must be unique." });
+      return res.status(STATUS_CODES.BAD_REQUEST).json({ error: "Category name must be unique." });
     }
 
     await db.collection("catogories").updateOne(
@@ -132,7 +133,7 @@ const catogoryupdate = async (req, res) => {
   } catch (err) {
     console.error(err);
     res
-      .status(500)
+      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
       .json({ error: "An error occurred while processing your request." });
   }
 };
@@ -148,7 +149,7 @@ const deletecatogory = async (req, res) => {
 
     if (!trimmedTarget) {
       return res
-        .status(400)
+        .status(STATUS_CODES.BAD_REQUEST)
         .json({ error: "Target category is required." });
     }
 
@@ -157,11 +158,11 @@ const deletecatogory = async (req, res) => {
       .findOne({ _id: new ObjectId(categoryId) });
 
     if (!sourceCat) {
-      return res.status(404).json({ error: "Category to delete not found." });
+      return res.status(STATUS_CODES.NOT_FOUND).json({ error: "Category to delete not found." });
     }
 
     if (sourceCat.name === trimmedTarget) {
-      return res.status(400).json({
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
         error: "Target category must be different from the deleted category.",
       });
     }
@@ -171,7 +172,7 @@ const deletecatogory = async (req, res) => {
       .findOne({ name: trimmedTarget });
 
     if (!targetCat) {
-      return res.status(404).json({ error: "Target category not found." });
+      return res.status(STATUS_CODES.NOT_FOUND).json({ error: "Target category not found." });
     }
 
     await db
@@ -184,7 +185,7 @@ const deletecatogory = async (req, res) => {
     res.render("admin/nav/catogory", { categories });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 

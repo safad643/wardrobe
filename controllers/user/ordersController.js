@@ -1,4 +1,5 @@
 const { ObjectId } = require("mongodb");
+const STATUS_CODES = require("../../constants/statusCodes");
 
 const placeOrder = async (req, res) => {
   try {
@@ -14,7 +15,7 @@ const placeOrder = async (req, res) => {
     let couponData = null;
     if (paymentMethod === "cod") {
       if (totals.total > 1000) {
-        return res.status(400).json({
+        return res.status(STATUS_CODES.BAD_REQUEST).json({
           paymentError: "cod is not available for orders above 1000",
         });
       }
@@ -42,7 +43,7 @@ const placeOrder = async (req, res) => {
     }
 
     if (outOfStockProducts.length > 0) {
-      return res.status(400).json({
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
         success: false,
         error: "Some products are out of stock",
         outOfStockProducts,
@@ -55,7 +56,7 @@ const placeOrder = async (req, res) => {
         .findOne({ _id: new ObjectId(req.session.uid) });
 
       if (user.couponsUsed && user.couponsUsed.includes(coupon)) {
-        return res.status(400).json({
+        return res.status(STATUS_CODES.BAD_REQUEST).json({
           success: false,
           error: "You have already used this coupon",
         });
@@ -166,7 +167,7 @@ const placeOrder = async (req, res) => {
     }
   } catch (error) {
     console.error("Order placement error:", error);
-    res.status(500).json({
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
       error: "Failed to place order. Please try again.",
     });
@@ -266,7 +267,7 @@ const loadcheckout = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    res.status(500).send("Checkout error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Checkout error");
   }
 };
 
@@ -290,7 +291,7 @@ const loadorderview = async (req, res) => {
     );
 
     if (!orderItem) {
-      return res.status(404).send("Order item not found");
+      return res.status(STATUS_CODES.NOT_FOUND).send("Order item not found");
     }
 
     const product = await db.collection("products").findOne({
@@ -324,7 +325,7 @@ const loadorderview = async (req, res) => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).send("Error loading order view");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Error loading order view");
   }
 };
 
@@ -396,19 +397,19 @@ const cancelOrder = async (req, res) => {
     }
 
     if (!orderResult || productResult.modifiedCount === 0) {
-      return res.status(404).json({
+      return res.status(STATUS_CODES.NOT_FOUND).json({
         success: false,
         message: "Order or product not found",
       });
     }
 
-    res.status(200).json({
+    res.status(STATUS_CODES.OK).json({
       success: true,
       message: "Order cancelled successfully",
     });
   } catch (error) {
     console.error("Error cancelling order:", error);
-    res.status(500).json({
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Failed to cancel order",
     });
@@ -440,7 +441,7 @@ const returnOrder = async (req, res) => {
     res.json({ status: "success" });
   } catch (error) {
     console.error("Error returning order:", error);
-    res.status(500).json({
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       status: "error",
       message: "Failed to process return request",
     });

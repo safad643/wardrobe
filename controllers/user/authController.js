@@ -3,13 +3,14 @@ const nodemailer = require("nodemailer");
 const passport = require("passport");
 const bcrypt = require("bcrypt");
 const { ObjectId } = require("mongodb");
+const STATUS_CODES = require("../../constants/statusCodes");
 
 const loadlogin = (req, res) => {
   try {
     res.render("user/login", { error: "" });
   } catch (error) {
     console.error("Error in loadlogin:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -41,7 +42,7 @@ const register = async (req, res) => {
     }
   } catch (error) {
     console.error("Error in register:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -51,7 +52,7 @@ const loadotp = (req, res) => {
     res.render("user/otp", { error: "" });
   } catch (error) {
     console.error("Error in loadotp:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -97,7 +98,7 @@ const otpverify = async (req, res) => {
     }
   } catch (error) {
     console.error("Error in otpverify:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -111,7 +112,7 @@ const reotp = (req, res) => {
     res.send(JSON.stringify({ changed: true }));
   } catch (error) {
     console.error("Error in reotp:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -132,7 +133,7 @@ const login = async (req, res) => {
     }
   } catch (error) {
     console.error("Error in login:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -141,7 +142,7 @@ const googleauth = (req, res) => {
     passport.authenticate("google", { scope: ["profile", "email"] });
   } catch (error) {
     console.error("Error in googleauth:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
@@ -211,7 +212,7 @@ const logout = (req, res) => {
     res.redirect("/user/login");
   } catch (error) {
     console.error("Error in logout:", error);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 

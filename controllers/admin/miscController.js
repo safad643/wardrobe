@@ -1,3 +1,4 @@
+const STATUS_CODES = require("../../constants/statusCodes");
 
 // Legacy "toggle list" endpoint used by admin panel (users/categories/products).
 const Delete = async (req, res) => {
@@ -28,7 +29,7 @@ const Delete = async (req, res) => {
     }
   } catch (err) {
     console.error(err);
-    res.status(500).send("Internal Server Error");
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
   }
 };
 
