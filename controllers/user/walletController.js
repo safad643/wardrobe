@@ -1,9 +1,8 @@
-const mongo = require("../../mongodb/mongo");
 const { ObjectId } = require("mongodb");
 
 const updatewallet = async (req, res) => {
   const { amount, type } = req.body;
-  const db = await mongo();
+  const db = req.db;
   const rawUserId = req.session.uid;
   const walletUserId =
     typeof rawUserId === "string" ? new ObjectId(rawUserId) : rawUserId;

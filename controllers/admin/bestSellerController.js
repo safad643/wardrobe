@@ -1,9 +1,8 @@
-const mongo = require("../../mongodb/mongo");
 
 const switchBestSeller = async (req, res) => {
   try {
     const { table } = req.query;
-    const db = await mongo();
+    const db = req.db;
     if (table === "category") {
       const topCategories = await db
         .collection("orders")

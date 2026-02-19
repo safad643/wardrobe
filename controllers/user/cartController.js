@@ -1,11 +1,10 @@
-const mongo = require("../../mongodb/mongo");
 const { ObjectId } = require("mongodb");
 
 const addtocart = async (req, res) => {
   try {
     let { productid, varient } = req.body;
     const userid = req.session.uid;
-    const db = await mongo();
+    const db = req.db;
 
     const query = {
       _id: new ObjectId(productid),
@@ -71,7 +70,7 @@ const addtocart = async (req, res) => {
 };
 
 const laodcart = async (req, res) => {
-  const db = await mongo();
+  const db = req.db;
   const products = await db
     .collection("products")
     .aggregate([
@@ -161,7 +160,7 @@ const removeFromCart = async (req, res) => {
     const userId = req.session.uid;
     const { size, color } = req.query;
 
-    const db = await mongo();
+    const db = req.db;
 
     await db.collection("cart").updateOne(
       { userid: userId },
@@ -188,7 +187,7 @@ const updatecart = async (req, res) => {
   try {
     const { productid, userid, quantity, varient } = req.body;
 
-    const db = await mongo();
+    const db = req.db;
 
     const result = await db.collection("cart").updateOne(
       {
@@ -214,7 +213,7 @@ const updatecart = async (req, res) => {
 };
 
 const getwishlist_cartcount = async (req, res) => {
-  const db = await mongo();
+  const db = req.db;
   const userId = req.session.uid;
   const wishlist = await db.collection("wishlist").findOne({ userId: userId });
   const cart = await db.collection("cart").findOne({ userid: userId });

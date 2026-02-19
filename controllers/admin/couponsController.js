@@ -1,10 +1,9 @@
-const mongo = require("../../mongodb/mongo");
 const { ObjectId } = require("mongodb");
 const { getPagination } = require("../../helpers/pagination");
 
 const loadcoupons = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
 
     const total = await db.collection("coupons").countDocuments({});
     const { currentPage, totalPages, skip, limit } = getPagination(
@@ -47,7 +46,7 @@ const loadcoupons = async (req, res) => {
 
 const loadaddcoupon = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
     const categories = await db.collection("catogories").find({}).toArray();
     res.render("admin/forms/couponadd", { categories });
   } catch (err) {
@@ -58,7 +57,7 @@ const loadaddcoupon = async (req, res) => {
 
 const addCoupon = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
 
     const existingCoupon = await db.collection("coupons").findOne({
       code: req.body.code,
@@ -100,7 +99,7 @@ const addCoupon = async (req, res) => {
 
 const deleteCoupon = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
 
     const result = await db.collection("coupons").deleteOne({
       _id: new ObjectId(req.params.id),
@@ -124,7 +123,7 @@ const deleteCoupon = async (req, res) => {
 const loadupdatecoupon = async (req, res) => {
   try {
     const id = req.params.id;
-    const db = await mongo();
+    const db = req.db;
     const categories = await db.collection("catogories").find({}).toArray();
     const coupon = await db
       .collection("coupons")
@@ -139,7 +138,7 @@ const loadupdatecoupon = async (req, res) => {
 const updatecoupon = async (req, res) => {
   console.log(req.body);
   try {
-    const db = await mongo();
+    const db = req.db;
     const data = { ...req.body.data };
     data.startDate = new Date(data.startDate);
     data.endDate = new Date(data.endDate);

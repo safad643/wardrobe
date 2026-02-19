@@ -1,7 +1,6 @@
-const mongo = require("../../mongodb/mongo");
 
 const generateSalesData = async (period, startDate, endDate) => {
-  const db = await mongo();
+  const db = req.db;
 
   let dateFilter = {};
   if (startDate && endDate) {

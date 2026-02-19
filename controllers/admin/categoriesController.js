@@ -1,9 +1,8 @@
-const mongo = require("../../mongodb/mongo");
 const { getPagination } = require("../../helpers/pagination");
 
 const loadcatogory = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
 
     const total = await db.collection("catogories").countDocuments({});
     const { currentPage, totalPages, skip, limit } = getPagination(
@@ -52,7 +51,7 @@ const catogoryadd = async (req, res) => {
       createdAt: new Date().toDateString(),
     };
 
-    const db = await mongo();
+    const db = req.db;
     const existingCategory = await db
       .collection("catogories")
       .findOne({ name: data.name });
@@ -73,7 +72,7 @@ const catogoryadd = async (req, res) => {
 
 const loadcatogupdate = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
     const { ObjectId } = require("mongodb");
     const categoryId = req.params.id;
     const category = await db
@@ -97,7 +96,7 @@ const catogoryupdate = async (req, res) => {
     const nameTrim = (name ?? "").trim();
     const descrTrim = typeof description === "string" ? description.trim() : "";
 
-    const db = await mongo();
+    const db = req.db;
     const currentCategory = await db
       .collection("catogories")
       .findOne({ _id: new ObjectId(categoryId) });
@@ -140,7 +139,7 @@ const catogoryupdate = async (req, res) => {
 
 const deletecatogory = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
     const { ObjectId } = require("mongodb");
     const categoryId = req.params.id;
     const { targetCategory } = req.body || {};

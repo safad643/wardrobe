@@ -1,9 +1,8 @@
-const mongo = require("../../mongodb/mongo");
 const { ObjectId } = require("mongodb");
 
 const placeOrder = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
     const { addressId, paymentMethod, products, totals, coupon } = req.body;
 
     const paymentVerification = req.flash("paymentverification");
@@ -176,7 +175,7 @@ const placeOrder = async (req, res) => {
 
 const loadcheckout = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
     const productQuantities = req.body.cartItems || {};
 
     const products = [];
@@ -277,7 +276,7 @@ const loadorderview = async (req, res) => {
     const productId = req.params.productId;
     const { size, color } = req.query;
 
-    const db = await mongo();
+    const db = req.db;
 
     const order = await db.collection("orders").findOne({
       _id: new ObjectId(orderId),
@@ -334,7 +333,7 @@ const cancelOrder = async (req, res) => {
     const varient = JSON.parse(decodeURIComponent(req.query.varient));
     const productid = req.query.productid;
     const orderid = req.params.orderId;
-    const db = await mongo();
+    const db = req.db;
 
     const orderResult = await db.collection("orders").findOneAndUpdate(
       {
@@ -419,7 +418,7 @@ const cancelOrder = async (req, res) => {
 const returnOrder = async (req, res) => {
   try {
     const { orderid, productid, varient, reason } = req.body;
-    const db = await mongo();
+    const db = req.db;
     const insertedReturn = await db.collection("returns").insertOne({
       orderid: orderid,
       productid: productid,

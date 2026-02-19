@@ -1,4 +1,3 @@
-const mongo = require("../../mongodb/mongo");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const passport = require("passport");
@@ -16,7 +15,7 @@ const loadlogin = (req, res) => {
 
 const register = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
 
     const user = await db
       .collection("users")
@@ -78,7 +77,7 @@ const otpverify = async (req, res) => {
         req.session.authtochangepassword = true;
         res.render("user/passwordreset");
       } else {
-        const db = await mongo();
+        const db = req.db;
         data.createdAt = new Date().toDateString();
 
         await db.collection("users").insertOne(data).then((result) => {
@@ -119,7 +118,7 @@ const reotp = (req, res) => {
 const login = async (req, res) => {
   try {
     const { password, email } = req.body;
-    const db = await mongo();
+    const db = req.db;
     const users = await db.collection("users").find({ email }).toArray();
 
     const match = await bcrypt.compare(password, users[0]?.password || "");
@@ -148,7 +147,7 @@ const googleauth = (req, res) => {
 
 const forgot = async (req, res) => {
   const { email } = req.params;
-  const db = await mongo();
+  const db = req.db;
   if (!(await db.collection("users").findOne({ email }))) {
     return res.render("user/login", { error: "email doesnt exist" });
   }
@@ -166,7 +165,7 @@ const resetpassword = async (req, res) => {
   try {
     if (req.session.authtochangepassword) {
       const hashedpass = await bcrypt.hash(req.body.password, 10);
-      const db = await mongo();
+      const db = req.db;
 
       await db
         .collection("users")
@@ -185,7 +184,7 @@ const resetpassword = async (req, res) => {
 
 const changepassword = async (req, res) => {
   const { currentPassword, newPassword } = req.body;
-  const db = await mongo();
+  const db = req.db;
   const data = await db
     .collection("users")
     .findOne({ _id: new ObjectId(req.session.uid) });

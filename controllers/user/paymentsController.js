@@ -1,4 +1,3 @@
-const mongo = require("../../mongodb/mongo");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 
@@ -63,7 +62,7 @@ const paymentcheck = async (req, res) => {
 const retryPayment = async (req, res) => {
   const verification = req.flash("paymentverification");
   if (verification[0] === "true") {
-    const db = await mongo();
+    const db = req.db;
     const paymentId = req.params.paymentId;
     await db
       .collection("orders")

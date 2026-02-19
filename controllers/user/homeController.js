@@ -1,8 +1,7 @@
-const mongo = require("../../mongodb/mongo");
 
 const loadhome = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
     const categories = await db.collection("catogories").find({}).toArray();
     const products = await db
       .collection("products")
@@ -30,7 +29,7 @@ const loadhome = async (req, res) => {
 
 const loadshop = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
     const categories = await db.collection("catogories").find({}).toArray();
 
     res.render("user/catogory", { categories, user: true });
@@ -43,7 +42,7 @@ const loadshop = async (req, res) => {
 const loadproductview = async (req, res) => {
   try {
     const { slug } = req.params;
-    const db = await mongo();
+    const db = req.db;
     const categories = await db.collection("catogories").find({}).toArray();
 
     const product = await db.collection("products").findOne({ name: slug });
@@ -78,7 +77,7 @@ const loadproductview = async (req, res) => {
 const loadcategory = async (req, res) => {
   try {
     const { slug } = req.params;
-    const db = await mongo();
+    const db = req.db;
     const categories = await db.collection("catogories").find({}).toArray();
     const products = await db
       .collection("products")
@@ -94,7 +93,7 @@ const loadcategory = async (req, res) => {
 
 const search = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
     const { search, filter, sort, page = 1, limit = 12 } = req.query;
     const itemsPerPage = parseInt(limit);
 
@@ -244,7 +243,7 @@ const search = async (req, res) => {
 };
 
 const getCategories = async (req, res) => {
-  const db = await mongo();
+  const db = req.db;
   const categories = await db.collection("catogories").find({}).toArray();
 
   res.json(categories);

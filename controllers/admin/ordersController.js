@@ -1,10 +1,9 @@
-const mongo = require("../../mongodb/mongo");
 const { ObjectId } = require("mongodb");
 const { getPagination } = require("../../helpers/pagination");
 
 const loadordermanagment = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
 
     const countResult = await db
       .collection("orders")
@@ -68,7 +67,7 @@ const updateProductStatus = async (req, res) => {
     const orderId = req.params.orderId;
     const { productId, status, varient } = req.body;
 
-    const db = await mongo();
+    const db = req.db;
 
     const result = await db.collection("orders").updateOne(
       {
@@ -105,7 +104,7 @@ const loadorderdetails = async (req, res) => {
   try {
     const { orderId, productId } = req.params;
     const varient = req.query.varient ? JSON.parse(req.query.varient) : null;
-    const db = await mongo();
+    const db = req.db;
 
     const order = await db.collection("orders").findOne(
       {

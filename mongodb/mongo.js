@@ -1,15 +1,21 @@
 const { MongoClient } = require('mongodb')
-const client =new MongoClient(process.env.MONGO_URI)
+const client = new MongoClient(process.env.MONGO_URI)
 let db;
-const returndb=async function(){
-  if(!db){
+
+async function connect() {
+  if (!db) {
     await client.connect()
-    db=client.db('Wardrobe')
-    return db
+    db = client.db('Wardrobe')
   }
-  else{
-    return db
-  }
+  return db
 }
-module.exports=returndb
+
+function getDb() {
+  if (!db) {
+    throw new Error('Database not connected. Call connect() first.')
+  }
+  return db
+}
+
+module.exports = { connect, getDb }
 

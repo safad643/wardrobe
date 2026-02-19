@@ -1,10 +1,9 @@
 const fs = require("fs");
-const mongo = require("../../mongodb/mongo");
 const { getPagination } = require("../../helpers/pagination");
 
 const loadproducts = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
 
     const total = await db.collection("products").countDocuments({});
     const { currentPage, totalPages, skip, limit } = getPagination(
@@ -36,7 +35,7 @@ const loadproducts = async (req, res) => {
 
 const productupdateload = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
     const { ObjectId } = require("mongodb");
     const productId = req.params.id;
     const product = await db
@@ -59,7 +58,7 @@ const productupdateload = async (req, res) => {
 
 const productaddload = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
     const optionsobj = await db
       .collection("catogories")
       .find({}, { projection: { name: 1, _id: 0 } })
@@ -74,7 +73,7 @@ const productaddload = async (req, res) => {
 
 const productadd = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
     const existingProduct = await db
       .collection("products")
       .findOne({ name: req.body.name });
@@ -143,7 +142,7 @@ const productadd = async (req, res) => {
 
 const productupdate = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
     const { ObjectId } = require("mongodb");
     const productId = req.params.id;
     const product = await db

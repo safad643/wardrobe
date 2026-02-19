@@ -1,10 +1,9 @@
-const mongo = require("../../mongodb/mongo");
 const { ObjectId } = require("mongodb");
 const { getPagination } = require("../../helpers/pagination");
 
 const getReturnData = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
     const returnId = req.params.returnId;
     const returnData = await db
       .collection("returns")
@@ -34,7 +33,7 @@ const getReturnData = async (req, res) => {
 
 const removeReturnNotification = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
     const returnId = req.params.returnId;
     await db
       .collection("notifications")
@@ -56,7 +55,7 @@ const updateReturnStatus = async (req, res) => {
   try {
     const { status } = req.body;
     const returnId = req.params.returnId;
-    const db = await mongo();
+    const db = req.db;
 
     const existingReturn = await db
       .collection("returns")
@@ -143,7 +142,7 @@ const updateReturnStatus = async (req, res) => {
 
 const loadreturnmanagment = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
 
     const total = await db.collection("returns").countDocuments({});
     const { currentPage, totalPages, skip, limit } = getPagination(

@@ -1,10 +1,10 @@
 require("dotenv").config();
 
-const mongo = require("../mongodb/mongo");
+const { connect } = require("../mongodb/mongo");
 
 async function cleanCollections() {
   try {
-    const db = await mongo();
+    const db = await connect();
 
     const collections = ["users", "products", "catogories", "orders", "returns"];
 

@@ -1,4 +1,3 @@
-const mongo = require("../mongodb/mongo");
 const { ObjectId } = require("mongodb");
 const usersession = (req, res, next) => {
   if (req.session.uid) {
@@ -26,7 +25,7 @@ const adminsession = (req, res, next) => {
 
 const checkBan = async (req, res, next) => {
   if (req.session.uid) {
-    const db = await mongo();
+    const db = req.db;
     const id = req.session.uid;
     const ban = await db
       .collection("users")

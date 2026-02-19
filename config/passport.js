@@ -1,6 +1,6 @@
 const passport=require('passport')
 const googleStratigy=require("passport-google-oauth20")
-const mongo=require('../mongodb/mongo')
+const { getDb } = require('../mongodb/mongo')
 passport.use(
   new googleStratigy(
     {
@@ -9,7 +9,7 @@ passport.use(
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     },
     async (accessToken, refreshToken, profile, done) => {
-      const db = await mongo();
+      const db = getDb();
       const existingUser = await db.collection('users').findOne({ gid: profile.id });
       console.log(JSON.stringify(profile, null, 2));
 
@@ -45,7 +45,7 @@ passport.serializeUser((user, done) => {
 
 // Deserialize user
 passport.deserializeUser(async (gid, done) => {
-  const db = await mongo();
+  const db = getDb();
   const user = await db.collection('users').findOne({ gid: gid });
   done(null, user); // Retrieve the user from the database using the Google ID
 });

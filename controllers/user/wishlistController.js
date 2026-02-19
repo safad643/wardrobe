@@ -1,9 +1,8 @@
-const mongo = require("../../mongodb/mongo");
 const { ObjectId } = require("mongodb");
 
 const loadWishlist = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
     const userId = req.session.uid;
 
     const userWishlist = await db.collection("wishlist").findOne({
@@ -31,7 +30,7 @@ const loadWishlist = async (req, res) => {
 
 const addToWishlist = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
     const productId = req.params.productId;
     const userId = req.session.uid;
 
@@ -71,7 +70,7 @@ const addToWishlist = async (req, res) => {
 
 const removeFromWishlist = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
     const productId = req.params.productId;
     const userId = req.session.uid;
 
@@ -96,7 +95,7 @@ const removeFromWishlist = async (req, res) => {
 
 const checkWishlist = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
     const userId = req.session.uid;
 
     if (!userId) {

@@ -1,9 +1,8 @@
-const mongo = require("../../mongodb/mongo");
 const { getPagination } = require("../../helpers/pagination");
 
 const loadusermanagment = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
 
     const total = await db.collection("users").countDocuments({});
     const { currentPage, totalPages, skip, limit } = getPagination(

@@ -1,4 +1,3 @@
-const mongo = require("../../mongodb/mongo");
 
 // Legacy "toggle list" endpoint used by admin panel (users/categories/products).
 const Delete = async (req, res) => {
@@ -6,21 +5,21 @@ const Delete = async (req, res) => {
     const { identifier, data, bool } = req.body;
 
     if (identifier === "user") {
-      const db = await mongo();
+      const db = req.db;
       await db
         .collection("users")
         .updateOne({ email: data }, { $set: { list: bool } });
       const user = await db.collection("users").find({}).toArray();
       res.render("admin/nav/usermanagment", { user });
     } else if (identifier === "catogories") {
-      const db = await mongo();
+      const db = req.db;
       await db
         .collection("catogories")
         .updateOne({ name: data }, { $set: { list: bool } });
       const a = await db.collection("catogories").find({}).toArray();
       res.render("admin/nav/catogory", { categories: a });
     } else if (identifier === "product") {
-      const db = await mongo();
+      const db = req.db;
       await db
         .collection("products")
         .updateOne({ name: data }, { $set: { list: bool } });

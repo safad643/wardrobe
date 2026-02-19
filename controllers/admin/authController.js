@@ -1,4 +1,3 @@
-const mongo = require("../../mongodb/mongo");
 
 const loadlogin = (req, res) => {
   try {
@@ -12,7 +11,7 @@ const loadlogin = (req, res) => {
 const loginverify = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const db = await mongo();
+    const db = req.db;
 
     const adminData = await db.collection("admin").find({ email }).toArray();
     if (adminData[0]?.password === password) {

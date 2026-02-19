@@ -1,9 +1,8 @@
-const mongo = require("../../mongodb/mongo");
 const { ObjectId } = require("mongodb");
 
 const profileload = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
     const user = await db
       .collection("users")
       .findOne({ _id: new ObjectId(req.session.uid) });
@@ -72,7 +71,7 @@ const profileload = async (req, res) => {
 const changename = async (req, res) => {
   try {
     const { name, email } = req.body;
-    const db = await mongo();
+    const db = req.db;
     await db.collection("users").updateOne({ email }, { $set: { name } });
     res.redirect("/user/profile");
   } catch (err) {
@@ -82,7 +81,7 @@ const changename = async (req, res) => {
 
 const addadress = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
     const { street, city, state, country, postalCode, phone } = req.body;
 
     const newAddress = {
@@ -112,7 +111,7 @@ const addadress = async (req, res) => {
 
 const deleteAddress = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
     const addressId = req.params.id;
 
     const result = await db
@@ -132,7 +131,7 @@ const deleteAddress = async (req, res) => {
 
 const updateAddress = async (req, res) => {
   try {
-    const db = await mongo();
+    const db = req.db;
     const { street, city, state, country, postalCode, phone } =
       req.body;
     const addressId = req.params.id;
