@@ -33,11 +33,18 @@ const catogoryaddload = (req, res) => {
 };
 
 const catogoryadd = async (req, res) => {
-  const { catogoryName, description } = req.body;
+  const { catogoryName, description, offer } = req.body;
+
+  const parsedOffer = Number(offer);
+  const safeOffer =
+    Number.isFinite(parsedOffer) && parsedOffer >= 0 && parsedOffer <= 100
+      ? parsedOffer
+      : 0;
 
   const data = {
     name: catogoryName.trim(),
     descr: description.trim(),
+    offer: safeOffer,
     createdAt: new Date().toDateString(),
   };
 
@@ -69,7 +76,7 @@ const loadcatogupdate = async (req, res) => {
 
 const catogoryupdate = async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, offer } = req.body;
     const { ObjectId } = require("mongodb");
     const categoryId = req.params.id;
     const nameTrim = (name ?? "").trim();
@@ -86,6 +93,13 @@ const catogoryupdate = async (req, res) => {
 
     const nextName = nameTrim || currentCategory.name;
     const nextDescr = descrTrim || currentCategory.descr;
+    const parsedOffer = Number(offer);
+    const nextOffer =
+      Number.isFinite(parsedOffer) && parsedOffer >= 0 && parsedOffer <= 100
+        ? parsedOffer
+        : typeof currentCategory.offer === "number"
+        ? currentCategory.offer
+        : 0;
 
     const existingCategory = await db.collection("catogories").findOne({
       $and: [{ name: nextName }, { _id: { $ne: new ObjectId(categoryId) } }],
@@ -101,6 +115,7 @@ const catogoryupdate = async (req, res) => {
         $set: {
           name: nextName,
           descr: nextDescr,
+          offer: nextOffer,
           updatedAt: new Date().toDateString(),
         },
       }

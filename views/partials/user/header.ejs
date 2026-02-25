@@ -664,7 +664,7 @@
                         // Show only first 2 results
                         const limitedProducts = data.products.slice(0, 2);
                         let html = limitedProducts.map(product => `
-                            <div class="suggestion-item" onclick="window.location.href='/user/product/${product.name}'">
+                            <div class="suggestion-item" onclick="window.location.href='/user/products/${product.name}'">
                                 <img src="${product.image}" alt="${product.name}" class="suggestion-image">
                                 <div class="suggestion-content">
                                     <div class="suggestion-text">${product.name}</div>

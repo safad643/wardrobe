@@ -7,7 +7,8 @@
               <thead>
                 <tr>
                   <th>name</th>
-                 <th>description</th>
+                  <th>description</th>
+                  <th>offer (%)</th>
                   <th>created at</th>
                   <th>Updated at</th>
                 </tr>
@@ -17,7 +18,7 @@
                   <tr>
                     <td><%= category.name %></td>
                     <td style="width: 400px; white-space: normal; word-wrap: break-word;"><%= category.descr %></td>
-                    
+                    <td><%= typeof category.offer !== 'undefined' ? category.offer : 0 %></td>
                     <td><%= category.createdAt %></td>
                     <td><%= category?.updatedAt %></td>
                     <td>

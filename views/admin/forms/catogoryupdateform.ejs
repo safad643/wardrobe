@@ -13,7 +13,20 @@
         <textarea class="form-control" id="descr" name="description" rows="3"><%= category ? category.descr : '' %></textarea>
         <small id="descError" class="text-danger" style="display: none;">Description is required</small>
       </div>
-      
+      <div class="form-group">
+        <label for="offerInput">Category Offer (%)</label>
+        <input
+          type="number"
+          class="form-control"
+          id="offerInput"
+          name="offer"
+          placeholder="Enter discount percentage"
+          min="0"
+          max="100"
+          value="<%= category && typeof category.offer !== 'undefined' ? category.offer : '' %>"
+        />
+        <small class="text-muted">Leave empty or 0 for no category offer.</small>
+      </div>
       <button type="submit" class="btn btn-primary mr-2">Submit</button>
     </form>
   </div>

@@ -10,7 +10,7 @@
             <% products.forEach(product => { %>
                 <div class="wishlist-card" data-product-id="<%= product._id %>">
                     <div class="card-image">
-                        <a href="/user/product/<%= product.name %>">
+                        <a href="/user/products/<%= product.name %>">
                             <img src="<%= product.images[0] %>" alt="<%= product.name %>" loading="lazy" />
                         </a>
                         <button 
@@ -21,7 +21,7 @@
                         </button>
                     </div>
                     <div class="card-content">
-                        <a href="/user/product/<%= product.name %>" class="product-name">
+                        <a href="/user/products/<%= product.name %>" class="product-name">
                             <%= product.name %>
                         </a>
                         <div class="pricing">

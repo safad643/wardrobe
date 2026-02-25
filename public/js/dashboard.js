@@ -24,6 +24,7 @@ function catogoryadder(e) {
   // Get the input fields and error messages
   const catogoryName = document.getElementById('updatename').value.trim();
   const description = document.getElementById('descr').value.trim();
+  const offerRaw = document.getElementById('offerInput') ? document.getElementById('offerInput').value.trim() : '';
   const nameError = document.getElementById('nameError');
   const descError = document.getElementById('descError');
 
@@ -47,10 +48,18 @@ function catogoryadder(e) {
     return false;
   }
 
+  let offer = null;
+  if (offerRaw !== '') {
+    const parsed = Number(offerRaw);
+    if (!Number.isNaN(parsed) && parsed >= 0 && parsed <= 100) {
+      offer = parsed;
+    }
+  }
+
   // Make the fetch request to add the category
   fetch('/admin/categories', {
     method: 'post',
-    body: JSON.stringify({ description, catogoryName }),
+    body: JSON.stringify({ description, catogoryName, offer }),
     headers: { 'Content-Type': 'application/json' }
   })
     .then(response => {
@@ -114,6 +123,7 @@ function catogoryupdate(event){
   const categoryId = form.querySelector('input[name="id"]')?.value || form.dataset.id;
   let name = (form.querySelector('input[name="name"]')?.value || '').trim();
   let description = (form.querySelector('textarea[name="description"]')?.value || '').trim();
+  const offerRaw = (form.querySelector('input[name="offer"]')?.value || '').trim();
 
   const nameError = form.querySelector('#nameError');
   const descError = form.querySelector('#descError');
@@ -138,10 +148,22 @@ function catogoryupdate(event){
     }
     return false;
   }
+
+  let offer = null;
+  if (offerRaw !== '') {
+    const parsed = Number(offerRaw);
+    if (!Number.isNaN(parsed) && parsed >= 0 && parsed <= 100) {
+      offer = parsed;
+    }
+  }
   
   // Convert ObjectId to string if needed
   const idStr = categoryId.toString ? categoryId.toString() : categoryId;
-  fetch(`/admin/categories/${idStr}`,{method:'PATCH',body:JSON.stringify({name,description}),headers:{'Content-Type':'application/json'}})
+  fetch(`/admin/categories/${idStr}`,{
+    method:'PATCH',
+    body:JSON.stringify({name,description,offer}),
+    headers:{'Content-Type':'application/json'}
+  })
   .then(response => {
     if (!response.ok) {
       return response.json().then(data => {

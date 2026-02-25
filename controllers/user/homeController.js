@@ -41,7 +41,15 @@ const loadproductview = async (req, res) => {
     throw new AppError("Product not found", 404);
   }
 
-  const relatedProducts = await db
+  const categoryOfferMap = new Map(
+    categories.map((c) => [c.name, Number(c.offer) || 0])
+  );
+
+  const productOffer = Number(product.offer) || 0;
+  const categoryOffer = categoryOfferMap.get(product.category) || 0;
+  product.effectiveOffer = Math.max(productOffer, categoryOffer);
+
+  const relatedProductsRaw = await db
     .collection("products")
     .find({
       category: product.category,
@@ -50,6 +58,12 @@ const loadproductview = async (req, res) => {
     })
     .limit(10)
     .toArray();
+
+  const relatedProducts = relatedProductsRaw.map((p) => {
+    const pOffer = Number(p.offer) || 0;
+    const cOffer = categoryOfferMap.get(p.category) || 0;
+    return { ...p, effectiveOffer: Math.max(pOffer, cOffer) };
+  });
 
   res.render("user/productview", {
     categories,

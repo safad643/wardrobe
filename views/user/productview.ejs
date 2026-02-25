@@ -792,8 +792,9 @@
 											<% for (let i = 0; i < 3; i++) { %>
 												<% const imageField = `image${i}`; %>
 												<div style="position: relative;">
-														<% if (product.offer > 0) { %>
-																<div class="offer-badge"><%= product.offer %>% OFF</div>
+														<% const effOffer = typeof product.effectiveOffer !== 'undefined' ? product.effectiveOffer : (product.offer || 0); %>
+														<% if (effOffer > 0) { %>
+																<div class="offer-badge"><%= effOffer %>% OFF</div>
 														<% } %>
 														<img class="biggimg" src="<%= product.images[i] %>" alt="Product Image" />
 												</div>
@@ -815,9 +816,10 @@
 												</div>
 												<!-- Moving price section here -->
 												<div class="price-section">
-													<% if (product.offer > 0) { %>
+													<% const priceOffer = typeof product.effectiveOffer !== 'undefined' ? product.effectiveOffer : (product.offer || 0); %>
+													<% if (priceOffer > 0) { %>
 															<span class="pro-price">
-																₹<%= Math.floor(Number(product.price) * (1 - product.offer/100)) %>
+																₹<%= Math.floor(Number(product.price) * (1 - priceOffer/100)) %>
 																	<span style="text-decoration: line-through; color: #999; margin-left: 8px; font-size: 0.9em;">
 																		₹<%= Math.floor(Number(product.price)) %>
 																	</span>
@@ -1194,18 +1196,19 @@
 											<% relatedProducts.slice(0, 5).forEach(relatedProduct => { %>
 													<div class="product-card">
 															<div class="product-image-container">
-																	<% if (relatedProduct.offer > 0) { %>
-																			<div class="related-offer-badge"><%= relatedProduct.offer %>% OFF</div>
+																	<% const relOffer = typeof relatedProduct.effectiveOffer !== 'undefined' ? relatedProduct.effectiveOffer : (relatedProduct.offer || 0); %>
+																	<% if (relOffer > 0) { %>
+																			<div class="related-offer-badge"><%= relOffer %>% OFF</div>
 																	<% } %>
-																	<a href="/user/product/<%= relatedProduct.name %>">
+																	<a href="/user/products/<%= relatedProduct.name %>">
 																		<img src="<%= relatedProduct.images[0] %>" alt="<%= relatedProduct.name %>">
 																	</a>
 															</div>
 															<div class="product-details">
 																	<h3 class="product-name"><%= relatedProduct.name %></h3>
 																	<div class="price-container">
-																			<% if (relatedProduct.offer > 0) { %>
-																					<% const discountedPrice = Math.floor(relatedProduct.price * (1 - relatedProduct.offer/100)) %>
+																			<% if (relOffer > 0) { %>
+																					<% const discountedPrice = Math.floor(relatedProduct.price * (1 - relOffer/100)) %>
 																					<span class="current-price">₹<%= discountedPrice %></span>
 																					<span class="original-price">₹<%= Math.floor(relatedProduct.price) %></span>
 																			<% } else { %>

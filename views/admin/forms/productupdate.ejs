@@ -4,17 +4,30 @@
       <div class="form-group">
         <input id="id" type="hidden" name="id" />
         <label>Name of Product</label>
-        <input name="name" type="text" class="form-control" placeholder="Name" >
+        <input name="name" type="text" class="form-control" placeholder="Name" value="<%= product.name %>">
       </div>
       <div class="form-group">
         <label>Price</label>
-        <input name="price" type="number" class="form-control" placeholder="Price" step="0.01" >
+        <input name="price" type="number" class="form-control" placeholder="Price" step="0.01" value="<%= product.price %>">
+      </div>
+      <div class="form-group">
+        <label>Offer in %</label>
+        <input
+          name="offer"
+          type="number"
+          class="form-control"
+          placeholder="Offer"
+          step="0.01"
+          min="0"
+          max="100"
+          value="<%= product.offer || '' %>"
+        >
       </div>
       <div class="form-group">
         <label >Catogory</label>
         <select class="form-control" name="category" id="dropdown" name="options">
           <% options.forEach(option => { %>
-            <option value="<%= option %>"><%= option %></option>
+            <option value="<%= option %>" <%= product.category === option ? 'selected' : '' %>><%= option %></option>
           <% }); %>
         </select>
       </div>
@@ -25,7 +38,7 @@
 
       <div class="form-group">
         <label>Rating</label>
-        <input name="rating" type="number" class="form-control" placeholder="Rating (0-5)" step="0.1" min="0" max="5">
+        <input name="rating" type="number" class="form-control" placeholder="Rating (0-5)" step="0.1" min="0" max="5" value="<%= typeof product.rating !== 'undefined' ? product.rating : '' %>">
       </div>
       <div id="selectedVariants" class="mb-3">
         <!-- Selected variants will be displayed here -->
