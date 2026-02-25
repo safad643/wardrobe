@@ -1,73 +1,68 @@
 const { ObjectId } = require("mongodb");
-const STATUS_CODES = require("../../constants/statusCodes");
+const AppError = require("../../utils/AppError");
 
 const addtocart = async (req, res) => {
-  try {
-    let { productid, varient } = req.body;
-    const userid = req.session.uid;
-    const db = req.db;
+  let { productid, varient } = req.body;
+  const userid = req.session.uid;
+  const db = req.db;
 
-    const query = {
-      _id: new ObjectId(productid),
-      ...(varient && {
-        variants: {
-          $elemMatch: {
-            color: varient.color,
-            size: varient.size,
-          },
-        },
-      }),
-    };
-
-    const product = await db.collection("products").findOne(query);
-
-    if (!varient && product) {
-      varient = product.variants[0];
-    }
-
-    if (!product) {
-      return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Product or variant not found" });
-    }
-
-    const matchingVariant = product.variants.find(
-      (v) => v.color === varient.color && v.size === varient.size
-    );
-
-    varient.count = matchingVariant.count;
-
-    const existingProduct = await db.collection("cart").findOne({
-      userid: userid,
-      products: {
+  const query = {
+    _id: new ObjectId(productid),
+    ...(varient && {
+      variants: {
         $elemMatch: {
-          productid: productid,
-          "varient.color": varient.color,
-          "varient.size": varient.size,
+          color: varient.color,
+          size: varient.size,
         },
       },
-    });
+    }),
+  };
 
-    if (existingProduct) {
-      return res.status(STATUS_CODES.BAD_REQUEST).json({ message: "product already exist" });
-    }
+  const product = await db.collection("products").findOne(query);
 
-    await db
-      .collection("wishlist")
-      .updateOne({ userId: userid }, { $pull: { products: productid } });
-
-    await db.collection("cart").updateOne(
-      { userid: userid },
-      {
-        $push: { products: { productid: productid, quantity: 1, varient } },
-        $setOnInsert: { userid: userid },
-      },
-      { upsert: true }
-    );
-
-    res.status(STATUS_CODES.OK).json({ message: "product added to cart" });
-  } catch (err) {
-    console.log(err);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ message: "Error updating cart" });
+  if (!varient && product) {
+    varient = product.variants[0];
   }
+
+  if (!product) {
+    throw new AppError("Product or variant not found", 404);
+  }
+
+  const matchingVariant = product.variants.find(
+    (v) => v.color === varient.color && v.size === varient.size
+  );
+
+  varient.count = matchingVariant.count;
+
+  const existingProduct = await db.collection("cart").findOne({
+    userid: userid,
+    products: {
+      $elemMatch: {
+        productid: productid,
+        "varient.color": varient.color,
+        "varient.size": varient.size,
+      },
+    },
+  });
+
+  if (existingProduct) {
+    throw new AppError("product already exist", 400);
+  }
+
+  await db
+    .collection("wishlist")
+    .updateOne({ userId: userid }, { $pull: { products: productid } });
+
+  await db.collection("cart").updateOne(
+    { userid: userid },
+    {
+      $push: { products: { productid: productid, quantity: 1, varient } },
+      $setOnInsert: { userid: userid },
+    },
+    { upsert: true }
+  );
+
+  res.status(200).json({ message: "product added to cart" });
 };
 
 const laodcart = async (req, res) => {
@@ -156,61 +151,51 @@ const laodcart = async (req, res) => {
 };
 
 const removeFromCart = async (req, res) => {
-  try {
-    const productId = req.params.productId;
-    const userId = req.session.uid;
-    const { size, color } = req.query;
+  const productId = req.params.productId;
+  const userId = req.session.uid;
+  const { size, color } = req.query;
 
-    const db = req.db;
+  const db = req.db;
 
-    await db.collection("cart").updateOne(
-      { userid: userId },
-      {
-        $pull: {
-          products: {
-            productid: productId,
-            "varient.size": size,
-            "varient.color": color,
-          },
+  await db.collection("cart").updateOne(
+    { userid: userId },
+    {
+      $pull: {
+        products: {
+          productid: productId,
+          "varient.size": size,
+          "varient.color": color,
         },
-      }
-    );
+      },
+    }
+  );
 
-    res.status(STATUS_CODES.OK).json({ message: "removed from cart" });
-  } catch (err) {
-    console.error(err);
-    req.flash("error", "Failed to remove product from cart");
-    res.redirect("/user/cart");
-  }
+  res.status(200).json({ message: "removed from cart" });
 };
 
 const updatecart = async (req, res) => {
-  try {
-    const { productid, userid, quantity, varient } = req.body;
+  const { productid, userid, quantity, varient } = req.body;
 
-    const db = req.db;
+  const db = req.db;
 
-    const result = await db.collection("cart").updateOne(
-      {
-        userid,
-        products: {
-          $elemMatch: {
-            productid: productid,
-            "varient.size": varient.size,
-            "varient.color": varient.color,
-          },
+  const result = await db.collection("cart").updateOne(
+    {
+      userid,
+      products: {
+        $elemMatch: {
+          productid: productid,
+          "varient.size": varient.size,
+          "varient.color": varient.color,
         },
       },
-      { $set: { "products.$.quantity": quantity } }
-    );
+    },
+    { $set: { "products.$.quantity": quantity } }
+  );
 
-    if (result.modifiedCount === 0)
-      return res.status(STATUS_CODES.NOT_FOUND).json({ message: "Product not found" });
-    res.status(STATUS_CODES.OK).json({ message: "Quantity updated" });
-  } catch (err) {
-    console.error(err);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ message: "Error updating quantity" });
+  if (result.modifiedCount === 0) {
+    throw new AppError("Product not found", 404);
   }
+  res.status(200).json({ message: "Quantity updated" });
 };
 
 const getwishlist_cartcount = async (req, res) => {

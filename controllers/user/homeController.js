@@ -1,130 +1,165 @@
-const STATUS_CODES = require("../../constants/statusCodes");
-
 const loadhome = async (req, res) => {
-  try {
-    const db = req.db;
-    const categories = await db.collection("catogories").find({}).toArray();
-    const products = await db
-      .collection("products")
-      .find({ list: true })
-      .toArray();
+  const db = req.db;
+  const categories = await db.collection("catogories").find({}).toArray();
+  const products = await db
+    .collection("products")
+    .find({ list: true })
+    .toArray();
 
-    if (req.session.user) {
-      const user = await db
-        .collection("users")
-        .find({ email: req.session.data.email });
-      return res.render("user/index", {
-        categories,
-        products,
-        user,
-        profilepic: req?.user?.profilepic,
-      });
-    }
-
-    res.render("user/index", { categories, products });
-  } catch (error) {
-    console.error("Error in loadhome:", error);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+  if (req.session.user) {
+    const user = await db
+      .collection("users")
+      .find({ email: req.session.data.email });
+    return res.render("user/index", {
+      categories,
+      products,
+      user,
+      profilepic: req?.user?.profilepic,
+    });
   }
+
+  res.render("user/index", { categories, products });
 };
 
 const loadshop = async (req, res) => {
-  try {
-    const db = req.db;
-    const categories = await db.collection("catogories").find({}).toArray();
+  const db = req.db;
+  const categories = await db.collection("catogories").find({}).toArray();
 
-    res.render("user/catogory", { categories, user: true });
-  } catch (error) {
-    console.error("Error in loadshop:", error);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
-  }
+  res.render("user/catogory", { categories, user: true });
 };
 
+const AppError = require("../../utils/AppError");
+
 const loadproductview = async (req, res) => {
-  try {
-    const { slug } = req.params;
-    const db = req.db;
-    const categories = await db.collection("catogories").find({}).toArray();
+  const { slug } = req.params;
+  const db = req.db;
+  const categories = await db.collection("catogories").find({}).toArray();
 
-    const product = await db.collection("products").findOne({ name: slug });
+  const product = await db.collection("products").findOne({ name: slug });
 
-    if (!product) {
-      return res.status(STATUS_CODES.NOT_FOUND).send("Product not found");
-    }
-
-    const relatedProducts = await db
-      .collection("products")
-      .find({
-        category: product.category,
-        name: { $ne: product.name },
-        list: true,
-      })
-      .limit(10)
-      .toArray();
-
-    res.render("user/productview", {
-      categories,
-      product,
-      relatedProducts,
-      userid: req.session.uid,
-      user: true,
-    });
-  } catch (error) {
-    console.error("Error in loadproductview:", error);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+  if (!product) {
+    throw new AppError("Product not found", 404);
   }
+
+  const relatedProducts = await db
+    .collection("products")
+    .find({
+      category: product.category,
+      name: { $ne: product.name },
+      list: true,
+    })
+    .limit(10)
+    .toArray();
+
+  res.render("user/productview", {
+    categories,
+    product,
+    relatedProducts,
+    userid: req.session.uid,
+    user: true,
+  });
 };
 
 const loadcategory = async (req, res) => {
-  try {
-    const { slug } = req.params;
-    const db = req.db;
-    const categories = await db.collection("catogories").find({}).toArray();
-    const products = await db
-      .collection("products")
-      .find({ category: slug, list: true })
-      .toArray();
+  const { slug } = req.params;
+  const db = req.db;
+  const categories = await db.collection("catogories").find({}).toArray();
+  const products = await db
+    .collection("products")
+    .find({ category: slug, list: true })
+    .toArray();
 
-    res.render("user/catogory", { categories, products, user: true });
-  } catch (error) {
-    console.error("Error in loadcategory:", error);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
-  }
+  res.render("user/catogory", { categories, products, user: true });
 };
 
 const search = async (req, res) => {
-  try {
-    const db = req.db;
-    const { search, filter, sort, page = 1, limit = 12 } = req.query;
-    const itemsPerPage = parseInt(limit);
+  const db = req.db;
+  const { search, filter, sort, page = 1, limit = 12 } = req.query;
+  const itemsPerPage = parseInt(limit);
 
-    let matchStage = { list: true };
-    if (search) {
-      matchStage.name = { $regex: search, $options: "i" };
-    }
-    if (filter) {
-      matchStage.category = filter;
-    }
+  let matchStage = { list: true };
+  if (search) {
+    matchStage.name = { $regex: search, $options: "i" };
+  }
+  if (filter) {
+    matchStage.category = filter;
+  }
 
-    let sortStage = {};
-    switch (sort) {
-      case "price_asc":
-        sortStage = { $sort: { offerPrice: 1 } };
-        break;
-      case "price_desc":
-        sortStage = { $sort: { offerPrice: -1 } };
-        break;
-      case "name_asc":
-        sortStage = { $sort: { name: 1 } };
-        break;
-      case "name_desc":
-        sortStage = { $sort: { name: -1 } };
-        break;
-      default:
-        sortStage = { $sort: { _id: 1 } };
-    }
+  let sortStage = {};
+  switch (sort) {
+    case "price_asc":
+      sortStage = { $sort: { offerPrice: 1 } };
+      break;
+    case "price_desc":
+      sortStage = { $sort: { offerPrice: -1 } };
+      break;
+    case "name_asc":
+      sortStage = { $sort: { name: 1 } };
+      break;
+    case "name_desc":
+      sortStage = { $sort: { name: -1 } };
+      break;
+    default:
+      sortStage = { $sort: { _id: 1 } };
+  }
 
-    const pipeline = [
+  const pipeline = [
+    { $match: matchStage },
+    {
+      $addFields: {
+        numericPrice: { $toDouble: "$price" },
+        numericOffer: { $toDouble: "$offer" },
+        offerPrice: {
+          $subtract: [
+            { $toDouble: "$price" },
+            {
+              $multiply: [
+                { $toDouble: "$price" },
+                { $divide: [{ $toDouble: "$offer" }, 100] },
+              ],
+            },
+          ],
+        },
+      },
+    },
+    {
+      $facet: {
+        metadata: [{ $count: "total" }],
+        products: [
+          sortStage,
+          { $skip: (page - 1) * itemsPerPage },
+          { $limit: itemsPerPage },
+          {
+            $project: {
+              _id: 1,
+              name: 1,
+              price: 1,
+              offer: 1,
+              offerPrice: 1,
+              image: { $arrayElemAt: ["$images", 0] },
+            },
+          },
+        ],
+      },
+    },
+  ];
+
+  const result = await db.collection("products").aggregate(pipeline).toArray();
+
+  const totalProducts = result[0].metadata[0]?.total || 0;
+  const totalPages = Math.ceil(totalProducts / itemsPerPage);
+  const currentPage = parseInt(page);
+
+  const validPage =
+    currentPage > totalPages && totalPages > 0
+      ? totalPages
+      : currentPage < 1
+      ? 1
+      : currentPage;
+
+  let products = result[0].products;
+  if (validPage !== currentPage && totalPages > 0) {
+    const correctedPipeline = [
       { $match: matchStage },
       {
         $addFields: {
@@ -145,10 +180,9 @@ const search = async (req, res) => {
       },
       {
         $facet: {
-          metadata: [{ $count: "total" }],
           products: [
             sortStage,
-            { $skip: (page - 1) * itemsPerPage },
+            { $skip: (validPage - 1) * itemsPerPage },
             { $limit: itemsPerPage },
             {
               $project: {
@@ -164,83 +198,21 @@ const search = async (req, res) => {
         },
       },
     ];
-
-    const result = await db.collection("products").aggregate(pipeline).toArray();
-
-    const totalProducts = result[0].metadata[0]?.total || 0;
-    const totalPages = Math.ceil(totalProducts / itemsPerPage);
-    const currentPage = parseInt(page);
-
-    const validPage =
-      currentPage > totalPages && totalPages > 0
-        ? totalPages
-        : currentPage < 1
-        ? 1
-        : currentPage;
-
-    let products = result[0].products;
-    if (validPage !== currentPage && totalPages > 0) {
-      const correctedPipeline = [
-        { $match: matchStage },
-        {
-          $addFields: {
-            numericPrice: { $toDouble: "$price" },
-            numericOffer: { $toDouble: "$offer" },
-            offerPrice: {
-              $subtract: [
-                { $toDouble: "$price" },
-                {
-                  $multiply: [
-                    { $toDouble: "$price" },
-                    { $divide: [{ $toDouble: "$offer" }, 100] },
-                  ],
-                },
-              ],
-            },
-          },
-        },
-        {
-          $facet: {
-            products: [
-              sortStage,
-              { $skip: (validPage - 1) * itemsPerPage },
-              { $limit: itemsPerPage },
-              {
-                $project: {
-                  _id: 1,
-                  name: 1,
-                  price: 1,
-                  offer: 1,
-                  offerPrice: 1,
-                  image: { $arrayElemAt: ["$images", 0] },
-                },
-              },
-            ],
-          },
-        },
-      ];
-      const correctedResult = await db
-        .collection("products")
-        .aggregate(correctedPipeline)
-        .toArray();
-      products = correctedResult[0].products;
-    }
-
-    res.json({
-      products,
-      pagination: {
-        currentPage: validPage,
-        totalPages: totalPages,
-        totalProducts,
-      },
-    });
-  } catch (error) {
-    console.error("Error in search:", error);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-      status: "error",
-      message: "Failed to search products",
-    });
+    const correctedResult = await db
+      .collection("products")
+      .aggregate(correctedPipeline)
+      .toArray();
+    products = correctedResult[0].products;
   }
+
+  res.json({
+    products,
+    pagination: {
+      currentPage: validPage,
+      totalPages: totalPages,
+      totalProducts,
+    },
+  });
 };
 
 const getCategories = async (req, res) => {

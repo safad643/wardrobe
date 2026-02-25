@@ -1,66 +1,59 @@
 const { ObjectId } = require("mongodb");
-const STATUS_CODES = require("../../constants/statusCodes");
+const AppError = require("../../utils/AppError");
 
 const placeOrder = async (req, res) => {
-  try {
-    const db = req.db;
-    const { addressId, paymentMethod, products, totals, coupon } = req.body;
+  const db = req.db;
+  const { addressId, paymentMethod, products, totals, coupon } = req.body;
 
-    const paymentVerification = req.flash("paymentverification");
+  const paymentVerification = req.flash("paymentverification");
 
-    const paymentorderid = paymentVerification[0];
+  const paymentorderid = paymentVerification[0];
 
-    let paymentStatus = paymentVerification[0] === "true" ? "paid" : "pending";
+  let paymentStatus = paymentVerification[0] === "true" ? "paid" : "pending";
 
-    let couponData = null;
-    if (paymentMethod === "cod") {
-      if (totals.total > 1000) {
-        return res.status(STATUS_CODES.BAD_REQUEST).json({
-          paymentError: "cod is not available for orders above 1000",
-        });
-      }
+  let couponData = null;
+  if (paymentMethod === "cod") {
+    if (totals.total > 1000) {
+      throw new AppError("cod is not available for orders above 1000", 400);
     }
+  }
 
-    const outOfStockProducts = [];
-    for (const product of products) {
-      const dbProduct = await db.collection("products").findOne({
-        _id: new ObjectId(product.productId),
-        variants: {
-          $elemMatch: {
-            size: product.size,
-            color: product.color,
-            count: { $gte: product.quantity },
-          },
+  const outOfStockProducts = [];
+  for (const product of products) {
+    const dbProduct = await db.collection("products").findOne({
+      _id: new ObjectId(product.productId),
+      variants: {
+        $elemMatch: {
+          size: product.size,
+          color: product.color,
+          count: { $gte: product.quantity },
         },
+      },
+    });
+
+    if (!dbProduct) {
+      const productDetails = await db.collection("products").findOne({
+        _id: new ObjectId(product.productId),
       });
-
-      if (!dbProduct) {
-        const productDetails = await db.collection("products").findOne({
-          _id: new ObjectId(product.productId),
-        });
-        outOfStockProducts.push(productDetails.name);
-      }
+      outOfStockProducts.push(productDetails.name);
     }
+  }
 
-    if (outOfStockProducts.length > 0) {
-      return res.status(STATUS_CODES.BAD_REQUEST).json({
-        success: false,
-        error: "Some products are out of stock",
-        outOfStockProducts,
-      });
+  if (outOfStockProducts.length > 0) {
+    throw new AppError("Some products are out of stock", 400, {
+      success: false,
+      outOfStockProducts,
+    });
+  }
+
+  if (coupon) {
+    const user = await db
+      .collection("users")
+      .findOne({ _id: new ObjectId(req.session.uid) });
+
+    if (user.couponsUsed && user.couponsUsed.includes(coupon)) {
+      throw new AppError("You have already used this coupon", 400);
     }
-
-    if (coupon) {
-      const user = await db
-        .collection("users")
-        .findOne({ _id: new ObjectId(req.session.uid) });
-
-      if (user.couponsUsed && user.couponsUsed.includes(coupon)) {
-        return res.status(STATUS_CODES.BAD_REQUEST).json({
-          success: false,
-          error: "You have already used this coupon",
-        });
-      }
 
       await db.collection("users").updateOne(
         { _id: new ObjectId(req.session.uid) },
@@ -165,18 +158,10 @@ const placeOrder = async (req, res) => {
     } else {
       res.render("user/checkoutsuccess", { id: result.insertedId });
     }
-  } catch (error) {
-    console.error("Order placement error:", error);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      error: "Failed to place order. Please try again.",
-    });
-  }
 };
 
 const loadcheckout = async (req, res) => {
-  try {
-    const db = req.db;
+  const db = req.db;
     const productQuantities = req.body.cartItems || {};
 
     const products = [];
@@ -265,15 +250,10 @@ const loadcheckout = async (req, res) => {
       total: Math.round(totalAmount),
       from: req.body.from,
     });
-  } catch (error) {
-    console.log(error);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Checkout error");
-  }
 };
 
 const loadorderview = async (req, res) => {
-  try {
-    const orderId = req.params.orderId;
+  const orderId = req.params.orderId;
     const productId = req.params.productId;
     const { size, color } = req.query;
 
@@ -291,7 +271,7 @@ const loadorderview = async (req, res) => {
     );
 
     if (!orderItem) {
-      return res.status(STATUS_CODES.NOT_FOUND).send("Order item not found");
+      throw new AppError("Order item not found", 404);
     }
 
     const product = await db.collection("products").findOne({
@@ -323,15 +303,10 @@ const loadorderview = async (req, res) => {
       returnStatus,
       razorpayKey: process.env.RAZORPAY_KEY_ID,
     });
-  } catch (error) {
-    console.error(error);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Error loading order view");
-  }
 };
 
 const cancelOrder = async (req, res) => {
-  try {
-    const varient = JSON.parse(decodeURIComponent(req.query.varient));
+  const varient = JSON.parse(decodeURIComponent(req.query.varient));
     const productid = req.query.productid;
     const orderid = req.params.orderId;
     const db = req.db;
@@ -397,28 +372,17 @@ const cancelOrder = async (req, res) => {
     }
 
     if (!orderResult || productResult.modifiedCount === 0) {
-      return res.status(STATUS_CODES.NOT_FOUND).json({
-        success: false,
-        message: "Order or product not found",
-      });
+      throw new AppError("Order or product not found", 404);
     }
 
-    res.status(STATUS_CODES.OK).json({
+    res.status(200).json({
       success: true,
       message: "Order cancelled successfully",
     });
-  } catch (error) {
-    console.error("Error cancelling order:", error);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      message: "Failed to cancel order",
-    });
-  }
 };
 
 const returnOrder = async (req, res) => {
-  try {
-    const { orderid, productid, varient, reason } = req.body;
+  const { orderid, productid, varient, reason } = req.body;
     const db = req.db;
     const insertedReturn = await db.collection("returns").insertOne({
       orderid: orderid,
@@ -439,13 +403,6 @@ const returnOrder = async (req, res) => {
       returnId: insertedReturn.insertedId,
     });
     res.json({ status: "success" });
-  } catch (error) {
-    console.error("Error returning order:", error);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-      status: "error",
-      message: "Failed to process return request",
-    });
-  }
 };
 
 module.exports = {

@@ -32,7 +32,7 @@ app.use('/admin',adminrouter)
 app.use('/images', express.static(path.join(__dirname, 'images')))
 
 app.use(express.static(path.join(__dirname,'public')))
-app.set('view engine','ejs')
+app.set('view engine','ejs');
 
 // Connect to database and start server
 (async () => {
@@ -53,5 +53,8 @@ app.set('view engine','ejs')
 app.use((req,res,next)=>{
     res.send('doesnt exist')
 })
+
+const errorHandler = require('./midddlewares/errorHandler')
+app.use(errorHandler)
 
 

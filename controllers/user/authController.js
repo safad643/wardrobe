@@ -3,147 +3,111 @@ const nodemailer = require("nodemailer");
 const passport = require("passport");
 const bcrypt = require("bcrypt");
 const { ObjectId } = require("mongodb");
-const STATUS_CODES = require("../../constants/statusCodes");
 
 const loadlogin = (req, res) => {
-  try {
-    res.render("user/login", { error: "" });
-  } catch (error) {
-    console.error("Error in loadlogin:", error);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
-  }
+  res.render("user/login", { error: "" });
 };
 
 const register = async (req, res) => {
-  try {
-    const db = req.db;
+  const db = req.db;
 
-    const user = await db
-      .collection("users")
-      .find({ email: req.body.email })
-      .toArray();
+  const user = await db
+    .collection("users")
+    .find({ email: req.body.email })
+    .toArray();
 
-    if (!user[0]) {
-      const data = {
-        name: req.body.name,
-        email: req.body.email,
-        password: await bcrypt.hash(req.body.password, 10),
-        otp: generateOTP(),
-        otpCreatedAt: Date.now(),
-        list: true,
-      };
+  if (!user[0]) {
+    const data = {
+      name: req.body.name,
+      email: req.body.email,
+      password: await bcrypt.hash(req.body.password, 10),
+      otp: generateOTP(),
+      otpCreatedAt: Date.now(),
+      list: true,
+    };
 
-      console.log(data.otp);
+    console.log(data.otp);
 
-      req.session.data = data;
-      res.redirect("otp");
-    } else {
-      res.render("user/login", { error: "user already exist" });
-    }
-  } catch (error) {
-    console.error("Error in register:", error);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+    req.session.data = data;
+    res.redirect("otp");
+  } else {
+    res.render("user/login", { error: "user already exist" });
   }
 };
 
 const loadotp = (req, res) => {
-  try {
-    sendotp(req.session.data.otp, req.session.data.email);
-    res.render("user/otp", { error: "" });
-  } catch (error) {
-    console.error("Error in loadotp:", error);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
-  }
+  sendotp(req.session.data.otp, req.session.data.email);
+  res.render("user/otp", { error: "" });
 };
 
 const otpverify = async (req, res) => {
-  try {
-    const otparr = Object.values(req.body);
-    let otp = "";
-    for (const i of otparr) {
-      otp += i;
-    }
+  const otparr = Object.values(req.body);
+  let otp = "";
+  for (const i of otparr) {
+    otp += i;
+  }
 
-    const data = req.session.data;
-    const currentTime = Date.now();
-    const otpExpiryTime = data.otpCreatedAt + 30000;
-    if (currentTime > otpExpiryTime) {
-      res.render("user/otp", { error: "expired" });
-      return;
-    }
-    if (data.otp === otp) {
-      delete data.otp;
+  const data = req.session.data;
+  const currentTime = Date.now();
+  const otpExpiryTime = data.otpCreatedAt + 30000;
+  if (currentTime > otpExpiryTime) {
+    res.render("user/otp", { error: "expired" });
+    return;
+  }
+  if (data.otp === otp) {
+    delete data.otp;
 
-      if (req.session.forgot) {
-        req.session.authtochangepassword = true;
-        res.render("user/passwordreset");
-      } else {
-        const db = req.db;
-        data.createdAt = new Date().toDateString();
-
-        await db.collection("users").insertOne(data).then((result) => {
-          db.collection("wallet").insertOne({
-            userId: result.insertedId,
-            balance: 0,
-          });
-          req.session.uid = result.insertedId;
-          req.session.save();
-        });
-
-        req.session.user = true;
-        res.redirect("/user");
-      }
+    if (req.session.forgot) {
+      req.session.authtochangepassword = true;
+      res.render("user/passwordreset");
     } else {
-      res.render("user/otp", { error: "wrong otp" });
+      const db = req.db;
+      data.createdAt = new Date().toDateString();
+
+      await db.collection("users").insertOne(data).then((result) => {
+        db.collection("wallet").insertOne({
+          userId: result.insertedId,
+          balance: 0,
+        });
+        req.session.uid = result.insertedId;
+        req.session.save();
+      });
+
+      req.session.user = true;
+      res.redirect("/user");
     }
-  } catch (error) {
-    console.error("Error in otpverify:", error);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+  } else {
+    res.render("user/otp", { error: "wrong otp" });
   }
 };
 
 const reotp = (req, res) => {
-  try {
-    const otp = generateOTP();
-    console.log(otp);
-    req.session.data.otp = otp;
-    req.session.data.otpCreatedAt = Date.now();
-    sendotp(otp, req.session.data.email);
-    res.send(JSON.stringify({ changed: true }));
-  } catch (error) {
-    console.error("Error in reotp:", error);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
-  }
+  const otp = generateOTP();
+  console.log(otp);
+  req.session.data.otp = otp;
+  req.session.data.otpCreatedAt = Date.now();
+  sendotp(otp, req.session.data.email);
+  res.send(JSON.stringify({ changed: true }));
 };
 
 const login = async (req, res) => {
-  try {
-    const { password, email } = req.body;
-    const db = req.db;
-    const users = await db.collection("users").find({ email }).toArray();
+  const { password, email } = req.body;
+  const db = req.db;
+  const users = await db.collection("users").find({ email }).toArray();
 
-    const match = await bcrypt.compare(password, users[0]?.password || "");
-    if (users[0]?.email === email && match) {
-      req.session.data = { email };
-      req.session.uid = users[0]._id;
-      req.session.user = true;
-      res.redirect("/user");
-    } else {
-      res.render("user/login", { error: "wrong credentials" });
-    }
-  } catch (error) {
-    console.error("Error in login:", error);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+  const match = await bcrypt.compare(password, users[0]?.password || "");
+  if (users[0]?.email === email && match) {
+    req.session.data = { email };
+    req.session.uid = users[0]._id;
+    req.session.user = true;
+    res.redirect("/user");
+  } else {
+    res.render("user/login", { error: "wrong credentials" });
   }
 };
 
 const googleauth = (req, res) => {
-  try {
-    passport.authenticate("google", { scope: ["profile", "email"] });
-  } catch (error) {
-    console.error("Error in googleauth:", error);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
-  }
+  passport.authenticate("google", { scope: ["profile", "email"] });
 };
 
 const forgot = async (req, res) => {
@@ -163,23 +127,19 @@ const forgot = async (req, res) => {
 };
 
 const resetpassword = async (req, res) => {
-  try {
-    if (req.session.authtochangepassword) {
-      const hashedpass = await bcrypt.hash(req.body.password, 10);
-      const db = req.db;
+  if (req.session.authtochangepassword) {
+    const hashedpass = await bcrypt.hash(req.body.password, 10);
+    const db = req.db;
 
-      await db
-        .collection("users")
-        .updateOne(
-          { email: req.session.data.email },
-          { $set: { password: hashedpass } }
-        );
-      res.redirect("/user/login");
-    } else {
-      res.redirect("/user/login");
-    }
-  } catch (er) {
-    console.log(er);
+    await db
+      .collection("users")
+      .updateOne(
+        { email: req.session.data.email },
+        { $set: { password: hashedpass } }
+      );
+    res.redirect("/user/login");
+  } else {
+    res.redirect("/user/login");
   }
 };
 
@@ -207,13 +167,8 @@ const changepassword = async (req, res) => {
 };
 
 const logout = (req, res) => {
-  try {
-    req.session.destroy();
-    res.redirect("/user/login");
-  } catch (error) {
-    console.error("Error in logout:", error);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
-  }
+  req.session.destroy();
+  res.redirect("/user/login");
 };
 
 function generateOTP(length = 6) {

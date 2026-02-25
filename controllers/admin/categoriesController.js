@@ -1,92 +1,70 @@
 const { getPagination } = require("../../helpers/pagination");
-const STATUS_CODES = require("../../constants/statusCodes");
+const AppError = require("../../utils/AppError");
 
 const loadcatogory = async (req, res) => {
-  try {
-    const db = req.db;
+  const db = req.db;
 
-    const total = await db.collection("catogories").countDocuments({});
-    const { currentPage, totalPages, skip, limit } = getPagination(
-      req.query.page,
-      total
-    );
+  const total = await db.collection("catogories").countDocuments({});
+  const { currentPage, totalPages, skip, limit } = getPagination(
+    req.query.page,
+    total
+  );
 
-    const categories = await db
-      .collection("catogories")
-      .find({})
-      .sort({ createdAt: -1, _id: -1 })
-      .skip(skip)
-      .limit(limit)
-      .toArray();
+  const categories = await db
+    .collection("catogories")
+    .find({})
+    .sort({ createdAt: -1, _id: -1 })
+    .skip(skip)
+    .limit(limit)
+    .toArray();
 
-    res.render("admin/nav/catogory", {
-      categories,
-      pagination: {
-        currentPage,
-        totalPages,
-        total,
-      },
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
-  }
+  res.render("admin/nav/catogory", {
+    categories,
+    pagination: {
+      currentPage,
+      totalPages,
+      total,
+    },
+  });
 };
 
 const catogoryaddload = (req, res) => {
-  try {
-    res.render("admin/forms/catogoryaddform.ejs");
-  } catch (err) {
-    console.error(err);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
-  }
+  res.render("admin/forms/catogoryaddform.ejs");
 };
 
 const catogoryadd = async (req, res) => {
-  try {
-    const { catogoryName, description } = req.body;
+  const { catogoryName, description } = req.body;
 
-    const data = {
-      name: catogoryName.trim(),
-      descr: description.trim(),
-      createdAt: new Date().toDateString(),
-    };
+  const data = {
+    name: catogoryName.trim(),
+    descr: description.trim(),
+    createdAt: new Date().toDateString(),
+  };
 
-    const db = req.db;
-    const existingCategory = await db
-      .collection("catogories")
-      .findOne({ name: data.name });
-    if (existingCategory) {
-      return res.status(STATUS_CODES.BAD_REQUEST).json({ error: "Category already exists." });
-    }
-
-    await db.collection("catogories").insertOne(data);
-    const categories = await db.collection("catogories").find({}).toArray();
-    res.render("admin/nav/catogory", { categories });
-  } catch (err) {
-    console.error(err);
-    res
-      .status(STATUS_CODES.INTERNAL_SERVER_ERROR)
-      .json({ error: "An error occurred while processing your request." });
+  const db = req.db;
+  const existingCategory = await db
+    .collection("catogories")
+    .findOne({ name: data.name });
+  if (existingCategory) {
+    throw new AppError("Category already exists.", 400);
   }
+
+  await db.collection("catogories").insertOne(data);
+  const categories = await db.collection("catogories").find({}).toArray();
+  res.render("admin/nav/catogory", { categories });
 };
 
 const loadcatogupdate = async (req, res) => {
-  try {
-    const db = req.db;
-    const { ObjectId } = require("mongodb");
-    const categoryId = req.params.id;
-    const category = await db
-      .collection("catogories")
-      .findOne({ _id: new ObjectId(categoryId) });
-    if (!category) {
-      return res.status(STATUS_CODES.NOT_FOUND).send("Category not found");
-    }
-    res.render("admin/forms/catogoryupdateform", { category: category || null });
-  } catch (err) {
-    console.error(err);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Internal Server Error");
+  const db = req.db;
+  const { ObjectId } = require("mongodb");
+  const categoryId = req.params.id;
+  const category = await db
+    .collection("catogories")
+    .findOne({ _id: new ObjectId(categoryId) });
+  if (!category) {
+    throw new AppError("Category not found", 404);
   }
+  res.render("admin/forms/catogoryupdateform", { category: category || null });
 };
 
 const catogoryupdate = async (req, res) => {
