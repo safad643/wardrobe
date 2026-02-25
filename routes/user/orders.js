@@ -4,6 +4,7 @@ const usercontroller = require("../../controllers/user");
 const midddlewares = require("../../midddlewares/session");
 
 router.get("/checkout", midddlewares.usersession, usercontroller.loadcheckout);
+router.post("/checkout", midddlewares.usersession, usercontroller.loadcheckout);
 router.get(
   "/orders/:orderId/items/:productId",
   midddlewares.usersession,

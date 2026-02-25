@@ -46,7 +46,8 @@ const addtocart = async (req, res) => {
   });
 
   if (existingProduct) {
-    throw new AppError("product already exist", 400);
+    // If product is already in cart, just inform the client
+    return res.status(200).json({ message: "product already exist" });
   }
 
   await db

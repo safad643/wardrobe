@@ -562,8 +562,12 @@
        
         try {
             const response = await fetch('/user/checkout', {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    cartItems,
+                    from: 'cart'
+                })
             });
 
             const html = await response.text();

@@ -1391,9 +1391,9 @@
 			return;
 		}
 		
-		fetch('/user/addtocart', {
-			method: 'post',
-			body: JSON.stringify({ productid, userid, varient:varienttosend }),
+		fetch('/user/cart/items', {
+			method: 'POST',
+			body: JSON.stringify({ productid, varient: varienttosend }),
 			headers: { 'Content-Type': 'application/json' }
 		})
 		.then(response => response.json())
@@ -1425,11 +1425,15 @@
 				color: varienttosend.color
 		};
 		fetch('/user/checkout', {
-				method: 'GET',
-				headers: {
-						'Content-Type': 'application/json'
-				}
-		})
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                cartItems,
+                from: 'buynow'
+            })
+        })
 		.then(response => response.text())
 		.then(html => {
 				document.open();

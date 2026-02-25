@@ -374,15 +374,13 @@ async function addToCart(productId) {
         cartBadge.textContent = parseInt(cartBadge.textContent) + 1;
     }
     try {
-        const response = await fetch('/user/addtocart', {
+        const response = await fetch('/user/cart/items', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                productid: productId,
-                
-
+                productid: productId
             })
         });
         
