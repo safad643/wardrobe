@@ -10,7 +10,7 @@ const loginverify = async (req, res) => {
   if (adminData[0]?.password === password) {
     req.session.admin = true;
     req.session.name = adminData[0].name;
-    res.redirect("admin/dashboard");
+    res.redirect("/admin/dashboard");
   } else {
     res.render("admin/login.ejs", { msg: "invalid credentials" });
   }
