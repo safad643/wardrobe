@@ -6,7 +6,7 @@ const midddlewares = require("../../midddlewares/session");
 
 router.get(
   "/auth/google",
-  passport.authenticate("google", { scope: ["profile"] })
+  passport.authenticate("google", { scope: ["profile", "email"] })
 );
 router.get("/auth/google/redirect", passport.authenticate("google"), (req, res) => {
   if (req.user) {

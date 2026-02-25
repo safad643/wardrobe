@@ -125,14 +125,15 @@ const productupdate = async (req, res) => {
   const db = req.db;
   const { ObjectId } = require("mongodb");
   const productId = req.params.id;
+  const objectId = new ObjectId(productId);
   const product = await db
     .collection("products")
-    .findOne({ _id: new ObjectId(productId) });
+    .findOne({ _id: objectId });
   if (!product) {
     throw new AppError("Product not found", 404);
   }
   const existingProduct = await db.collection("products").findOne({
-    $and: [{ name: req.body.name }, { _id: { $ne: new ObjectId(productId) } }],
+    $and: [{ name: req.body.name }, { _id: { $ne: objectId } }],
   });
   if (existingProduct) {
     throw new AppError("Product name already exists", 400);
@@ -177,7 +178,7 @@ const productupdate = async (req, res) => {
       fs.writeFileSync(`./images/${productId}/image${i}.png`, binary);
 
       await db.collection("products").updateOne(
-        { _id: productId },
+        { _id: objectId },
         { $set: { [`images.${i}`]: imagePath } }
       );
     }
@@ -186,7 +187,7 @@ const productupdate = async (req, res) => {
   req.body.updatedAt = new Date();
 
   await db.collection("products").updateOne(
-    { _id: productId },
+    { _id: objectId },
     { $set: { ...req.body } }
   );
 

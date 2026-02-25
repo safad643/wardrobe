@@ -290,7 +290,40 @@ const Delete = function(identifier, data, bool) {
     return;
   }
 
-  const actionVerb = bool ? 'delete' : 'list';
+  let actionVerb;
+  let confirmButtonText;
+  let successTitle;
+
+  if (identifier === 'user') {
+    // For users, bool === true means "unblock" (list: true),
+    // and bool === false means "block" (list: false).
+    if (bool) {
+      actionVerb = 'unblock';
+      confirmButtonText = 'Unblock';
+      successTitle = 'User unblocked';
+    } else {
+      actionVerb = 'block';
+      confirmButtonText = 'Block';
+      successTitle = 'User blocked';
+    }
+  } else {
+    // For products/categories, bool is the new `list` value:
+    // - bool === true  -> item will be listed (made visible)
+    // - bool === false -> item will be unlisted (hidden)
+    if (bool) {
+      actionVerb = 'list';
+      confirmButtonText = 'List';
+    } else {
+      actionVerb = 'unlist';
+      confirmButtonText = 'Unlist';
+    }
+
+    const capitalizedNoun = noun.charAt(0).toUpperCase() + noun.slice(1);
+    successTitle = bool
+      ? `${capitalizedNoun} listed`
+      : `${capitalizedNoun} unlisted`;
+  }
+
   const title = `Do you want to ${actionVerb} this ${noun}?`;
 
   Swal.fire({
@@ -299,7 +332,7 @@ const Delete = function(identifier, data, bool) {
     background: "#191c24",
     color: "#ffffff",
     showCancelButton: true,
-    confirmButtonText: "Delete",
+    confirmButtonText,
     cancelButtonText: "Cancel",
     reverseButtons: true,
     buttonsStyling: true,
@@ -320,10 +353,6 @@ const Delete = function(identifier, data, bool) {
         .then((r) => r.text())
         .then((html) => {
           document.querySelector('.main-panel').innerHTML = html;
-          // Optional success notice, kept dark as well
-          const successTitle = bool
-            ? `${noun.charAt(0).toUpperCase() + noun.slice(1)} deleted`
-            : `${noun.charAt(0).toUpperCase() + noun.slice(1)} listed`;
           Swal.fire({
             title: successTitle,
             icon: "success",

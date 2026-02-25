@@ -9,7 +9,15 @@ const Delete = async (req, res) => {
       const db = req.db;
       await db
         .collection("users")
-        .updateOne({ email: data }, { $set: { list: bool } });
+        .updateOne(
+          { email: data },
+          {
+            $set: {
+              list: bool,
+              updatedAt: new Date(),
+            },
+          }
+        );
       const user = await db.collection("users").find({}).toArray();
       res.render("admin/nav/usermanagment", { user });
     } else if (identifier === "catogories") {

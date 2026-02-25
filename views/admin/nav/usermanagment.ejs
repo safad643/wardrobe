@@ -18,17 +18,22 @@
           <tr>
             <td><%= user.email %></td>
             <td><%= user.name %></td>
-            <td><%= user.createdAt%></td>
-            <td><%= user?.updatedAt %></td>
+            <td><%= user.createdAt %></td>
+            <td>
+              <%= user?.updatedAt
+                ? new Date(user.updatedAt).toLocaleString('en-IN', {
+                    dateStyle: 'medium',
+                    timeStyle: 'short'
+                  })
+                : '' %>
+            </td>
             
             <td>
               <% if (user.list) { %>
-                <button onclick="Delete('user','<%= user.email %>',false)" class="btn btn-success btn-rounded">List</button>
+                <button onclick="Delete('user','<%= user.email %>',false)" class="btn btn-danger btn-rounded">Block</button>
               <% } else { %>
                 
-                <button onclick="Delete('user','<%= user.email %>',true)" class="btn btn-danger btn-rounded">
-                  <span class="mdi mdi-delete"></span> 
-                </button>
+                <button onclick="Delete('user','<%= user.email %>',true)" class="btn btn-success btn-rounded">Unblock</button>
               <% } %>
             </td>
 
