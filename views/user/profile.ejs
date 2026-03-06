@@ -1149,14 +1149,14 @@
                 <% order.items.forEach(function(item) { %>
                    
                     <div class="order-card <%= order.paymentStatus === 'pending' && order.paymentMethod === 'razorpay' ? 'payment-failed' : '' %>" 
-                         onclick="viewProductOrder('<%= order._id %>', '<%= item.productId %>', '<%= JSON.stringify(item.varient) %>')">
+                         onclick="viewProductOrder('<%= order.orderNo %>', '<%= item.productId %>', '<%= JSON.stringify(item.varient) %>')">
                         <div class="product-image">
                             <img src="<%= item.image %>" alt="Product Image">
                         </div>
                         <div class="order-content">
                             <div class="order-header">
                                 <div>
-                                    <div>Order #<%= order._id.toString().slice(-6).toUpperCase() %></div>
+                                    <div>Order #<%= order.orderNo %></div>
                                     <div><%= new Date(order.createdAt).toLocaleDateString('en-IN', {
                                         day: 'numeric',
                                         month: 'short',

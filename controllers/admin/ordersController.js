@@ -34,7 +34,7 @@ const loadordermanagment = async (req, res) => {
         { $limit: limit },
         {
           $project: {
-            orderId: "$_id",
+            orderId: "$orderNo",
             createdAt: "$createdAt",
             paymentMethod: "$paymentMethod",
             paymentStatus: { $ifNull: ["$paymentStatus", "pending"] },
@@ -72,7 +72,7 @@ const updateProductStatus = async (req, res) => {
 
     const result = await db.collection("orders").updateOne(
       {
-        _id: new ObjectId(orderId),
+        orderNo: orderId,
         "items.productId": productId,
         "items.varient.color": varient.color,
         "items.varient.size": varient.size,
@@ -109,7 +109,7 @@ const loadorderdetails = async (req, res) => {
 
     const order = await db.collection("orders").findOne(
       {
-        _id: new ObjectId(orderId),
+        orderNo: orderId,
         "items.productId": productId,
         ...(varient && { "items.varient": varient }),
       },

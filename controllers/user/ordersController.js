@@ -1,5 +1,17 @@
 const { ObjectId } = require("mongodb");
+const crypto = require("crypto");
 const AppError = require("../../utils/AppError");
+
+async function generateUniqueOrderNo(db) {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const orderNo = `ORD_${crypto.randomBytes(8).toString("hex")}`;
+    const existing = await db
+      .collection("orders")
+      .findOne({ orderNo }, { projection: { _id: 1 } });
+    if (!existing) return orderNo;
+  }
+  throw new AppError("Failed to generate order number", 500);
+}
 
 const placeOrder = async (req, res) => {
   const db = req.db;
@@ -130,7 +142,9 @@ const placeOrder = async (req, res) => {
       }
     );
 
+    const orderNo = await generateUniqueOrderNo(db);
     const order = {
+      orderNo,
       paymentStatus: paymentStatus,
       userId: req.session.uid,
       address: addressdetials,
@@ -154,9 +168,9 @@ const placeOrder = async (req, res) => {
     }
 
     if (paymentMethod === "razorpay" && paymentStatus === "pending") {
-      res.render("user/checkoutfailed", { id: result.insertedId });
+      res.render("user/checkoutfailed", { id: orderNo });
     } else {
-      res.render("user/checkoutsuccess", { id: result.insertedId });
+      res.render("user/checkoutsuccess", { id: orderNo });
     }
 };
 
@@ -259,9 +273,10 @@ const loadorderview = async (req, res) => {
 
     const db = req.db;
 
-    const order = await db.collection("orders").findOne({
-      _id: new ObjectId(orderId),
-    });
+    const order = await db.collection("orders").findOne({ orderNo: orderId });
+    if (!order) {
+      throw new AppError("Order not found", 404);
+    }
 
     const orderItem = order.items.find(
       (item) =>
@@ -281,7 +296,7 @@ const loadorderview = async (req, res) => {
     const orderView = {
       paymentorderid: order.paymentorderid,
       paymentStatus: order.paymentStatus,
-      _id: order._id,
+      orderNo: order.orderNo,
       createdAt: order.createdAt,
       paymentMethod: order.paymentMethod,
       item: {
@@ -292,7 +307,7 @@ const loadorderview = async (req, res) => {
     };
 
     const returndoc = await db.collection("returns").findOne({
-      orderid: orderId,
+      orderid: order.orderNo,
       productid: productId,
       varient: { size: size, color: color },
     });
@@ -313,7 +328,7 @@ const cancelOrder = async (req, res) => {
 
     const orderResult = await db.collection("orders").findOneAndUpdate(
       {
-        _id: new ObjectId(orderid),
+        orderNo: orderid,
         "items.varient": varient,
       },
       {
@@ -326,7 +341,8 @@ const cancelOrder = async (req, res) => {
       }
     );
 
-    const cancelledItem = orderResult.items.find(
+    const updatedOrder = orderResult?.value || orderResult;
+    const cancelledItem = updatedOrder.items.find(
       (item) =>
         item.productId === productid &&
         item.varient.size === varient.size &&
@@ -347,8 +363,8 @@ const cancelOrder = async (req, res) => {
     );
 
     if (
-      orderResult.paymentMethod === "wallet" ||
-      orderResult.paymentMethod === "razorpay"
+      updatedOrder.paymentMethod === "wallet" ||
+      updatedOrder.paymentMethod === "razorpay"
     ) {
       const refundAmount = cancelledItem.total;
       const rawUserId = req.session.uid;
@@ -371,7 +387,7 @@ const cancelOrder = async (req, res) => {
       );
     }
 
-    if (!orderResult || productResult.modifiedCount === 0) {
+    if (!updatedOrder || productResult.modifiedCount === 0) {
       throw new AppError("Order or product not found", 404);
     }
 

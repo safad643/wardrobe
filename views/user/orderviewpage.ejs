@@ -1039,7 +1039,7 @@
                     <div class="order-meta">
                         <div class="order-id">
                             <span class="label">Order ID:</span>
-                            <span class="value">#<%= order._id.toString().slice(-6).toUpperCase() %></span>
+                            <span class="value">#<%= order.orderNo %></span>
                         </div>
                         <div class="order-date">
                             <span class="label">Ordered on:</span>
@@ -1251,7 +1251,7 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <form
                         id="cancelOrderForm"
-                        data-cancel-url="/user/orders/<%= order._id %>/cancel?varient=<%= encodeURIComponent(JSON.stringify(order.item.varient)) %>&productid=<%= order.item.productId %>"
+                        data-cancel-url="/user/orders/<%= order.orderNo %>/cancel?varient=<%= encodeURIComponent(JSON.stringify(order.item.varient)) %>&productid=<%= order.item.productId %>"
                     >
                         <button type="button" id="confirmCancelBtn" class="btn btn-danger">Confirm Cancellation</button>
                     </form>
@@ -1306,7 +1306,7 @@
     <script>
 
         const invoiceData = {
-            "_id": "<%= order._id %>",
+            "_id": "<%= order.orderNo %>",
             "createdAt": "<%= order.createdAt %>",
             "paymentMethod": "<%= order.paymentMethod %>",
             "item": {
@@ -1348,7 +1348,7 @@
             doc.setFontSize(10);
             y += 20;
             doc.text(`Invoice Date: ${new Date(orderData.createdAt).toLocaleDateString()}`, 20, y);
-            doc.text(`Invoice No: ${orderData._id.slice(-8).toUpperCase()}`, 20, y + 7);
+            doc.text(`Invoice No: ${String(orderData._id).toUpperCase()}`, 20, y + 7);
             
             // Add customer details
             y += 25;
@@ -1414,7 +1414,7 @@
             doc.text("Thank you for your business!", 105, y, { align: "center" });
             
             // Download the PDF
-            doc.save(`invoice-${orderData._id.slice(-8)}.pdf`);
+            doc.save(`invoice-${String(orderData._id)}.pdf`);
         }
 
         function changeImage(src, index) {
@@ -1656,10 +1656,10 @@
             }
             const order = <%- JSON.stringify(order) %>;
             
-            const orderid = order._id;
+            const orderid = order.orderNo;
             const productid = order.item.productId;
             const varient = order.item.varient;
-            fetch('/user/orders/<%= order._id %>/return', {
+            fetch('/user/orders/<%= order.orderNo %>/return', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

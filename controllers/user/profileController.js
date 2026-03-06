@@ -21,7 +21,7 @@ const profileload = async (req, res) => {
   for (const order of orders) {
     const approvedReturns = await db
       .collection("returns")
-      .find({ orderid: order._id.toString(), status: "approved" })
+      .find({ orderid: order.orderNo, status: "approved" })
       .toArray();
 
     for (const item of order.items) {

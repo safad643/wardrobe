@@ -79,7 +79,7 @@ const updateReturnStatus = async (req, res) => {
     if (status === "approved") {
       const order = await db
         .collection("orders")
-        .findOne({ _id: new ObjectId(existingReturn.orderid) });
+        .findOne({ orderNo: existingReturn.orderid });
 
       if (!order) {
         return res.status(STATUS_CODES.NOT_FOUND).json({
