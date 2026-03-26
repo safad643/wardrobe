@@ -1,7 +1,6 @@
 const STATUS_CODES = require("../../constants/statusCodes");
 
-const generateSalesData = async (period, startDate, endDate) => {
-  const db = req.db;
+const generateSalesData = async (db, period, startDate, endDate) => {
 
   let dateFilter = {};
   if (startDate && endDate) {
@@ -189,7 +188,7 @@ const generatesalesdata = async (req, res) => {
       end = new Date(req.body.endDate);
     }
 
-    result = await generateSalesData(period, start, end);
+    result = await generateSalesData(req.db, period, start, end);
     res.json(result);
   } catch (error) {
     console.error("Error generating sales data:", error);

@@ -125,6 +125,9 @@ const productupdate = async (req, res) => {
   const db = req.db;
   const { ObjectId } = require("mongodb");
   const productId = req.params.id;
+  const dirPath = `./images/${productId}`;
+  // Ensure the image directory exists (Render filesystem may be fresh/ephemeral).
+  fs.mkdirSync(dirPath, { recursive: true });
   const objectId = new ObjectId(productId);
   const product = await db
     .collection("products")
@@ -175,7 +178,7 @@ const productupdate = async (req, res) => {
       const binary = Buffer.from(base64Data, "base64");
       const imagePath = `/images/${productId}/image${i}.png`;
 
-      fs.writeFileSync(`./images/${productId}/image${i}.png`, binary);
+      fs.writeFileSync(`${dirPath}/image${i}.png`, binary);
 
       await db.collection("products").updateOne(
         { _id: objectId },
